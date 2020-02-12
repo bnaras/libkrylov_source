@@ -18,7 +18,9 @@ Copyright 2018 Filipp Furche Research Group
 
 ## About Library
 
-Please see the wiki for more information about the library!
+Please see the wiki for more information about the library:
+
+https://gitlab.com/libkrylov/libkrylov-wiki/-/wikis/home
 
 ## Collaborators and Acknowledgements
 
