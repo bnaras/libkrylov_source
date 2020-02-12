@@ -1,0 +1,11 @@
+{ "real(kind_float)array": {
+  "name":"cmplx_sp_1c_freq                ",
+  "dimensions":[          2],
+  "precision":"singleprecision                 ",
+  "array": [
+//               column   real
+    { "val":[         1,"  -0.551096082E+00" ] },
+    { "val":[         2,"  -0.877609491E+00" ] },
+    { "val":[         0, null ] }
+  ]
+}

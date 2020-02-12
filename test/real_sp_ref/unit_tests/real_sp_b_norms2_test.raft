@@ -1,0 +1,14 @@
+$real(kind_float)array=
+ real_sp_b_norms2_test           
+  dimensions=           8
+  precision=
+   singleprecision                 
+    column      real
+         1   1.00000000
+         2   1.00000000
+         3   1.00000000
+         4   1.00000000
+         5   1.00000000
+         6   0.00000106
+         7   0.00000107
+         8   0.00000107

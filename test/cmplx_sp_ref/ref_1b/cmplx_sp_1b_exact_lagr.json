@@ -1,0 +1,12 @@
+{ "type(base)array": {
+  "name":"cmplx_sp_1b_exact_lagr          ",
+  "dimensions":[          1,          3],
+  "element_type":"cmplx_sp                        ",
+  "array": [
+//                  row     column   element:real             imaginary      
+    { "val":[         1,         1,"  -0.507092476E+01   -0.381168093E-07" ] },
+    { "val":[         1,         2,"  -0.436016369E+01   -0.115366632E-07" ] },
+    { "val":[         1,         3,"  -0.366497040E+01   -0.288738669E-07" ] },
+    { "val":[         0,         0, null ] }
+  ]
+}

@@ -1,0 +1,250 @@
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+program problem_1c
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Description:
+!--------------------------------------------------------------------
+!< This program generates a problem for driver_1c to be 
+!< tested on. Compiling with the different floatformat_*.f90
+!< and basetypes_*.f90 gives the different matrix types.
+!< uses fortran intrinsic function for random_number
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Modules and Global Variables
+!--------------------------------------------------------------------
+! for kind_integer and other precision related parameters
+  use basekinds
+! define parameters of precision of real(kind_float)
+  use floatformat
+! define type(base) and type(basereal) and associated operations
+  use basetypes
+  use blastypes
+! for file i/o : printing problem matrix
+  use arrayfile
+!--------------------------------------------------------------------
+! Implicit None statement
+!--------------------------------------------------------------------
+  implicit none
+!--------------------------------------------------------------------
+! Local Variables for Subroutines and reading problem
+!--------------------------------------------------------------------
+! contains the problem, to be read in from file
+  type(base), allocatable :: krylov_a(:,:)
+  type(base), allocatable :: krylov_copy(:,:)
+! contains the rhs, to be read in from file
+  type(base), allocatable :: krylov_p(:,:)
+! contains the freq, to be read in from file
+  real(kind_float), allocatable :: krylov_o(:)
+! contains the exact solution, used for testing
+  type(base), allocatable :: krylov_x(:,:)
+  type(base), allocatable :: krylov_ax(:,:)
+  type(base) :: krylov_xax
+  type(base) :: krylov_xx
+  type(base) :: krylov_xp
+  type(base) :: krylov_px
+  type(base),allocatable :: krylov_l(:,:)
+! character string to identify all files
+  character(len=32), target :: c1_string = ''
+! character string for file name that contains the problem
+  character(len=32) :: problemname_string = ''
+! character string for file name that contains the rhs
+  character(len=32) :: rhsname_string = ''
+! character string for file name that contains the freq
+  character(len=32) :: freqname_string = ''
+! character string for file name that contains the lagragian
+  character(len=32) :: lagrangianname_string = ''
+! integers for the size of the problem
+  integer(kind_integer) :: n = 100
+! integers for number of rhs vectors
+  integer(kind_integer) :: m = 3
+! integers for number of frequencies
+  integer(kind_integer) :: l = 2
+!! dummy indexes
+  integer(kind_integer) :: j,k = 0
+!! diagonal for lapack and eigenvalues
+  real(kind_float), allocatable :: diag(:)
+!! seed for lapack random generator
+  integer(kind_integer) :: iseed(4) = 0
+!! real number for random_number
+  real(kind_float) :: seed = 0
+!! factor for scaling diagonals
+  type(base) :: factor
+!! output from generalized Lapack linear solver
+  integer(kind_integer), allocatable :: ipiv(:)
+!! constants for generalized blas calls
+  type(base) :: one_kb
+  type(base) :: zero_kb
+!--------------------------------------------------------------------
+! Error Parameter
+!--------------------------------------------------------------------
+  integer(kind_integer) :: ierr = 0
+!--------------------------------------------------------------------
+
+!! setting up the problem before calling solver
+
+!! set a1_string based on basetypes
+  c1_string = trim(base_print_string)//'_1c'
+
+!! set the filename_string for the file name 
+  problemname_string = trim(c1_string)//'_prob'
+
+!! set the filename_string for the file name 
+  rhsname_string = trim(c1_string)//'_rhs'
+
+!! set the filename_string for the file name 
+  freqname_string = trim(c1_string)//'_freq'
+
+!! set the lagrangianname_string for the file name 
+  lagrangianname_string = trim(c1_string)//'_exact_lagr'
+
+!! allocate array to contain problem, diagonal used to 
+!! construct problem, and work array
+  allocate(krylov_a(n,n))
+  allocate(krylov_copy(n,n))
+  allocate(diag(n))
+!! allocate array to contain rhs
+  allocate(krylov_p(n,m))
+!! allocate array to contain freq
+  allocate(krylov_o(l))
+!! allocate array for exact solution
+  allocate(krylov_x(n,m))
+  allocate(krylov_ax(n,m))
+  allocate(krylov_l(m,l))
+!! allocate ipiv for generalized lapack call
+  allocate(ipiv(n))
+
+!! fill iseed needed for randomizing
+  do j = 1 , 4
+    call random_number(seed)
+    iseed(j) = 1 + 2*(floor(2047*seed))
+  end do
+
+!! fill diagonal with small random numbers
+  call random_number(diag)
+  diag = diag*10
+
+!! randomly multiply diagonal into a square matrix, krylov_a
+  call glaghe(n,(n-1),diag,krylov_a,n,iseed,ierr)
+!  krylov_a = real(0,kind=kind_float)
+
+  if (ierr.ne.0) then
+    print *, 'problem creating problem matrix!'
+    stop
+  end if
+
+!! options making krylov_a diagonally dominant
+  do j = 1 , n
+    call random_number(seed)
+    factor = real(seed*10,kind=kind_float)
+    krylov_a(j,j) = krylov_a(j,j) + factor
+!    krylov_a(j,j) = real(j,kind=kind_float)
+  end do
+
+!! print problem array size
+  call array_print_base(problemname_string,n,&
+  &   n,krylov_a,ierr)
+
+  if (ierr.ne.0) then
+    print *, 'problem printing problem matrix!'
+    stop
+  end if
+
+
+!! fill rhs
+  do k = 1, m
+    do j = 1, n
+      call random_number(seed)
+      factor = real(seed,kind=kind_float)
+      krylov_p(j,k) = factor
+    end do
+  end do
+
+
+!! print rhs
+  call array_print_base(rhsname_string,n,&
+  &   m,krylov_p,ierr)
+
+  if (ierr.ne.0) then
+    print *, 'problem printing rhs matrix!'
+    stop
+  end if
+
+!! fill freq
+  do j = 1, l
+    call random_number(seed)
+    factor = real(-seed,kind=kind_float)
+    krylov_o(j) = factor
+  end do
+
+!! print freq
+  call array_print_float(freqname_string,l,&
+  &   krylov_o,ierr)
+
+  if (ierr.ne.0) then
+    print *, 'problem printing freq matrix!'
+    stop
+  end if
+
+!! loop over frequncies
+  do j = 1, l
+!! copy rhs onto solution
+    krylov_x = krylov_p
+    krylov_copy = krylov_a
+    do k = 1, n
+      krylov_copy(k,k) = krylov_a(k,k) - krylov_o(j)
+    end do
+
+    call ghesv('l',n,m,krylov_copy,n,ipiv,&
+  &      krylov_x,n,ierr)
+
+    if (ierr.ne.0) then
+      print *, 'problem solving linear problem !'
+      stop
+    end if
+
+!! set constants for BLAS
+    one_kb = real(1,kind=kind_float)
+    zero_kb = real(0,kind=kind_float)
+
+!! to make lagrangian
+    call ggemm('n','n',n,m,n,one_kb,krylov_a,&
+  &     n,krylov_x,n,zero_kb,krylov_ax,n)
+    do k = 1, m
+      call gdot(n,krylov_x(1:n,k),1,krylov_ax(1:n,k),1,krylov_xax,ierr)
+      call gdot(n,krylov_x(1:n,k),1,krylov_p(1:n,k),1,krylov_xp,ierr)
+      call gdot(n,krylov_p(1:n,k),1,krylov_x(1:n,k),1,krylov_px,ierr)
+      call gdot(n,krylov_x(1:n,k),1,krylov_x(1:n,k),1,krylov_xx,ierr)
+      krylov_l(k,j) = krylov_xax -(krylov_xx*krylov_o(j)) - krylov_xp - krylov_px
+    end do
+  end do ! end loop over freq
+
+!! print exact lagr
+  call array_print_base(lagrangianname_string,m,&
+  &   l,krylov_l,ierr)
+
+  if (ierr.ne.0) then
+    print *, 'problem printing exact lagrangian !'
+    stop
+  end if
+
+  deallocate(ipiv)
+  deallocate(diag)
+  deallocate(krylov_copy)
+  deallocate(krylov_a)
+  deallocate(krylov_p)
+  deallocate(krylov_l)
+  deallocate(krylov_x)
+
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+end program problem_1c
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------

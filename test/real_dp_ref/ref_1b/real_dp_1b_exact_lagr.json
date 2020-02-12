@@ -1,0 +1,12 @@
+{ "type(base)array": {
+  "name":"real_dp_1b_exact_lagr           ",
+  "dimensions":[          1,          3],
+  "element_type":"real_dp                         ",
+  "array": [
+//                  row     column   element:real                            
+    { "val":[         1,         1,"-0.55108296308427480E+01" ] },
+    { "val":[         1,         2,"-0.42151937476848333E+01" ] },
+    { "val":[         1,         3,"-0.46050085541574060E+01" ] },
+    { "val":[         0,         0, null ] }
+  ]
+}

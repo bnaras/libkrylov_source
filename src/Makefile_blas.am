@@ -1,0 +1,292 @@
+#shared section
+#suggestion from autoconf
+ACLOCAL_AMFLAGS = -Iautoconf-archive/m4
+#Other things to be set 
+#OPENMPFLAGS = -fopenmp
+DEBUGFLAGS = -Og -pedantic -Wall -Wextra -fcheck=all -g -fbacktrace -ffpe-trap=zero,overflow,underflow,denormal
+PROFILEFLAGS = -pg
+RELEASEFLAGS = -O3 -flto
+# Real Single precision
+# library
+real_sp_libdir = $(PWD)/real_sp_lib
+real_sp_lib_LTLIBRARIES = libkrylov_real_sp.la
+# file printing/reading unit test
+real_sp_arrayfiledir = $(PWD)/real_sp_test
+real_sp_arrayfile_PROGRAMS = test_arrayfile_real_sp
+test_arrayfile_real_sp_SOURCES = test_arrayfile.f90
+test_arrayfile_real_sp_LDADD = libkrylov_real_sp.la
+# type(base) elementary operations test
+real_sp_basetypedir = $(PWD)/real_sp_test
+real_sp_basetype_PROGRAMS = test_basetypes_real_sp
+test_basetypes_real_sp_SOURCES = test_basetypes.f90
+test_basetypes_real_sp_LDADD = libkrylov_real_sp.la
+# type(base) array operations test
+real_sp_blastypedir = $(PWD)/real_sp_test
+real_sp_blastype_PROGRAMS = test_blastypes_real_sp
+test_blastypes_real_sp_SOURCES = test_blastypes.f90
+test_blastypes_real_sp_LDADD = libkrylov_real_sp.la
+## test of krylov_a subspace solver's subroutines
+#real_sp_krylovtypedir = $(PWD)/real_sp_test
+#real_sp_krylovtype_PROGRAMS = test_krylovtypes_a_real_sp
+#test_krylovtypes_a_real_sp_SOURCES = test_krylovtypes_a.f90
+#test_krylovtypes_a_real_sp_LDADD = libkrylov_real_sp.la
+# check of quality for restart files
+real_sp_restartdir = $(PWD)/real_sp_lib
+real_sp_restart_PROGRAMS = restart_check_libkrylov_real_sp
+restart_check_libkrylov_real_sp_SOURCES = restart_check.f90
+restart_check_libkrylov_real_sp_LDADD = libkrylov_real_sp.la
+# generate vandermonde matrix for driver1a
+real_sp_vm_problem1adir = $(PWD)/real_sp_test
+real_sp_vm_problem1a_PROGRAMS = problem1a_vm_real_sp
+problem1a_vm_real_sp_SOURCES = problem_1a_vandermonde.f90
+problem1a_vm_real_sp_LDADD = libkrylov_real_sp.la
+# generate pascal matrix for driver1a
+real_sp_ps_problem1adir = $(PWD)/real_sp_test
+real_sp_ps_problem1a_PROGRAMS = problem1a_ps_real_sp
+problem1a_ps_real_sp_SOURCES = problem_1a_pascal.f90
+problem1a_ps_real_sp_LDADD = libkrylov_real_sp.la
+# generate pascal matrix for driver1a
+real_sp_hk_problem1adir = $(PWD)/real_sp_test
+real_sp_hk_problem1a_PROGRAMS = problem1a_hk_real_sp
+problem1a_hk_real_sp_SOURCES = problem_1a_huckel.f90
+problem1a_hk_real_sp_LDADD = libkrylov_real_sp.la
+# generate problem for driver1a
+#real_sp_rand_problem1adir = $(PWD)/real_sp_test
+#real_sp_rand_problem1a_PROGRAMS = problem1a_rand_real_sp
+#problem1a_rand_real_sp_SOURCES = problem_1a_random.f90
+#problem1a_rand_real_sp_LDADD = libkrylov_real_sp.la
+# generate problem for driver1b
+#real_sp_rand_problem1bdir = $(PWD)/real_sp_test
+#real_sp_rand_problem1b_PROGRAMS = problem1b_rand_real_sp
+#problem1b_rand_real_sp_SOURCES = problem_1b_random.f90
+#problem1b_rand_real_sp_LDADD = libkrylov_real_sp.la
+# generate problem for driver1c
+#real_sp_rand_problem1cdir = $(PWD)/real_sp_test
+#real_sp_rand_problem1c_PROGRAMS = problem1c_rand_real_sp
+#problem1c_rand_real_sp_SOURCES = problem_1c_random.f90
+#problem1c_rand_real_sp_LDADD = libkrylov_real_sp.la
+# driver1a - program for calling solver on a problem on file
+real_sp_driver1adir = $(PWD)/real_sp_test
+real_sp_driver1a_PROGRAMS = driver1a_real_sp
+driver1a_real_sp_SOURCES = driver_1a_real_sp.f90
+driver1a_real_sp_LDADD = libkrylov_real_sp.la
+# driver1b - program for calling b_solver on a problem on file
+real_sp_driver1bdir = $(PWD)/real_sp_test
+real_sp_driver1b_PROGRAMS = driver1b_real_sp
+driver1b_real_sp_SOURCES = driver_1b_real_sp.f90
+driver1b_real_sp_LDADD = libkrylov_real_sp.la
+# driver1c - program for calling c_solver on a problem on file
+real_sp_driver1cdir = $(PWD)/real_sp_test
+real_sp_driver1c_PROGRAMS = driver1c_real_sp
+driver1c_real_sp_SOURCES = driver_1c_real_sp.f90
+driver1c_real_sp_LDADD = libkrylov_real_sp.la
+# complex single precision
+# Library
+cmplx_sp_libdir = $(PWD)/cmplx_sp_lib
+cmplx_sp_lib_LTLIBRARIES = libkrylov_cmplx_sp.la
+# file printing/reading unit test
+cmplx_sp_arrayfiledir = $(PWD)/cmplx_sp_test
+cmplx_sp_arrayfile_PROGRAMS = test_arrayfile_cmplx_sp
+test_arrayfile_cmplx_sp_SOURCES = test_arrayfile.f90
+test_arrayfile_cmplx_sp_LDADD = libkrylov_cmplx_sp.la
+# type(base) elementary operations test
+cmplx_sp_basetypedir = $(PWD)/cmplx_sp_test
+cmplx_sp_basetype_PROGRAMS = test_basetypes_cmplx_sp
+test_basetypes_cmplx_sp_SOURCES = test_basetypes.f90
+test_basetypes_cmplx_sp_LDADD = libkrylov_cmplx_sp.la
+# type(base) array operations test
+cmplx_sp_blastypedir = $(PWD)/cmplx_sp_test
+cmplx_sp_blastype_PROGRAMS = test_blastypes_cmplx_sp
+test_blastypes_cmplx_sp_SOURCES = test_blastypes.f90
+test_blastypes_cmplx_sp_LDADD = libkrylov_cmplx_sp.la
+## test of krylov subspace solver's subroutines
+#cmplx_sp_krylovtypedir = $(PWD)/cmplx_sp_test
+#cmplx_sp_krylovtype_PROGRAMS = test_krylovtypes_a_cmplx_sp
+#test_krylovtypes_a_cmplx_sp_SOURCES = test_krylovtypes_a.f90
+#test_krylovtypes_a_cmplx_sp_LDADD = libkrylov_cmplx_sp.la
+# check of quality for restart files
+cmplx_sp_restartdir = $(PWD)/cmplx_sp_lib
+cmplx_sp_restart_PROGRAMS = restart_check_libkrylov_cmplx_sp
+restart_check_libkrylov_cmplx_sp_SOURCES = restart_check.f90
+restart_check_libkrylov_cmplx_sp_LDADD = libkrylov_cmplx_sp.la
+# generate vandermonde matrix for driver1a
+cmplx_sp_vm_problem1adir = $(PWD)/cmplx_sp_test
+cmplx_sp_vm_problem1a_PROGRAMS = problem1a_vm_cmplx_sp
+problem1a_vm_cmplx_sp_SOURCES = problem_1a_vandermonde.f90
+problem1a_vm_cmplx_sp_LDADD = libkrylov_cmplx_sp.la
+# generate problem for driver1a
+#cmplx_sp_rand_problem1adir = $(PWD)/cmplx_sp_test
+#cmplx_sp_rand_problem1a_PROGRAMS = problem1a_rand_cmplx_sp
+#problem1a_rand_cmplx_sp_SOURCES = problem_1a_random.f90
+#problem1a_rand_cmplx_sp_LDADD = libkrylov_cmplx_sp.la
+# generate problem for driver1b
+#cmplx_sp_rand_problem1bdir = $(PWD)/cmplx_sp_test
+#cmplx_sp_rand_problem1b_PROGRAMS = problem1b_rand_cmplx_sp
+#problem1b_rand_cmplx_sp_SOURCES = problem_1b_random.f90
+#problem1b_rand_cmplx_sp_LDADD = libkrylov_cmplx_sp.la
+# generate problem for driver1c
+#cmplx_sp_rand_problem1cdir = $(PWD)/cmplx_sp_test
+#cmplx_sp_rand_problem1c_PROGRAMS = problem1c_rand_cmplx_sp
+#problem1c_rand_cmplx_sp_SOURCES = problem_1c_random.f90
+#problem1c_rand_cmplx_sp_LDADD = libkrylov_cmplx_sp.la
+# driver1a - program for calling solver on a problem on file
+cmplx_sp_driver1adir = $(PWD)/cmplx_sp_test
+cmplx_sp_driver1a_PROGRAMS = driver1a_cmplx_sp
+driver1a_cmplx_sp_SOURCES = driver_1a_cmplx_sp.f90
+driver1a_cmplx_sp_LDADD = libkrylov_cmplx_sp.la
+# driver1b - program for calling b_solver on a problem on file
+cmplx_sp_driver1bdir = $(PWD)/cmplx_sp_test
+cmplx_sp_driver1b_PROGRAMS = driver1b_cmplx_sp
+driver1b_cmplx_sp_SOURCES = driver_1b_cmplx_sp.f90
+driver1b_cmplx_sp_LDADD = libkrylov_cmplx_sp.la
+# driver1c - program for calling c_solver on a problem on file
+cmplx_sp_driver1cdir = $(PWD)/cmplx_sp_test
+cmplx_sp_driver1c_PROGRAMS = driver1c_cmplx_sp
+driver1c_cmplx_sp_SOURCES = driver_1c_cmplx_sp.f90
+driver1c_cmplx_sp_LDADD = libkrylov_cmplx_sp.la
+# Real Double precision
+# library
+real_dp_libdir = $(PWD)/real_dp_lib
+real_dp_lib_LTLIBRARIES = libkrylov_real_dp.la
+# file printing/reading unit test
+real_dp_arrayfiledir = $(PWD)/real_dp_test
+real_dp_arrayfile_PROGRAMS = test_arrayfile_real_dp
+test_arrayfile_real_dp_SOURCES = test_arrayfile.f90
+test_arrayfile_real_dp_LDADD = libkrylov_real_dp.la
+# type(base) elementary operations test
+real_dp_basetypedir = $(PWD)/real_dp_test
+real_dp_basetype_PROGRAMS = test_basetypes_real_dp
+test_basetypes_real_dp_SOURCES = test_basetypes.f90
+test_basetypes_real_dp_LDADD = libkrylov_real_dp.la
+# type(base) array operations test
+real_dp_blastypedir = $(PWD)/real_dp_test
+real_dp_blastype_PROGRAMS = test_blastypes_real_dp
+test_blastypes_real_dp_SOURCES = test_blastypes.f90
+test_blastypes_real_dp_LDADD = libkrylov_real_dp.la
+## test of krylov subspace solver's subroutines
+#real_dp_krylovtypedir = $(PWD)/real_dp_test
+#real_dp_krylovtype_PROGRAMS = test_krylovtypes_a_real_dp
+#test_krylovtypes_a_real_dp_SOURCES = test_krylovtypes_a.f90
+#test_krylovtypes_a_real_dp_LDADD = libkrylov_real_dp.la
+# check of quality for restart files
+real_dp_restartdir = $(PWD)/real_dp_lib
+real_dp_restart_PROGRAMS = restart_check_libkrylov_real_dp
+restart_check_libkrylov_real_dp_SOURCES = restart_check.f90
+restart_check_libkrylov_real_dp_LDADD = libkrylov_real_dp.la
+# generate vandermonde matrix for driver1a
+real_dp_vm_problem1adir = $(PWD)/real_dp_test
+real_dp_vm_problem1a_PROGRAMS = problem1a_vm_real_dp
+problem1a_vm_real_dp_SOURCES = problem_1a_vandermonde.f90
+problem1a_vm_real_dp_LDADD = libkrylov_real_dp.la
+# generate problem for driver1a
+#real_dp_rand_problem1adir = $(PWD)/real_dp_test
+#real_dp_rand_problem1a_PROGRAMS = problem1a_rand_real_dp
+#problem1a_rand_real_dp_SOURCES = problem_1a_random.f90
+#problem1a_rand_real_dp_LDADD = libkrylov_real_dp.la
+# generate problem for driver1b
+#real_dp_rand_problem1bdir = $(PWD)/real_dp_test
+#real_dp_rand_problem1b_PROGRAMS = problem1b_rand_real_dp
+#problem1b_rand_real_dp_SOURCES = problem_1b_random.f90
+#problem1b_rand_real_dp_LDADD = libkrylov_real_dp.la
+# generate problem for driver1c
+#real_dp_rand_problem1cdir = $(PWD)/real_dp_test
+#real_dp_rand_problem1c_PROGRAMS = problem1c_rand_real_dp
+#problem1c_rand_real_dp_SOURCES = problem_1c_random.f90
+#problem1c_rand_real_dp_LDADD = libkrylov_real_dp.la
+# driver1a - program for calling solver on a problem on file
+real_dp_driver1adir = $(PWD)/real_dp_test
+real_dp_driver1a_PROGRAMS = driver1a_real_dp
+driver1a_real_dp_SOURCES = driver_1a_real_dp.f90
+driver1a_real_dp_LDADD = libkrylov_real_dp.la
+# driver1b - program for calling b_solver on a problem on file
+real_dp_driver1bdir = $(PWD)/real_dp_test
+real_dp_driver1b_PROGRAMS = driver1b_real_dp
+driver1b_real_dp_SOURCES = driver_1b_real_dp.f90
+driver1b_real_dp_LDADD = libkrylov_real_dp.la
+# driver1c - program for calling c_solver on a problem on file
+real_dp_driver1cdir = $(PWD)/real_dp_test
+real_dp_driver1c_PROGRAMS = driver1c_real_dp
+driver1c_real_dp_SOURCES = driver_1c_real_dp.f90
+driver1c_real_dp_LDADD = libkrylov_real_dp.la
+# complex double precision
+# Library
+cmplx_dp_libdir = $(PWD)/cmplx_dp_lib
+cmplx_dp_lib_LTLIBRARIES = libkrylov_cmplx_dp.la
+# file printing/reading unit test
+cmplx_dp_arrayfiledir = $(PWD)/cmplx_dp_test
+cmplx_dp_arrayfile_PROGRAMS = test_arrayfile_cmplx_dp
+test_arrayfile_cmplx_dp_SOURCES = test_arrayfile.f90
+test_arrayfile_cmplx_dp_LDADD = libkrylov_cmplx_dp.la
+# type(base) elementary operations test
+cmplx_dp_basetypedir = $(PWD)/cmplx_dp_test
+cmplx_dp_basetype_PROGRAMS = test_basetypes_cmplx_dp
+test_basetypes_cmplx_dp_SOURCES = test_basetypes.f90
+test_basetypes_cmplx_dp_LDADD = libkrylov_cmplx_dp.la
+# type(base) array operations test
+cmplx_dp_blastypedir = $(PWD)/cmplx_dp_test
+cmplx_dp_blastype_PROGRAMS = test_blastypes_cmplx_dp
+test_blastypes_cmplx_dp_SOURCES = test_blastypes.f90
+test_blastypes_cmplx_dp_LDADD = libkrylov_cmplx_dp.la
+## test of krylov subspace solver's subroutines
+#cmplx_dp_krylovtypedir = $(PWD)/cmplx_dp_test
+#cmplx_dp_krylovtype_PROGRAMS = test_krylovtypes_a_cmplx_dp
+#test_krylovtypes_a_cmplx_dp_SOURCES = test_krylovtypes_a.f90
+#test_krylovtypes_a_cmplx_dp_LDADD = libkrylov_cmplx_dp.la
+# check of quality for restart files
+cmplx_dp_restartdir = $(PWD)/cmplx_dp_lib
+cmplx_dp_restart_PROGRAMS = restart_check_libkrylov_cmplx_dp
+restart_check_libkrylov_cmplx_dp_SOURCES = restart_check.f90
+restart_check_libkrylov_cmplx_dp_LDADD = libkrylov_cmplx_dp.la
+# generate vandermonde matrix for driver1a
+cmplx_dp_vm_problem1adir = $(PWD)/cmplx_dp_test
+cmplx_dp_vm_problem1a_PROGRAMS = problem1a_vm_cmplx_dp
+problem1a_vm_cmplx_dp_SOURCES = problem_1a_vandermonde.f90
+problem1a_vm_cmplx_dp_LDADD = libkrylov_cmplx_dp.la
+# generate problem for driver1a
+#cmplx_dp_rand_problem1adir = $(PWD)/cmplx_dp_test
+#cmplx_dp_rand_problem1a_PROGRAMS = problem1a_rand_cmplx_dp
+#problem1a_rand_cmplx_dp_SOURCES = problem_1a_random.f90
+#problem1a_rand_cmplx_dp_LDADD = libkrylov_cmplx_dp.la
+# generate problem for driver1b
+#cmplx_dp_rand_problem1bdir = $(PWD)/cmplx_dp_test
+#cmplx_dp_rand_problem1b_PROGRAMS = problem1b_rand_cmplx_dp
+#problem1b_rand_cmplx_dp_SOURCES = problem_1b_random.f90
+#problem1b_rand_cmplx_dp_LDADD = libkrylov_cmplx_dp.la
+# generate problem for driver1c
+#cmplx_dp_rand_problem1cdir = $(PWD)/cmplx_dp_test
+#cmplx_dp_rand_problem1c_PROGRAMS = problem1c_rand_cmplx_dp
+#problem1c_rand_cmplx_dp_SOURCES = problem_1c_random.f90
+#problem1c_rand_cmplx_dp_LDADD = libkrylov_cmplx_dp.la
+# driver1a - program for calling a_solver on a problem on file
+cmplx_dp_driver1adir = $(PWD)/cmplx_dp_test
+cmplx_dp_driver1a_PROGRAMS = driver1a_cmplx_dp
+driver1a_cmplx_dp_SOURCES = driver_1a_cmplx_dp.f90
+driver1a_cmplx_dp_LDADD = libkrylov_cmplx_dp.la
+# driver1b - program for calling b_solver on a problem on file
+cmplx_dp_driver1bdir = $(PWD)/cmplx_dp_test
+cmplx_dp_driver1b_PROGRAMS = driver1b_cmplx_dp
+driver1b_cmplx_dp_SOURCES = driver_1b_cmplx_dp.f90
+driver1b_cmplx_dp_LDADD = libkrylov_cmplx_dp.la
+# driver1c - program for calling c_solver on a problem on file
+cmplx_dp_driver1cdir = $(PWD)/cmplx_dp_test
+cmplx_dp_driver1c_PROGRAMS = driver1c_cmplx_dp
+driver1c_cmplx_dp_SOURCES = driver_1c_cmplx_dp.f90
+driver1c_cmplx_dp_LDADD = libkrylov_cmplx_dp.la
+#flags for linking BLAS/LAPACK
+AM_LDFLAGS = @LAPACK_LIBS@ @BLAS_LIBS@ @LIBS@ @FLIBS@
+# compiler string
+FC = gfortran -fdefault-integer-8 -std=f2008 -cpp -static $(AM_LDFLAGS)
+# library sources
+libkrylov_real_sp_la_SOURCES = basekinds.f90 floatformat_sp.f90 \
+basetypes_real.f90 blastypes_blas_real_sp.f90 arrayfile.f90 \
+libkrylovinterface_real_sp.f90 libkrylovsolver.f90
+libkrylov_cmplx_sp_la_SOURCES = basekinds.f90 floatformat_sp.f90 \
+basetypes_cmplx.f90 blastypes_blas_cmplx_sp.f90 arrayfile.f90 \
+libkrylovinterface_cmplx_sp.f90 libkrylovsolver.f90
+libkrylov_real_dp_la_SOURCES = basekinds.f90 floatformat_dp.f90 \
+basetypes_real.f90 blastypes_blas_real_dp.f90 arrayfile.f90 \
+libkrylovinterface_real_dp.f90 \
+libkrylovsolver.f90
+libkrylov_cmplx_dp_la_SOURCES = basekinds.f90 floatformat_dp.f90 \
+basetypes_cmplx.f90 blastypes_blas_cmplx_dp.f90 arrayfile.f90 \
+libkrylovinterface_cmplx_dp.f90 libkrylovsolver.f90
