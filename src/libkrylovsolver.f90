@@ -2210,13 +2210,6 @@ contains
   &       one_kb,basis_vectors(1:nbasis,1:nsubspace),nbasis,&
   &       solutions(1:nsubspace,1:nroots),nsubspace,zero_kb,&
   &       mvproduct(1:nbasis,1:nroots),nbasis)
-      if (ierr.ne.0) then
-        if (iverb.ge.0) then
-          print *, 'krylov_normalize failed'
-        end if
-        ierr = -40
-        return
-      end if
       if (irestart.ge.1) then ! user asked for save files
         call array_print_rstrt(sname,nbasis,nroots,&
   &       mvproduct(1:nbasis,1:nroots),iverb,ierr)
