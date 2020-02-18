@@ -11,6 +11,7 @@
 # ignore binaries in folders
 *_lib/*
 *_test/*
+.libs/*
 
 # ignore configure.ac
 # The correct version of these file

@@ -12,7 +12,8 @@ AC_CONFIG_SRCDIR(basekinds.f90)
 AC_CONFIG_AUX_DIR([build_aux])
 
 # call autoconf-archive macros installed from
-# using "git submodule add git://git.sv.gnu.org/autoconf-archive.git"
+# using "git clone git://git.sv.gnu.org/autoconf-archive.git"
+# in this source directory
 AC_CONFIG_MACRO_DIR([autoconf-archive/m4])
 
 # Starting Automake, ignore GNU standards with 'foreign'
