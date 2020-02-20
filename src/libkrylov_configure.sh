@@ -1,14 +1,13 @@
 #bin/bash
 if [[ $1 == "--help" ]];
 then
-  echo 'libkrylov configuration script: configure.sh'
+  echo 'libkrylov configuration script: libkrylov_configure.sh'
   echo 'This script copies the correct configure scripts and files'
   echo 'and runs them.'
   echo 'Usage:'
   echo 'This script should be used only'
   echo 'first time the library is installed, or'
   echo 'if there is some changes to the dependencies of the library.'
-  echo 'do "make_custom.sh --help" to see custom driver installation help.'
   echo 'A fresh git clone is suggested if the BLAS/LAPack dependencies'
   echo 'are to be changed.'
   exit 0
@@ -36,7 +35,7 @@ do
     read answer2
     for (( ; ; ))
     do
-# set default to making with mkl to be yes
+# set default to making with mkl to be no
       if [[ $answer2 == "" ]];
       then
         answer2="no"
@@ -62,34 +61,36 @@ do
         export LDFLAGS=$LDFLAGS' -L'$path_addition
         echo 'present $LDFLAGS is'
         echo $LDFLAGS
-        cp configure_mkl configure
+# generate Makefile.am
+        cat Makefile_shared.am > Makefile.am
+        cat Makefile_mkl_template.am >> Makefile.am
+# copy configure.ac without blas/lapack searches
         cp configure_blas_free.ac configure.ac
-#        cp libtool_blas_free libtool
-        cp Makefile_mkl.am Makefile.am
-        cp Makefile_mkl.in Makefile.in
-        echo '----------copied MKL configure file----------'
+        echo '----------copied MKL autoconf files----------'
+        autoreconf --verbose --install --force
+        echo '----------autoconf for MKL done----------'
         ./configure --help
         ./configure --prefix=$PWD
-        echo '----------configure done----------'
         break
       fi
       if [[ $answer2 == no ]];
       then
-        cp configure_blas configure
+# generate Makefile.am
+        cat Makefile_shared.am > Makefile.am
+        cat Makefile_blas_template.am >> Makefile.am
+# copy configure.ac without blas/lapack searches
         cp configure_blas.ac configure.ac
-#        cp libtool_blas libtool
-        cp Makefile_blas.am Makefile.am
-        cp Makefile_blas.in Makefile.in
         echo '----------copied BLAS/LAPack configure files----------'
-        echo 'Any suggestions on where your BLAS might be?'
+        autoreconf --verbose --install --force
+        echo '----------autoconf for external BLAS/LAPack library done----------'
+        echo 'Please enter a desired BLAS library file path'
         echo '(Optional, can be used to point to a specific library)'
         read answer3
-        echo 'Any suggestions on where your LAPack might be?'
+        echo 'Please enter a LAPack library file path'
         echo '(Optional, can be used to point to a specific library)'
         read answer4
         ./configure --help
         ./configure --prefix=$PWD --with-blas=$answer3 --with-lapack=$answer4
-        echo '----------configure done----------'
         break
       fi
       echo 'please enter an available option'
@@ -101,17 +102,19 @@ do
   then
     echo 'blas-free not implemented yet!'
     exit 1
-    cp configure_blas_free configure
+# generate Makefile.am
+    cat Makefile_shared.am > Makefile.am
+    cat Makefile_blas_free_template.am >> Makefile.am
+# copy configure.ac without blas/lapack searches
     cp configure_blas_free.ac configure.ac
-#    cp libtool_blas_free libtool
-    cp Makefile_blas_free.am Makefile.am
-    cp Makefile_blas_free.in Makefile.in
-    echo '----------copied BLAS-free configure files----------'
+    echo '----------copied external-library-free autoconf files----------'
+    autoreconf --verbose --install --force
+    echo '----------autoconf without external library done----------'
     ./configure --help
     ./configure --prefix=$PWD
-    echo '----------configure done----------'
     break
   fi
   echo 'please enter an available option'
   read answer1
 done
+echo '----------configure done----------'

@@ -9,7 +9,7 @@ then
   echo '1. checking that make program is present'
   echo '2. running the libkrylov_configure.sh script which'
   echo '       determines the libraries available to the user'
-  echo '       runs the correct configure script to'
+  echo '       runs the autoconf program to'
   echo '       set up the correct Makefile'
   echo '3. running a user selected libkrylov_make_*.sh script which'
   echo '       makes the installation directories'
@@ -28,8 +28,34 @@ if hash make 2>/dev/null;
 then
   echo 'make available'
 else
-  echo 'make not available, exiting'
+  echo 'ERROR: make not available, exiting'
   exit 1
+fi
+if hash autoreconf 2>/dev/null;
+then
+  echo 'autoconf available'
+else
+  echo 'ERROR: autoconf not available, exiting'
+  exit 1
+fi
+if hash automake 2>/dev/null;
+then
+  echo 'automake available'
+else
+  echo 'ERROR: automake not available, exiting'
+  exit 1
+fi
+if hash libtoolize 2>/dev/null;
+then
+  echo 'libtool available: may be Apple libtool, see next check'
+else
+  echo 'WARNING: libtool not available: maybe installed as glibtool, see next check'
+fi
+if hash glibtoolize 2>/dev/null;
+then
+  echo 'glibtool available'
+else
+  echo 'WARNING: glibtool not available'
 fi
 #entering src directory
 cd src/
@@ -38,7 +64,7 @@ export LIBKRYLOV_PATH=$PWD
 echo '--------------------------------------------------'
 echo 'libraries folders will be installed in '$LIBKRYLOV_PATH
 echo '--------------------------------------------------'
-# Select building with BLAS, configuring make structure
+# Select configuration, configuring make structure
 ./libkrylov_configure.sh
 # Determing how much of the library to build
 echo 'Build all libraries?'

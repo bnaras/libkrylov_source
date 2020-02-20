@@ -10,7 +10,8 @@ then
   exit 0
 fi
 set -e
-echo 'Interactive make for a libkrylov library'
+echo 'Make for a libkrylov library'
+echo 'Beginning with a clean:'
 ./libkrylov_clean.sh
 echo '----------Cleaned out temporary files----------'
 echo 'Select precision of desired library'
