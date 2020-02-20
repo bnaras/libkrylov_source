@@ -40,14 +40,14 @@ AC_FC_FREEFORM
 #(Most blastypes_*.f90 use BLAS routines)
 #(Macro from Autoconf-archive
 AX_BLAS([AC_MSG_NOTICE([found BLAS])],[AC_MSG_ERROR([no BLAS])])
-AC_MSG_NOTICE([$BLAS_LIBS])
 
 # Looking for LAPACK
 # required linking $LAPACK_LIBS $ BLAS_LIBS $LIBS $FLIBS
 AX_LAPACK([AC_MSG_NOTICE([found LAPACK])],[AC_MSG_ERROR([no LAPACK])])
-AC_MSG_NOTICE([$LAPACK_LIBS])
 
-# Logic check on HAVE_BLAS=yes and HAVE_LAPACK=yes
+# Print out of full linker for checking
+AC_MSG_NOTICE([The next message is the entire linker for BLAS and LAPack])
+AC_MSG_NOTICE([$LAPACK_LIBS $BLAS_LIBS $LIBS $FLIBS])
 
 #Looking for RANLIB for archiver
 #AC_PROG_RANLIB
