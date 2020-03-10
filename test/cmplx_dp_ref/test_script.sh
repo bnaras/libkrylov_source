@@ -8,15 +8,21 @@ cd unit_tests
 ./test_script.sh
 cd ../ref_1a
 ./test_script.sh
+cd ../restart_a
+./test_script.sh
 #cd ../random_1a
 #./test_script.sh
 #cd ../vandermonde_1a
 #./test_script.sh
 cd ../ref_1b
 ./test_script.sh
+cd ../restart_b
+./test_script.sh
 #cd ../random_1b
 #./test_script.sh
 cd ../ref_1c
+./test_script.sh
+cd ../restart_c
 ./test_script.sh
 #cd ../random_1c
 #./test_script.sh

@@ -1,5 +1,11 @@
 # compiler string
+#Other things to be set
+OPENMPFLAGS = -fopenmp
+PROFILEFLAGS = -pg
+RELEASEFLAGS = -O3 -flto
 FC = gfortran -fdefault-integer-8 -std=f2008 -cpp 
+DEBUGFLAGS = -Og -pedantic -Wall -Wextra -g -fbacktrace\
+-ffpe-trap=overflow,underflow,denormal -fcheck=bounds
 # library sources
 libkrylov_real_sp_la_SOURCES = basekinds.f90 floatformat_sp.f90 \
 basetypes_real.f90 blastypes_base_real_sp.f90 arrayfile.f90 \
