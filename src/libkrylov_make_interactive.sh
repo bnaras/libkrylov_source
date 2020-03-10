@@ -16,9 +16,15 @@ echo 'Beginning with a clean:'
 echo '----------Cleaned out temporary files----------'
 echo 'Select precision of desired library'
 echo '  Please enter >single< or >double<'
+echo ' (Default: >double<)'
 read precision
 for (( ; ; ))
 do
+# set default precision to be double
+  if [[ $precision == "" ]];
+  then
+    precision="double" 
+  fi
   if [[ $precision == single ]];
   then
     break
@@ -32,9 +38,15 @@ do
 done
 echo 'Select element type of desired library'
 echo ' Please enter >real< or >complex<'
+echo ' (Default: >real<)'
 read element_type
 for (( ; ; ))
 do
+# set default element type to be real
+  if [[ $element_type == "" ]];
+  then
+    element_type="real"
+  fi
   if [[ $element_type == real ]];
   then
     break
@@ -63,6 +75,10 @@ then
   make install-real_sp_driver1bPROGRAMS
   make install-real_sp_driver1cPROGRAMS
   echo '----------Real Single Precision driver1 made----------'
+  make install-real_sp_test_restart_aPROGRAMS
+  make install-real_sp_test_restart_bPROGRAMS
+  make install-real_sp_test_restart_cPROGRAMS
+  echo '----------Real Double Precision restart tests made----------'
 #  make install-real_sp_rand_problem1aPROGRAMS
   make install-real_sp_vm_problem1aPROGRAMS
   echo '----------Real Single Precision reference problems made----------'
@@ -85,6 +101,10 @@ then
   make install-cmplx_sp_driver1bPROGRAMS
   make install-cmplx_sp_driver1cPROGRAMS
   echo '----------Complex Single Precision driver1 made----------'
+  make install-cmplx_sp_test_restart_aPROGRAMS
+  make install-cmplx_sp_test_restart_bPROGRAMS
+  make install-cmplx_sp_test_restart_cPROGRAMS
+  echo '----------Complex Single Precision restart tests made----------'
 #  make install-cmplx_sp_rand_problem1aPROGRAMS
   make install-cmplx_sp_vm_problem1aPROGRAMS
   echo '----------Complex Single Precision reference problems made----------'
@@ -107,6 +127,10 @@ then
   make install-real_dp_driver1bPROGRAMS
   make install-real_dp_driver1cPROGRAMS
   echo '----------Real Double Precision driver1 made----------'
+  make install-real_dp_test_restart_aPROGRAMS
+  make install-real_dp_test_restart_bPROGRAMS
+  make install-real_dp_test_restart_cPROGRAMS
+  echo '----------Real Double Precision restart tests made----------'
 #  make install-real_dp_rand_problem1aPROGRAMS
   make install-real_dp_vm_problem1aPROGRAMS
   echo '----------Real Double Precision reference problems made----------'
@@ -129,6 +153,10 @@ then
   make install-cmplx_dp_driver1bPROGRAMS
   make install-cmplx_dp_driver1cPROGRAMS
   echo '----------Complex Double Precision driver1a made----------'
+  make install-cmplx_dp_test_restart_aPROGRAMS
+  make install-cmplx_dp_test_restart_bPROGRAMS
+  make install-cmplx_dp_test_restart_cPROGRAMS
+  echo '----------Complex Double Precision restart tests made----------'
 #  make install-cmplx_dp_rand_problem1aPROGRAMS
   make install-cmplx_dp_vm_problem1aPROGRAMS
   echo '----------Complex Double Precision reference problems made----------'

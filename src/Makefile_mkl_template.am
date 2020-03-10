@@ -1,8 +1,14 @@
 #flags for linking MKL
 AM_LDFLAGS = -Wl,--no-as-needed -lmkl_gf_ilp64 -lmkl_sequential -lmkl_core -lpthread -lm -ldl
+#Other things to be set
+#OPENMPFLAGS = -fopenmp
+PROFILEFLAGS = -pg
+RELEASEFLAGS = -O3 -flto
 # compiler string
 FC = gfortran -fdefault-integer-8 -std=f2008 -cpp -I$(MKLROOT)/include $(AM_LDFLAGS)
 # library sources
+DEBUGFLAGS = -Og -pedantic -Wall -Wextra -g -fbacktrace\
+-ffpe-trap=overflow,underflow,denormal -fcheck=bounds
 libkrylov_real_sp_la_SOURCES = basekinds.f90 floatformat_sp.f90 \
 basetypes_real.f90 blastypes_blas_real_sp.f90 arrayfile.f90 \
 libkrylovinterface_real_sp.f90 libkrylovsolver.f90

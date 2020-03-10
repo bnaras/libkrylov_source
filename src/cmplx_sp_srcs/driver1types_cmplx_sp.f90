@@ -1,7 +1,7 @@
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
-module drivertypes_1c
+module driver1types_cmplx_sp
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
@@ -10,7 +10,7 @@ module drivertypes_1c
 ! Description:
 !--------------------------------------------------------------------
 !< This module implements functions that are input
-!< to the solver in krylovtypes_c.
+!< to the solver in libkrylov.
 !< Specifically defining the solver reading a slyvester problem
 !< already present on file and pointed to before calling the solver
 !< this module uses the basetype.f90 selected at compile time
@@ -44,7 +44,42 @@ module drivertypes_1c
 ! Extending the abstract interface
 !--------------------------------------------------------------------
 
-  type, extends(libkrylov_problem_c_subroutine) :: kl_problem
+  type, extends(libkrylov_problem_a_subroutine) :: kl_problem_a
+! external data required for the function
+! character string for problem
+! pointer to target set outside of solver
+! must be set before calling solver
+    character(len=22), pointer :: problem_string => null()
+! size of the matrix problem
+! must be set before calling solver
+    integer(kind_integer) :: n_size
+! restart level integer
+! must be set before calling solver
+    integer(kind_integer) :: irestart
+  contains
+    procedure :: lkl_problem_a => eval_kl_problem_a
+  end type kl_problem_a
+
+  type, extends(libkrylov_problem_b_subroutine) :: kl_problem_b
+! external data required for the function
+! character string for problem
+! pointer to target set outside of solver
+! must be set before calling solver
+    character(len=22), pointer :: problem_string => null()
+! size of the matrix problem
+! must be set before calling solver
+    integer(kind_integer) :: n_size
+! number of right hand sides
+! must be set before calling solver
+    integer(kind_integer) :: n_rhs
+! restart level integer
+! must be set before calling solver
+    integer(kind_integer) :: irestart
+  contains
+    procedure :: lkl_problem_b => eval_kl_problem_b
+  end type kl_problem_b
+
+  type, extends(libkrylov_problem_c_subroutine) :: kl_problem_c
 ! external data required for the function
 ! character string for problem
 ! pointer to target set outside of solver
@@ -65,8 +100,8 @@ module drivertypes_1c
 ! must be set before calling solver
     integer(kind_integer) :: irestart
   contains
-    procedure :: lkl_problem_c => eval_kl_problem
-  end type kl_problem
+    procedure :: lkl_problem_c => eval_kl_problem_c
+  end type kl_problem_c
 
   type, extends(libkrylov_vector_subroutine) :: kl_approx
 ! external data required for the function
@@ -108,12 +143,27 @@ module drivertypes_1c
     procedure :: lkl_mvp => eval_kl_mvp
   end type kl_mvp
 
-  type, extends(libkrylov_output_c_subroutine) :: kl_output
+  type, extends(libkrylov_output_a_subroutine) :: kl_output_a
 ! external data required for the function
 !   no external data
   contains
-    procedure :: lkl_output_c => eval_kl_output
-  end type kl_output
+    procedure :: lkl_output_a => eval_kl_output_a
+  end type kl_output_a
+
+  type, extends(libkrylov_output_b_subroutine) :: kl_output_b
+! external data required for the function
+!   no external data
+  contains
+    procedure :: lkl_output_b => eval_kl_output_b
+  end type kl_output_b
+
+  type, extends(libkrylov_output_c_subroutine) :: kl_output_c
+! external data required for the function
+!   no external data
+  contains
+    procedure :: lkl_output_c => eval_kl_output_c
+  end type kl_output_c
+
 !--------------------------------------------------------------------
 
 contains
@@ -123,7 +173,203 @@ contains
 
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
-  subroutine eval_kl_problem(data,nbasis,nomega,nrhs,&
+  subroutine eval_kl_problem_a(data,nbasis,nroots,&
+  &     minstart,maxstart,threshold,maxiter,&
+  &     id_string,iverb,irestart,ierr)
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Description:
+!--------------------------------------------------------------------
+!< This subroutine fits into the kl_problem_eval type signature,
+!< of user_krylov_a_problem_subroutine
+!< setting up the problem with fixed parameters described in 
+!< subroutine
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Modules and Global Variables
+!--------------------------------------------------------------------
+! for kind_integer and other precision related parameters
+    use basekinds
+    use floatformat
+! define type(base) and type(basereal) and associated operations
+    use basetypes
+    use blastypes
+! set interface for this subroutine
+    use libkrylovinterface
+!--------------------------------------------------------------------
+! Implicit None statement
+!--------------------------------------------------------------------
+    implicit none
+!--------------------------------------------------------------------
+! External data (defined in the interface above)
+!--------------------------------------------------------------------
+    class(kl_problem_a) :: data
+!--------------------------------------------------------------------
+! Variables
+!--------------------------------------------------------------------
+! matching interface defined in krylovtypes_a
+    integer(kind_integer), intent(inout) :: nbasis
+    integer(kind_integer), intent(inout) :: nroots
+    integer(kind_integer), intent(inout) :: minstart
+    integer(kind_integer), intent(inout) :: maxstart
+    real(kind_float), intent(inout) :: threshold
+    integer(kind_integer), intent(inout) :: maxiter
+    character(len=22), intent(inout) :: id_string
+    integer(kind_integer), intent(inout) :: iverb
+    integer(kind_integer), intent(inout) :: irestart
+    integer(kind_integer), intent(inout) :: ierr
+!--------------------------------------------------------------------
+! Local Variables
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+
+!! set nbasis based on size in file 
+    nbasis = data%n_size
+
+!! choice based on problem description
+    if (nbasis.lt.16) then
+      nroots = nbasis
+      minstart = nbasis
+      maxstart = nbasis
+    else if (nbasis.lt.50) then
+      nroots = 2
+      minstart = 8
+      maxstart = 16
+    else if (nbasis.lt.200) then
+      nroots = 5
+      minstart = floor(0.2*nbasis,kind=kind_integer)
+      maxstart = floor(0.5*nbasis,kind=kind_integer)
+    else
+      nroots = 5
+      minstart = floor(0.1*nbasis,kind=kind_integer)
+      maxstart = floor(0.3*nbasis,kind=kind_integer)
+    end if
+
+!! choice based on problem description
+!! threshold
+    threshold = real(3,kind=kind_float)
+
+!! reasonable number of iterations before things go bad
+    maxiter = 25
+
+!! set id_string based on basetypes
+    id_string = data%problem_string
+
+!! set iverb to most verbose operation
+    iverb = 5
+
+!! no restart option for solving from file!
+    irestart = data%irestart
+
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+  end subroutine eval_kl_problem_a
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+  subroutine eval_kl_problem_b(data,nbasis,nrhs,&
+  &     minstart,maxstart,threshold,maxiter,&
+  &     id_string,iverb,irestart,ierr)
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Description:
+!--------------------------------------------------------------------
+!< This subroutine fits into the kl_problem_eval type signature,
+!< of user_krylov_a_problem_subroutine
+!< setting up the problem with fixed parameters described in 
+!< subroutine
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Modules and Global Variables
+!--------------------------------------------------------------------
+! for kind_integer and other precision related parameters
+    use basekinds
+    use floatformat
+! define type(base) and type(basereal) and associated operations
+    use basetypes
+    use blastypes
+! set interface for this subroutine
+    use libkrylovinterface
+!--------------------------------------------------------------------
+! Implicit None statement
+!--------------------------------------------------------------------
+    implicit none
+!--------------------------------------------------------------------
+! External data (defined in the interface above)
+!--------------------------------------------------------------------
+    class(kl_problem_b) :: data
+!--------------------------------------------------------------------
+! Variables
+!--------------------------------------------------------------------
+! matching interface defined in krylovtypes_a
+    integer(kind_integer), intent(inout) :: nbasis
+    integer(kind_integer), intent(inout) :: nrhs
+    integer(kind_integer), intent(inout) :: minstart
+    integer(kind_integer), intent(inout) :: maxstart
+    real(kind_float), intent(inout) :: threshold
+    integer(kind_integer), intent(inout) :: maxiter
+    character(len=22), intent(inout) :: id_string
+    integer(kind_integer), intent(inout) :: iverb
+    integer(kind_integer), intent(inout) :: irestart
+    integer(kind_integer), intent(inout) :: ierr
+!--------------------------------------------------------------------
+! Local Variables
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+
+!! set nbasis based on size in file 
+    nbasis = data%n_size
+
+    nrhs = data%n_rhs
+
+!! choice based on problem description
+    threshold = real(3,kind=kind_float)
+
+!! reasonable number of iterations before things go bad
+    maxiter = 25
+
+
+    if (nbasis.lt.16) then
+      minstart = nbasis
+      maxstart = nbasis
+    else if (nbasis.lt.50) then
+      minstart = 8
+      maxstart = 16
+    else if (nbasis.lt.200) then
+      minstart = floor(0.2*nbasis,kind=kind_integer)
+      maxstart = floor(0.5*nbasis,kind=kind_integer)
+    else
+      minstart = floor(0.1*nbasis,kind=kind_integer)
+      maxstart = floor(0.3*nbasis,kind=kind_integer)
+    end if
+
+
+!! set id_string based on basetypes
+    id_string = data%problem_string
+
+!! set iverb to most verbose operation
+    iverb = 5
+
+!! restart options for solving from file!
+    irestart = data%irestart
+
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+  end subroutine eval_kl_problem_b
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+  subroutine eval_kl_problem_c(data,nbasis,nomega,nrhs,&
   &     minstart,maxstart,threshold,maxiter,unique_rhs_omega,&
   &     id_string,iverb,irestart,ierr)
 !--------------------------------------------------------------------
@@ -156,7 +402,7 @@ contains
 !--------------------------------------------------------------------
 ! External data (defined in the interface above)
 !--------------------------------------------------------------------
-    class(kl_problem) :: data
+    class(kl_problem_c) :: data
 !--------------------------------------------------------------------
 ! Variables
 !--------------------------------------------------------------------
@@ -186,13 +432,7 @@ contains
     nrhs = data%n_rhs
 
 !! choice based on problem description
-    if (kind_float.eq.kind_double) then
-      threshold = real(8,kind=kind_float)
-    else if (kind_float.eq.kind_single) then
-      threshold = real(4,kind=kind_float)
-    else
-      threshold = sqrt(abs(logeps))
-    end if 
+    threshold = real(3,kind=kind_float)
 
 !! reasonable number of iterations before things go bad
     maxiter = 25
@@ -226,7 +466,7 @@ contains
 
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
-  end subroutine eval_kl_problem
+  end subroutine eval_kl_problem_c
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
 
@@ -473,7 +713,6 @@ contains
   &   one_kb,data%krylov_a,n1,&
   &   bv,n1,zero_kb,&
   &   mvp,n1)
-
 !! make mvp real
    mvproduct = mvp
 
@@ -488,7 +727,237 @@ contains
 
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
-  subroutine eval_kl_output(data,n1,n2,n3,n4,n5,n6,&
+  subroutine eval_kl_output_a(data,n1,n2,n3,n4,&
+  &     jconverged,roots,lagrangian,solutions,&
+  &     euc_norm,fro_norm,id_string,ierr)
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Description:
+!--------------------------------------------------------------------
+!< This subroutine fits into the kl_output_eval type signature
+!< of user_krylov_a_output_subroutine
+!< and prints the roots and solutions to file.
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Modules and Global Variables
+!--------------------------------------------------------------------
+! for kind_integer and other precision related parameters
+    use basekinds
+! precision parameters for real(kind_float)
+    use floatformat
+! define type(base)and associated operations
+    use basetypes
+    use blastypes
+! set interface for this subroutine
+    use libkrylovinterface
+!  for file i/o : printing operations
+    use arrayfile
+!--------------------------------------------------------------------
+! Implicit None statement
+!--------------------------------------------------------------------
+    implicit none
+!--------------------------------------------------------------------
+! External data (defined in the interface above)
+!--------------------------------------------------------------------
+    class(kl_output_a) :: data
+!--------------------------------------------------------------------
+! Variables
+!--------------------------------------------------------------------
+! matching interface defined in krylovtypes_a
+    integer(kind_integer), intent(in) :: n1
+    integer(kind_integer), intent(in) :: n2
+    integer(kind_integer), intent(in) :: n3
+    integer(kind_integer), intent(in) :: n4
+    logical, intent(in) :: jconverged(n3)
+    real(kind_float), intent(in) :: roots(n3)
+    complex(kind_float), intent(in) :: lagrangian(n3)
+    complex(kind_float), intent(in) :: solutions(n1,n3)
+    real(kind_float), intent(in) :: euc_norm(n3)
+    real(kind_float), intent(in) :: fro_norm
+    character(len=22), intent(in) :: id_string
+    integer(kind_integer), intent(inout) :: ierr
+!--------------------------------------------------------------------
+! Local Variables
+!--------------------------------------------------------------------
+! file name for eigenvectors
+    character(len=32) :: vector_string
+! file name for eigenvalues
+    character(len=32) :: values_string
+! file name for roots included unconverged ones
+    character(len=32) :: data_string
+! file name for lagrangian string
+    character(len=32) :: lagr_string
+! converged roots
+    real(kind_float), allocatable :: converged_roots(:)
+! converged solutions
+    type(base), allocatable :: converged_solutions(:,:)
+! converged lagrangians
+    type(base), allocatable :: converged_lagrangian(:,:)
+! integer for loops
+    integer(kind_integer) :: j,k = 0
+!--------------------------------------------------------------------
+
+!! file names
+    vector_string = trim(id_string)//'_vecs'
+    values_string = trim(id_string)//'_vals'
+    data_string = trim(id_string)//'_allr'
+    lagr_string = trim(id_string)//'_lagr'
+
+    allocate(converged_roots(n4))
+    allocate(converged_lagrangian(1,n4))
+    allocate(converged_solutions(n1,n4))
+
+    k = 0
+    do j = 1, n3
+      if (jconverged(j)) then
+        k = k + 1
+        converged_roots(k) = roots(j)
+        converged_lagrangian(1,k) = lagrangian(j)
+        converged_solutions(1:n1,k) = solutions(1:n1,j)
+      end if
+    end do
+
+!! print to file
+    call array_print_float(data_string,n3,roots,ierr)
+
+!! print to file
+    call array_print_float(values_string,n4,converged_roots,ierr)
+
+!! print to file
+    call array_print_base(vector_string,n1,n4,converged_solutions,ierr)
+
+!! print to file
+    call array_print_base(lagr_string,1,n4,converged_lagrangian,ierr)
+
+    deallocate(converged_roots)
+    deallocate(converged_lagrangian)
+    deallocate(converged_solutions)
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+  end subroutine eval_kl_output_a
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+  subroutine eval_kl_output_b(data,n1,n2,n3,n4,&
+  &     jconverged,rhs,lagrangian,solutions,&
+  &     euc_norm,fro_norm,id_string,ierr)
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Description:
+!--------------------------------------------------------------------
+!< This subroutine fits into the kl_output_eval type signature
+!< of user_krylov_a_output_subroutine
+!< and prints the roots and solutions to file.
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Modules and Global Variables
+!--------------------------------------------------------------------
+! for kind_integer and other precision related parameters
+    use basekinds
+! precision parameters for real(kind_float)
+    use floatformat
+! define type(base)and associated operations
+    use basetypes
+    use blastypes
+! set interface for this subroutine
+    use libkrylovinterface
+! for file i/o : printing operations
+    use arrayfile
+!--------------------------------------------------------------------
+! Implicit None statement
+!--------------------------------------------------------------------
+    implicit none
+!--------------------------------------------------------------------
+! External data (defined in the interface above)
+!--------------------------------------------------------------------
+    class(kl_output_b) :: data
+!--------------------------------------------------------------------
+! Variables
+!--------------------------------------------------------------------
+! matching interface defined in krylovtypes_b
+    integer(kind_integer), intent(in) :: n1
+    integer(kind_integer), intent(in) :: n2
+    integer(kind_integer), intent(in) :: n3
+    integer(kind_integer), intent(in) :: n4
+    logical, intent(in) :: jconverged(n3)
+    complex(kind_float), intent(in) :: rhs(n1,n3)
+    complex(kind_float), intent(in) :: lagrangian(n3)
+    complex(kind_float), intent(in) :: solutions(n1,n3)
+    real(kind_float), intent(in) :: euc_norm(n3)
+    real(kind_float), intent(in) :: fro_norm
+    character(len=22), intent(in) :: id_string
+    integer(kind_integer), intent(inout) :: ierr
+!--------------------------------------------------------------------
+! Local Variables
+!--------------------------------------------------------------------
+! file name for eigenvectors
+    character(len=32) :: vector_string
+! file name for eigenvalues
+    character(len=32) :: values_string
+! file name for roots included unconverged ones
+    character(len=32) :: data_string
+! all roots
+    type(base), allocatable :: all_lagrangian(:,:)
+! converged roots
+    type(base), allocatable :: converged_lagrangian(:,:)
+! converged solutions
+    type(base), allocatable :: converged_solutions(:,:)
+! integer for loops
+    integer(kind_integer) :: j,k = 0
+!--------------------------------------------------------------------
+
+!! file names
+    vector_string = trim(id_string)//'_vecs'
+    values_string = trim(id_string)//'_lagr'
+    data_string = trim(id_string)//'_allr'
+
+    allocate(all_lagrangian(1,n3))
+    allocate(converged_lagrangian(1,n4))
+    allocate(converged_solutions(n1,n4))
+
+    k = 0
+    do j = 1, n3
+      all_lagrangian(1,j) = lagrangian(j)
+      if (jconverged(j)) then
+        k = k + 1
+        converged_lagrangian(1,k) = lagrangian(j)
+        converged_solutions(1:n1,k) = solutions(1:n1,j)
+      end if
+    end do
+
+
+!! print to file
+    call array_print_base(data_string,1,n3,all_lagrangian,ierr)
+
+!! print to file
+    call array_print_base(values_string,1,n4,converged_lagrangian,ierr)
+
+
+!! print to file
+    call array_print_base(vector_string,n1,n4,converged_solutions,ierr)
+
+!! deallocate solutions
+    deallocate(all_lagrangian)
+    deallocate(converged_lagrangian)
+    deallocate(converged_solutions)
+
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+  end subroutine eval_kl_output_b
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+  subroutine eval_kl_output_c(data,n1,n2,n3,n4,n5,n6,&
   &     jconverged,omega,rhs,lagrangian,solutions,&
   &     euc_norm,fro_norm,id_string,ierr)
 !--------------------------------------------------------------------
@@ -523,7 +992,7 @@ contains
 !--------------------------------------------------------------------
 ! External data (defined in the interface above)
 !--------------------------------------------------------------------
-    class(kl_output) :: data
+    class(kl_output_c) :: data
 !--------------------------------------------------------------------
 ! Variables
 !--------------------------------------------------------------------
@@ -627,7 +1096,7 @@ contains
 
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
-  end subroutine eval_kl_output
+  end subroutine eval_kl_output_c
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
 
@@ -636,271 +1105,7 @@ contains
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
-end module drivertypes_1c
-!--------------------------------------------------------------------
-!--------------------------------------------------------------------
-!--------------------------------------------------------------------
-
-
-!--------------------------------------------------------------------
-!--------------------------------------------------------------------
-!--------------------------------------------------------------------
-program krylovdriver_1c
-!--------------------------------------------------------------------
-!--------------------------------------------------------------------
-!--------------------------------------------------------------------
-!
-!--------------------------------------------------------------------
-! Description:
-!--------------------------------------------------------------------
-!< This program acts as a wrapper for the eigen_solver subroutine in
-!< krylovtypes_a and the input functions described above,
-!< which when combined create a krylov space eigenvalue
-!< solver which reads in the matrix problem from file
-!< (named : <basetype>_1c_prob.raft )
-!< solves the lowest 5% of the eigenvalues,
-!< starting from the smallest 20% of the subspace.
-!< and prints the solutions to file
-!< (eigenvectors named : <basetype>_1c_vecs.raft )
-!< (eigenvalues named : <basetype>_1c_vals.raft )
-!--------------------------------------------------------------------
-!
-!--------------------------------------------------------------------
-! Modules and Global Variables
-!--------------------------------------------------------------------
-! for kind_integer and other precision related parameters
-  use basekinds
-! define parameters of precision of real(kind_float)
-  use floatformat
-! define type(base) and type(basereal) and associated operations
-  use basetypes
-  use blastypes
-! for file i/o : reading size and contents operations
-  use arrayfile
-! set interfaces
-  use libkrylovsolver
-! define the input subroutines
-  use drivertypes_1c
-!--------------------------------------------------------------------
-! Implicit None statement
-!--------------------------------------------------------------------
-  implicit none
-!--------------------------------------------------------------------
-!  Input Subroutines
-!--------------------------------------------------------------------
-  type(kl_problem) :: krylov_problem
-  type(kl_approx) :: krylov_approx
-  type(lkl_s_elec_gas) :: krylov_s_eg
-  type(kl_rhs) :: krylov_rhs
-  type(kl_omega) :: krylov_omega
-  type(lkl_g_unit_vec) :: krylov_g_uv
-  type(lkl_pc_none) :: krylov_pc_none
-  type(lkl_pc_approx) :: krylov_pc_approx
-  type(lkl_pc_davidson) :: krylov_pc_davidson
-  type(kl_mvp) :: krylov_mvp
-  type(kl_output) :: krylov_output
-!--------------------------------------------------------------------
-! Local Variables for Subroutines and reading problem
-!--------------------------------------------------------------------
-! character string for preconditioner string
-  character(len=32) :: preconditioner = ''
-! contains the matrix of problem, read in from file
-  type(base), target, allocatable :: krylov_a(:,:)
-! contains the frequencies of the problem, read in from file
-  real(kind_float), target, allocatable :: krylov_o(:)
-! contains the rhs of problem, read in from file
-  type(base), target, allocatable :: krylov_p(:,:)
-! character string to become id_string in solver
-  character(len=22), target :: c1_string = ''
-! character string for file name that is to be read at the moment
-  character(len=32) :: filename_string = ''
-! character string for type in file, for checking
-  character(len=32) :: filetype_string = ''
-! integers for reading size of problem from file
-! which becomes nbasis via krylov_problem%n_size
-  integer(kind_integer) :: n1 = 0
-  integer(kind_integer) :: n2 = 0
-! which becomes the number of frequencies
-  integer(kind_integer) :: n3 = 0
-! which becomes the size of rhs
-  integer(kind_integer) :: n4 = 0
-  integer(kind_integer) :: n5 = 0
-!--------------------------------------------------------------------
-! Error Parameter
-!--------------------------------------------------------------------
-  integer(kind_integer) :: ierr = 0
-!--------------------------------------------------------------------
-
-!! setting up the problem before calling solver
-
-!! ask for user input on preconditoner
-  print *, 'Please enter an option for the preconditioner'
-  read (*,*) preconditioner
-  print *, preconditioner,' entered'
-
-!! set irestart
-  krylov_problem%irestart = 0
-
-!! set a1_string based on basetypes
-  c1_string = trim(base_print_string)//'_1c'
-
-!! set the filename_string for the file name of prob
-  filename_string = trim(c1_string)//'_prob'
-
-!! read problem array size
-  call array_read_base_size(filename_string,n1,n2,filetype_string,ierr)
-
-  if (ierr.ne.0) then
-    print *, 'solver failed as there is no problem to be solved!'
-    stop
-  else if (filetype_string.ne.filename_string) then
-    print *, 'solver failed as type in problem file is incorrect!'
-    stop
-  end if
-
-  if (n1.gt.n2) then
-    krylov_problem%n_size = n1
-  else
-    krylov_problem%n_size = n2 
-  end if
-
-!! allocate array to contain problem
-  allocate(krylov_a(krylov_problem%n_size,krylov_problem%n_size))
-
-!! read problem array
-  call array_read_base(filename_string,krylov_problem%n_size,&
-  &    krylov_problem%n_size,krylov_a,ierr)
-
-  if (ierr.ne.0) then
-    print *, 'solver failed as problem can not be read!'
-    stop
-  end if
-
-!! set the filename_string for the file name of frequencies
-  filename_string = trim(c1_string)//'_freq'
-
-!! read frequencies array size
-  call array_read_float_size(filename_string,n3,filetype_string,ierr)
-
-  if (ierr.ne.0) then
-!! frequency file does not exist
-    print *, 'solver failed as freq can not be read!'
-    stop
-  else if (ierr.eq.0) then
-!! no errors reading frequency file
-    if (filetype_string.ne.filename_string) then
-      print *, 'solver failed as type in frequency file is incorrect!'
-      stop
-    end if
-    if (n1.gt.n3) then
-      krylov_problem%n_omega = n3
-    else
-      print *, 'solver failed as too many frequencies given!'
-      stop
-    end if
-  !! allocate array to contain problem
-    allocate(krylov_o(krylov_problem%n_omega))
-  !! read problem array size
-    call array_read_float(filename_string,krylov_problem%n_omega,&
-  &   krylov_o,ierr)
-    if (ierr.ne.0) then
-      print *, 'solver failed as frequencies can not be read!'
-      stop
-    end if
-  end if
-
-!! set the filename_string for the file name of rhs
-  filename_string = trim(c1_string)//'_rhs'
-
-!! read rhs array size
-  call array_read_base_size(filename_string,n4,n5,filetype_string,ierr)
-
-  if (ierr.ne.0) then
-    print *, 'solver failed as there is no rhs to be solved!'
-    stop
-  else if (filetype_string.ne.filename_string) then
-    print *, 'solver failed as type in rhs file is incorrect!'
-    stop
-  end if
-
-  if (n4.ne.krylov_problem%n_size) then
-    print *, 'solver failed as rhs basis does not match problem!'
-    stop
-  end if
-
-  if (n5.gt.n4) then
-    print *, 'solver failed as too many rhs given!'
-    stop
-  end if
-
-  krylov_problem%one_rhs_per_omega = .false.
-  if ((n5*n3).gt.n1) then
-    if (n5.eq.n3) then
-      print *, 'solver forced to solve only one rhs per frequency'
-      krylov_problem%one_rhs_per_omega = .true.
-    else ! n5 .ne. n3
-      print *, 'solver failed as too many rhs*freq given!'
-      stop
-    end if
-  end if 
-
-  krylov_problem%n_rhs = n5 
-
-!! allocate array to contain problem
-  allocate(krylov_p(krylov_problem%n_size,krylov_problem%n_rhs))
-
-!! read problem array
-  call array_read_base(filename_string,krylov_problem%n_size,&
-  &    krylov_problem%n_rhs,krylov_p,ierr)
-
-  if (ierr.ne.0) then
-    print *, 'solver failed as rhs can not be read!'
-    stop
-  end if
-
-! set pointers to local variables required for input subroutines
-  krylov_problem%problem_string => c1_string
-  krylov_approx%krylov_a => krylov_a
-  krylov_mvp%krylov_a => krylov_a
-  krylov_omega%krylov_o => krylov_o
-  krylov_rhs%krylov_p => krylov_p
-
-! call solver
-  if (preconditioner.eq.'davidson') then
-    call problem_c_solver(krylov_approx,krylov_s_eg,&
-  &   krylov_rhs,krylov_omega, &
-  &   krylov_problem,krylov_g_uv,krylov_mvp,krylov_pc_davidson, &
-  &   krylov_output,ierr)
-  else if (preconditioner.eq.'approx_spectra') then
-    call problem_c_solver(krylov_approx,krylov_s_eg,&
-  &   krylov_rhs,krylov_omega, &
-  &   krylov_problem,krylov_g_uv,krylov_mvp,krylov_pc_approx, &
-  &   krylov_output,ierr)
-  else if (preconditioner.eq.'none') then
-    call problem_c_solver(krylov_approx,krylov_s_eg,&
-  &   krylov_rhs,krylov_omega, &
-  &   krylov_problem,krylov_g_uv,krylov_mvp,krylov_pc_none, &
-  &   krylov_output,ierr)
-  else
-    print *, 'unrecognised preconditioner string'
-    print *, 'using davidson'
-    call problem_c_solver(krylov_approx,krylov_s_eg, &
-  &   krylov_rhs,krylov_omega, &
-  &   krylov_problem,krylov_g_uv,krylov_mvp,krylov_pc_davidson, &
-  &   krylov_output,ierr)
-  end if
-
-  print *, 'final ierr value = ',ierr
-
-! no post calculation operations, everything done within solver
-  deallocate(krylov_a)
-  deallocate(krylov_o)
-  deallocate(krylov_p)
-
-!--------------------------------------------------------------------
-!--------------------------------------------------------------------
-!--------------------------------------------------------------------
-end program krylovdriver_1c
+end module driver1types_cmplx_sp
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------

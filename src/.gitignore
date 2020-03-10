@@ -63,3 +63,6 @@ userlibraryconfig
 *_real_dp
 *_cmplx_sp
 *_cmplx_dp
+
+# ignore configuration
+*srcs/.*

@@ -16,7 +16,7 @@ AC_CONFIG_AUX_DIR([build_aux])
 AC_CONFIG_MACRO_DIR([autoconf-archive/m4])
 
 # Starting Automake, ignore GNU standards with 'foreign'
-AM_INIT_AUTOMAKE([-Wall -Werror foreign])
+AM_INIT_AUTOMAKE([-Wall -Werror foreign subdir-objects])
 
 # Looking for newer fortran compiler 
 #(CODE WILL NOT WORK WITHOUT 2003 FEATURES)

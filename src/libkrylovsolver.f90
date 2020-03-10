@@ -641,6 +641,22 @@ contains
       ierr = -7
       return
     end if
+    if (k1.ne.n1) then
+      if (iverb.ge.0) then
+        print *, 'output array does not have matching rows'
+      end if
+      close(unit=funit,iostat=ierr,status='keep') ! force close with iostat
+      ierr = -7
+      return
+    end if
+    if (k2.ne.n2) then
+      if (iverb.ge.0) then
+        print *, 'output array does not have matching rows'
+      end if
+      close(unit=funit,iostat=ierr,status='keep') ! force close with iostat
+      ierr = -7
+      return
+    end if
 
 !! reading of values
     read(unit=funit,iostat=ierr) obj
@@ -751,7 +767,7 @@ contains
       return
     end if
 
-!! reading of values
+!! writing of values
     write(unit=funit,iostat=ierr) obj
     if (ierr.ne.0) then
       if (iverb.ge.0) then
@@ -1712,31 +1728,6 @@ contains
     sname = trim(id_string)//'v.save'
 
 
-!! if restart is allowed, look for restart v files
-!! invert irestart to generate new basis vectors
-!! and matrix vector products, as v-file is missing
-    if (irestart.ge.2) then
-      inquire(file=vname,exist=check)
-      if (check) then
-        call array_read_rstrt_size(vname,k1,k2,iverb,ierr)
-        if (ierr.ne.0) then ! no restart available
-          ierr = 0
-          irestart = -abs(irestart)
-        else if (k1.ne.nbasis) then ! vfile not in this basis
-          irestart = -abs(irestart)
-        else if (k2.lt.nstart) then ! vfile from a different start?
-          irestart = -abs(irestart)
-        else if (k2.gt.nstart) then ! vfile from later than iter=1?
-          nstart = k2 ! change start conditions
-          maxiter = floor((real((maxsubspace-nstart),kind=kind_float)/&
-  &         nroots+real(1,kind=kind_float)),kind=kind_integer)
-        end if ! not able to read vectors yet, no allocation!
-      else !no restart available
-        irestart = -abs(irestart)
-      end if
-    end if
-
-
 ! Allocate all arrays that exist across iterations
     allocate(basis_vectors(nbasis,maxsubspace)) !maximum
     allocate(mvproduct(nbasis,maxsubspace)) !maximum
@@ -1755,12 +1746,37 @@ contains
     overlap = real(0,kind=kind_float)
     diag_overlap = real(0,kind=kind_float)
 
-    if (irestart.ge.2) then ! verified that v restart file exists
+!! if restart is allowed, look for restart v files
+!!  invert irestart if new restart is to be generated
+!!   as v-file is missing
+!! check can be moved after allocation?
+    if (irestart.ge.2) then
+      inquire(file=vname,exist=check)
+      if (check) then
+        call array_read_rstrt_size(vname,k1,k2,iverb,ierr)
+        if (ierr.ne.0) then ! no restart available
+          ierr = 0
+          irestart = -abs(irestart)
+        else if (k1.ne.nbasis) then ! vfile not in this basis
+          irestart = -abs(irestart)
+        else if (k2.lt.nstart) then ! vfile from a different start?
+          irestart = -abs(irestart)
+        else if (k2.gt.nstart) then ! vfile from iter>1? ! vfile pass all checks
+            nstart = k2
+            maxiter = floor((real((maxsubspace-nstart),kind=kind_float)/&
+  &           nroots+real(1,kind=kind_float)),kind=kind_integer)
+        end if ! vfile pass all checks
+      else !no restart available or possible
+        irestart = -abs(irestart)
+      end if
+    end if
+
+    if (irestart.ge.2) then !read restart if possible
       if (iverb.ge.2) then
-        print *, 'Calcuation starting from restart file!'
+        print *, 'Calculation starting from restart file!'
       end if
       call array_read_rstrt(vname,nbasis,nstart,&
-  &       basis_vectors(1:nbasis,1:nstart),iverb,ierr)
+  &     basis_vectors(1:nbasis,1:nstart),iverb,ierr)
       if (ierr.ne.0) then
         if (iverb.ge.0) then
           print *, 'v.rstrt passed checks but failed to read'
@@ -1770,20 +1786,35 @@ contains
         ierr = -50
         return ! abort solver, return to call
       end if
-! VECTORS ASSUMED TO BE NORMALIZED AND INDEPENDENT
-    else if (irestart.eq.0) then !! skip check if no restart allowed
-    else !! check if there is a save file
+    else if (irestart.eq.0) then !! skip savefile check if no restart
+      if (iverb.ge.2) then
+        print *, 'Calcuation starting from scratch!'
+      end if
+      associate(interfacing_bv => basis_vectors%element)
+        call krylov_guess%lkl_guess(nbasis,nstart,0,&
+  &       approx_spectra,interfacing_bv(1:nbasis,1:nstart),&
+  &       ierr)
+      end associate
+      if (ierr.ne.0) then
+        if (iverb.ge.0) then
+          print *, 'class(user_krylov_guess_subroutine) function failed' 
+          print *, 'error variable = ',ierr
+        end if
+        ierr = -45
+        return ! abort solver, return to call
+      end if
+    else ! save file if it could be useful
       inquire(file=sname,exist=check)
       if (check) then
         call array_read_rstrt_size(sname,k1,k2,iverb,ierr)
-        if (ierr.ne.0) then ! no save file,
-          irestart = -abs(irestart)
+        if (ierr.ne.0) then ! no restart available
           ierr = 0
+          irestart = -abs(irestart)
         else if (k1.ne.nbasis) then ! sfile not in this basis
           irestart = -abs(irestart)
         else ! sfile passes all checks, using sfile
           if (iverb.ge.2) then
-            print *, 'Calcuation starting from save file!'
+            print *, 'Calculation starting from save file!'
           end if
           if (k2.gt.nstart) then ! read in only up to nstart vecs
             k2 = nstart
@@ -1800,8 +1831,13 @@ contains
             return ! abort solver, return to call
           end if
           if (k2.eq.nstart) then ! no new initial vectors needed
+            if (iverb.ge.2) then
+              print *, ' with no new vectors needed!'
+            end if
           else ! more initial vectors needed
-!! NAMBI
+            if (iverb.ge.2) then
+              print *, ' generating more start vectors!'
+            end if
             associate(interfacing_bv => basis_vectors%element)
               call krylov_guess%lkl_guess(nbasis,nstart,k2,&
   &             approx_spectra,interfacing_bv(1:nbasis,1:nstart),&
@@ -1809,38 +1845,45 @@ contains
             end associate
             if (ierr.ne.0) then
               if (iverb.ge.0) then
-                print *, 'class(user_krylov_guess_subroutine) guess function failed' 
+                print *, 'class(user_krylov_guess_subroutine) function failed' 
                 print *, 'error variable = ',ierr
               end if
               ierr = -45
-              return ! abort solver, return to call!
+              return ! abort solver, return to call
             end if
           end if
         end if
-      else ! no save file
+      else !no save file
+!! Fresh starting basis vectors generated if 
+!! conditions are met.
         irestart = -abs(irestart)
+        if (iverb.ge.2) then
+          print *, 'Calculation starting from scratch!'
+        end if
+        associate(interfacing_bv => basis_vectors%element)
+          call krylov_guess%lkl_guess(nbasis,nstart,0,&
+  &         approx_spectra,interfacing_bv(1:nbasis,1:nstart),&
+  &         ierr)
+        end associate
+        if (ierr.ne.0) then
+          if (iverb.ge.0) then
+            print *, 'class(user_krylov_guess_subroutine) function failed' 
+            print *, 'error variable = ',ierr
+          end if
+          ierr = -45
+          return ! abort solver, return to call 
+        end if
       end if
     end if
 
-!! Fresh starting basis vectors generated if 
-!! conditions are met.
-    if (irestart.le.0) then
-      if (iverb.ge.2) then
-        print *, 'Calcuation starting from scratch!'
-      end if
-!!NAMBI
-      associate(interfacing_bv => basis_vectors%element)
-        call krylov_guess%lkl_guess(nbasis,nstart,0,&
-  &       approx_spectra,interfacing_bv(1:nbasis,1:nstart),&
-  &       ierr)
-      end associate
-! print restart basis-vector products if required (DESTROY?)
-      if (irestart.le.-2) then
-        call array_print_rstrt(vname,nbasis,nsubspace,&
+
+! print restart basis-vector products if required
+    if (irestart.le.-2) then
+      call array_print_rstrt(vname,nbasis,nsubspace,&
   &       basis_vectors(1:nbasis,1:nsubspace),iverb,ierr)
-        ierr = 0
-      end if
+      ierr = 0
     end if
+
 
 !! Set constants required for BLAS
     one_kb = real(1,kind=kind_float)
@@ -1879,6 +1922,9 @@ contains
     if (irestart.le.2) then  !! need to generate new MVP
 ! call user defined matrix vector product for the first time
 !!NAMBI
+      if (iverb.ge.2) then
+        print *, ' Fresh Matrix Vector Products!'
+      end if
       associate(interfacing_bv => basis_vectors%element,&
   &             interfacing_mv => mvproduct%element)
       call krylov_mvp%lkl_mvp(nbasis,nsubspace,&
@@ -2456,7 +2502,7 @@ contains
       print *, ' condition number: ',rcond
     end if
 !! check condition number
-    if (log10(rcond).lt.logeps) then
+    if (log10(rcond).lt.(logeps-1)) then
       if (iverb.ge.0) then
         print *, 'overlap is ill-conditioned, exit ritz step'
       end if
@@ -3120,31 +3166,6 @@ contains
     rname = trim(id_string)//'r.rstrt'
     sname = trim(id_string)//'v.save'
 
-
-!! if restart is allowed, look for restart v files
-!! invert irestart to generate new basis vectors
-!! and matrix vector products, as v-file is missing
-    if (irestart.ge.2) then
-      inquire(file=vname,exist=check)
-      if (check) then
-        call array_read_rstrt_size(vname,k1,k2,iverb,ierr)
-        if (ierr.ne.0) then ! no restart available
-          ierr = 0
-          irestart = -abs(irestart)
-        else if (k1.ne.nbasis) then ! vfile not in this basis
-          irestart = -abs(irestart)
-        else if (k2.lt.nstart) then ! vfile from a different start?
-          irestart = -abs(irestart)
-        else if (k2.gt.nstart) then ! vfile from iter>1?
-          nstart = k2
-          maxiter = floor((real((maxsubspace-nstart),kind=kind_float)/&
-  &         nrhs+real(1,kind=kind_float)),kind=kind_integer)
-        end if ! not able to read vectors yet, no allocation!
-      else !no restart available
-        irestart = -abs(irestart)
-      end if
-    end if
-
 ! Set initial subspace size
     nsubspace = nstart
 
@@ -3182,12 +3203,37 @@ contains
       return ! abort solver, return to call
     end if
 
-    if (irestart.ge.2) then ! verified that v restart file exists
+!! if restart is allowed, look for restart v files
+!!  invert irestart if new restart is to be generated
+!!   as v-file is missing
+!! check can be moved after allocation?
+    if (irestart.ge.2) then
+      inquire(file=vname,exist=check)
+      if (check) then
+        call array_read_rstrt_size(vname,k1,k2,iverb,ierr)
+        if (ierr.ne.0) then ! no restart available
+          ierr = 0
+          irestart = -abs(irestart)
+        else if (k1.ne.nbasis) then ! vfile not in this basis
+          irestart = -abs(irestart)
+        else if (k2.lt.nstart) then ! vfile from a different start?
+          irestart = -abs(irestart)
+        else if (k2.gt.nstart) then ! vfile from iter>1? ! vfile pass all checks
+            nstart = k2
+            maxiter = floor((real((maxsubspace-nstart),kind=kind_float)/&
+  &           nrhs+real(1,kind=kind_float)),kind=kind_integer)
+        end if ! vfile pass all checks
+      else !no restart available or possible
+        irestart = -abs(irestart)
+      end if
+    end if
+
+    if (irestart.ge.2) then !read restart if possible
       if (iverb.ge.2) then
-        print *, 'Calcuation starting from restart file!'
+        print *, 'Calculation starting from restart file!'
       end if
       call array_read_rstrt(vname,nbasis,nstart,&
-  &       basis_vectors(1:nbasis,1:nstart),iverb,ierr)
+  &     basis_vectors(1:nbasis,1:nstart),iverb,ierr)
       if (ierr.ne.0) then
         if (iverb.ge.0) then
           print *, 'v.rstrt passed checks but failed to read'
@@ -3197,20 +3243,35 @@ contains
         ierr = -50
         return ! abort solver, return to call
       end if
-! VECTORS ASSUMED TO BE NORMALIZED
-    else if (irestart.eq.0) then !! skip check if no restart allowed
-    else !! check if there is a save file
+    else if (irestart.eq.0) then !! skip savefile check if no restart
+      if (iverb.ge.2) then
+        print *, 'Calcuation starting from scratch!'
+      end if
+      associate(interfacing_bv => basis_vectors%element)
+        call krylov_guess%lkl_guess(nbasis,nstart,0,&
+  &       approx_spectra,interfacing_bv(1:nbasis,1:nstart),&
+  &       ierr)
+      end associate
+      if (ierr.ne.0) then
+        if (iverb.ge.0) then
+          print *, 'class(user_krylov_guess_subroutine) function failed' 
+          print *, 'error variable = ',ierr
+        end if
+        ierr = -45
+        return ! abort solver, return to call
+      end if
+    else ! save file if it could be useful
       inquire(file=sname,exist=check)
       if (check) then
         call array_read_rstrt_size(sname,k1,k2,iverb,ierr)
-        if (ierr.ne.0) then ! no save file,
-          irestart = -abs(irestart)
+        if (ierr.ne.0) then ! no restart available
           ierr = 0
+          irestart = -abs(irestart)
         else if (k1.ne.nbasis) then ! sfile not in this basis
           irestart = -abs(irestart)
         else ! sfile passes all checks, using sfile
           if (iverb.ge.2) then
-            print *, 'Calcuation starting from save file!'
+            print *, 'Calculation starting from save file!'
           end if
           if (k2.gt.nstart) then ! read in only up to nstart vecs
             k2 = nstart
@@ -3227,50 +3288,70 @@ contains
             return ! abort solver, return to call
           end if
           if (k2.eq.nstart) then ! no new initial vectors needed
+            if (iverb.ge.2) then
+              print *, ' with no new vectors needed!'
+            end if
           else ! more initial vectors needed
+            if (iverb.ge.2) then
+              print *, ' generating more start vectors!'
+            end if
             associate(interfacing_bv => basis_vectors%element)
               call krylov_guess%lkl_guess(nbasis,nstart,k2,&
   &             approx_spectra,interfacing_bv(1:nbasis,1:nstart),&
   &             ierr)
             end associate
+            if (ierr.ne.0) then
+              if (iverb.ge.0) then
+                print *, 'class(user_krylov_guess_subroutine) function failed' 
+                print *, 'error variable = ',ierr
+              end if
+              ierr = -45
+              return ! abort solver, return to call
+            end if
           end if
         end if
-      else ! no save file
-        irestart = -abs(irestart)
-      end if
-    end if
-
-
-!!NAMBI
+      else !no save file
 !! Fresh starting basis vectors generated if 
 !! conditions are met.
-    if (irestart.le.0) then
-      if (iverb.ge.2) then
-        print *, 'Calcuation starting from scratch!'
-      end if
-      associate(interfacing_bv => basis_vectors%element)
-        call krylov_guess%lkl_guess(nbasis,nstart,0,&
-  &       approx_spectra,interfacing_bv(1:nbasis,1:nstart),&
-  &       ierr)
-      end associate
-! print restart basis-vector products if required (DESTROY?)
-      if (irestart.le.-2) then
-        call array_print_rstrt(vname,nbasis,nsubspace,&
-  &       basis_vectors(1:nbasis,1:nsubspace),iverb,ierr)
-        ierr = 0
+        irestart = -abs(irestart)
+        if (iverb.ge.2) then
+          print *, 'Calculation starting from scratch!'
+        end if
+        associate(interfacing_bv => basis_vectors%element)
+          call krylov_guess%lkl_guess(nbasis,nstart,0,&
+  &         approx_spectra,interfacing_bv(1:nbasis,1:nstart),&
+  &         ierr)
+        end associate
+        if (ierr.ne.0) then
+          if (iverb.ge.0) then
+            print *, 'class(user_krylov_guess_subroutine) function failed' 
+            print *, 'error variable = ',ierr
+          end if
+          ierr = -45
+          return ! abort solver, return to call 
+        end if
       end if
     end if
+
+
+! print restart basis-vector products if required
+    if (irestart.le.-2) then
+      call array_print_rstrt(vname,nbasis,nsubspace,&
+  &       basis_vectors(1:nbasis,1:nsubspace),iverb,ierr)
+      ierr = 0
+    end if
+
 
 !! Set constants required for BLAS
     one_kb = real(1,kind=kind_float)
     zero_kb = real(0,kind=kind_float)
 !! determine overlap
     call ggemm('c','n',nstart,nstart,nbasis,one_kb,&
-  &       basis_vectors(1:nbasis,1:nstart),nbasis,&
-  &       basis_vectors(1:nbasis,1:nstart),nbasis,&
-  &       zero_kb,&
-  &       overlap(1:nstart,1:nstart),&
-  &       nstart)
+  &    basis_vectors(1:nbasis,1:nstart),nbasis,&
+  &    basis_vectors(1:nbasis,1:nstart),nbasis,&
+  &    zero_kb,&
+  &    overlap(1:nstart,1:nstart),&
+  &    nstart)
 !! determine diag_overlap
     do j = 1 , nstart
       diag_overlap(j) = overlap(j,j)
@@ -3989,7 +4070,7 @@ contains
       print *, ' condition number: ',rcond
     end if
 !! check condition number
-    if (log10(rcond).lt.logeps) then
+    if (log10(rcond).lt.(logeps-1)) then
       if (iverb.ge.0) then
         print *, 'overlap is ill-conditioned, exit ritz step'
       end if
@@ -4921,30 +5002,6 @@ contains
     sname = trim(id_string)//'v.save'
 
 
-!! if restart is allowed, look for restart v files
-!! invert irestart to generate new basis vectors
-!! and matrix vector products, as v-file is missing
-    if (irestart.ge.2) then
-      inquire(file=vname,exist=check)
-      if (check) then
-        call array_read_rstrt_size(vname,k1,k2,iverb,ierr)
-        if (ierr.ne.0) then ! no restart available
-          ierr = 0
-          irestart = -abs(irestart)
-        else if (k1.ne.nbasis) then ! vfile not in this basis
-          irestart = -abs(irestart)
-        else if (k2.lt.nstart) then ! vfile from a different start?
-          irestart = -abs(irestart)
-        else if (k2.gt.nstart) then ! vfile from iter>1?
-          nstart = k2
-          maxiter = floor((real((maxsubspace-nstart),kind=kind_float)/&
-  &         nroots+real(1,kind=kind_float)),kind=kind_integer)
-        end if ! not able to read vectors yet, no allocation!
-      else !no restart available
-        irestart = -abs(irestart)
-      end if
-    end if
-
 ! Set initial subspace size
     nsubspace = nstart
 
@@ -4993,12 +5050,37 @@ contains
       return ! abort solver, return to call
     end if
 
-    if (irestart.ge.2) then ! verified that v restart file exists
+!! if restart is allowed, look for restart v files
+!!  invert irestart if new restart is to be generated
+!!   as v-file is missing
+!! check can be moved after allocation?
+    if (irestart.ge.2) then
+      inquire(file=vname,exist=check)
+      if (check) then
+        call array_read_rstrt_size(vname,k1,k2,iverb,ierr)
+        if (ierr.ne.0) then ! no restart available
+          ierr = 0
+          irestart = -abs(irestart)
+        else if (k1.ne.nbasis) then ! vfile not in this basis
+          irestart = -abs(irestart)
+        else if (k2.lt.nstart) then ! vfile from a different start?
+          irestart = -abs(irestart)
+        else if (k2.gt.nstart) then ! vfile from iter>1? ! vfile pass all checks
+            nstart = k2
+            maxiter = floor((real((maxsubspace-nstart),kind=kind_float)/&
+  &           nroots+real(1,kind=kind_float)),kind=kind_integer)
+        end if ! vfile pass all checks
+      else !no restart available or possible
+        irestart = -abs(irestart)
+      end if
+    end if
+
+    if (irestart.ge.2) then !read restart if possible
       if (iverb.ge.2) then
-        print *, 'Calcuation starting from restart file!'
+        print *, 'Calculation starting from restart file!'
       end if
       call array_read_rstrt(vname,nbasis,nstart,&
-  &       basis_vectors(1:nbasis,1:nstart),iverb,ierr)
+  &     basis_vectors(1:nbasis,1:nstart),iverb,ierr)
       if (ierr.ne.0) then
         if (iverb.ge.0) then
           print *, 'v.rstrt passed checks but failed to read'
@@ -5008,20 +5090,35 @@ contains
         ierr = -50
         return ! abort solver, return to call
       end if
-! VECTORS ASSUMED TO BE NORMALIZED
-    else if (irestart.eq.0) then !! skip check if no restart allowed
-    else !! check if there is a save file
+    else if (irestart.eq.0) then !! skip savefile check if no restart
+      if (iverb.ge.2) then
+        print *, 'Calcuation starting from scratch!'
+      end if
+      associate(interfacing_bv => basis_vectors%element)
+        call krylov_guess%lkl_guess(nbasis,nstart,0,&
+  &       approx_spectra,interfacing_bv(1:nbasis,1:nstart),&
+  &       ierr)
+      end associate
+      if (ierr.ne.0) then
+        if (iverb.ge.0) then
+          print *, 'class(user_krylov_guess_subroutine) function failed' 
+          print *, 'error variable = ',ierr
+        end if
+        ierr = -45
+        return ! abort solver, return to call
+      end if
+    else ! save file if it could be useful
       inquire(file=sname,exist=check)
       if (check) then
         call array_read_rstrt_size(sname,k1,k2,iverb,ierr)
-        if (ierr.ne.0) then ! no save file,
-          irestart = -abs(irestart)
+        if (ierr.ne.0) then ! no restart available
           ierr = 0
+          irestart = -abs(irestart)
         else if (k1.ne.nbasis) then ! sfile not in this basis
           irestart = -abs(irestart)
         else ! sfile passes all checks, using sfile
           if (iverb.ge.2) then
-            print *, 'Calcuation starting from save file!'
+            print *, 'Calculation starting from save file!'
           end if
           if (k2.gt.nstart) then ! read in only up to nstart vecs
             k2 = nstart
@@ -5038,36 +5135,57 @@ contains
             return ! abort solver, return to call
           end if
           if (k2.eq.nstart) then ! no new initial vectors needed
+            if (iverb.ge.2) then
+              print *, ' with no new vectors needed!'
+            end if
           else ! more initial vectors needed
+            if (iverb.ge.2) then
+              print *, ' generating more start vectors!'
+            end if
             associate(interfacing_bv => basis_vectors%element)
               call krylov_guess%lkl_guess(nbasis,nstart,k2,&
   &             approx_spectra,interfacing_bv(1:nbasis,1:nstart),&
   &             ierr)
             end associate
+            if (ierr.ne.0) then
+              if (iverb.ge.0) then
+                print *, 'class(user_krylov_guess_subroutine) function failed' 
+                print *, 'error variable = ',ierr
+              end if
+              ierr = -45
+              return ! abort solver, return to call
+            end if
           end if
         end if
-      else ! no save file
+      else !no save file
+!! Fresh starting basis vectors generated if 
+!! conditions are met.
         irestart = -abs(irestart)
+        if (iverb.ge.2) then
+          print *, 'Calculation starting from scratch!'
+        end if
+        associate(interfacing_bv => basis_vectors%element)
+          call krylov_guess%lkl_guess(nbasis,nstart,0,&
+  &         approx_spectra,interfacing_bv(1:nbasis,1:nstart),&
+  &         ierr)
+        end associate
+        if (ierr.ne.0) then
+          if (iverb.ge.0) then
+            print *, 'class(user_krylov_guess_subroutine) function failed' 
+            print *, 'error variable = ',ierr
+          end if
+          ierr = -45
+          return ! abort solver, return to call 
+        end if
       end if
     end if
 
-!! Fresh starting basis vectors generated if 
-!! conditions are met.
-    if (irestart.le.0) then
-      if (iverb.ge.2) then
-        print *, 'Calcuation starting from scratch!'
-      end if
-      associate(interfacing_bv => basis_vectors%element)
-        call krylov_guess%lkl_guess(nbasis,nstart,0,&
-  &       approx_spectra,interfacing_bv(1:nbasis,1:nstart),&
-  &       ierr)
-      end associate
-! print restart basis-vector products if required (DESTROY?)
-      if (irestart.le.-2) then
-        call array_print_rstrt(vname,nbasis,nsubspace,&
+
+! print restart basis-vector products if required
+    if (irestart.le.-2) then
+      call array_print_rstrt(vname,nbasis,nsubspace,&
   &       basis_vectors(1:nbasis,1:nsubspace),iverb,ierr)
-        ierr = 0
-      end if
+      ierr = 0
     end if
 
 
@@ -5107,6 +5225,9 @@ contains
 
     if (irestart.le.2) then  !! need to generate new MVP
 ! call user defined matrix vector product for the first time
+      if (iverb.ge.2) then
+        print *, ' Fresh Matrix Vector Product!'
+      end if
       associate(interfacing_bv => basis_vectors%element, &
   &             interfacing_mv => mvproduct%element)
         call krylov_mvp%lkl_mvp(nbasis,nsubspace,&
@@ -5188,6 +5309,9 @@ contains
     end if
 
     if (irestart.le.3) then  !! need to generate new RHS
+      if (iverb.ge.2) then
+        print *, ' Fresh Projected RHS!'
+      end if
       one_kb = real(1,kind=kind_float)
       zero_kb = real(0,kind=kind_float)
       call ggemm('c','n',nsubspace,nrhs,nbasis,one_kb,&
