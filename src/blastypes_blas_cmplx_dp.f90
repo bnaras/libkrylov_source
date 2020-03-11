@@ -208,6 +208,57 @@ contains
 !--------------------------------------------------------------------
 
 !--------------------------------------------------------------------
+  subroutine ggetrf(m,n,obj1,ld1,ipiv,ierr)
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+!< Description:
+!< wrapper for
+!< LU decomposition
+!< where obj1 is the matrix to be decomposed
+!< and obj1 is the output
+!< note dim(ipiv) = min(m,n)
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Modules
+!--------------------------------------------------------------------
+    use basekinds
+    use floatformat
+    use basetypes
+!--------------------------------------------------------------------
+!
+    implicit none
+!
+!--------------------------------------------------------------------
+! Input Parameters
+!--------------------------------------------------------------------
+!! scaled overlap matrix
+    type(base), intent(inout) :: obj1(:,:)
+!! number of rows in obj1
+    integer(kind_integer), intent(in) :: m
+!! number of rows in obj1
+    integer(kind_integer), intent(in) :: n
+!! first dimension of obj1
+    integer(kind_integer), intent(in) :: ld1
+!! pivot index
+    integer(kind_integer), intent(inout) :: ipiv(:)
+!--------------------------------------------------------------------
+! Error Parameter
+!--------------------------------------------------------------------
+    integer(kind_integer), intent(inout) :: ierr
+!--------------------------------------------------------------------
+!  Local Variables
+!--------------------------------------------------------------------
+
+    call zgetrf(m,n,obj1%element,ld1,ipiv,ierr)
+
+!--------------------------------------------------------------------
+  end subroutine ggetrf
+!--------------------------------------------------------------------
+
+
+!--------------------------------------------------------------------
   subroutine gtrsm(side,uplo,trans1,diag,m,n,alpha,obj1,ld1, &
   &   obj2,ld2)
 !--------------------------------------------------------------------
@@ -266,6 +317,65 @@ contains
 
 !--------------------------------------------------------------------
   end subroutine gtrsm
+!--------------------------------------------------------------------
+
+!--------------------------------------------------------------------
+  subroutine ggetrs(trans1,m,n,obj1,ld1,ipiv, &
+  &   obj2,ld2,ierr)
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+!< Description:
+!< wrapper for
+!< Matrix Multiplication obj1**(-T)*obj2
+!< or Matrix Multiplication obj1**(-1)*obj2
+!< of type(base)
+!< where obj1 is LU decomposed
+!< done by forward (and backward) substitution
+!< note dim(ipiv) = min(m,n)
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Modules
+!--------------------------------------------------------------------
+    use basekinds
+    use floatformat
+!--------------------------------------------------------------------
+!
+    implicit none
+!
+!--------------------------------------------------------------------
+! Input Parameters
+!--------------------------------------------------------------------
+!! lower triangular decomposition of overlap
+    type(base), intent(in) :: obj1(:,:)
+!! eigenvectors or matrix to be transformed
+    type(base), intent(inout) :: obj2(:,:)
+!! number of rows in obj2
+    integer(kind_integer), intent(in) :: m
+!! number of columns in obj2
+    integer(kind_integer), intent(in) :: n
+!! first dimension of obj1
+    integer(kind_integer), intent(in) :: ld1
+!! first dimension of obj2
+    integer(kind_integer), intent(in) :: ld2
+!! character for obj1**T('c' or 't') or obj1('n')
+    character(len=1), intent(in) :: trans1
+!! pivot index
+    integer(kind_integer), intent(in) :: ipiv(:)
+!--------------------------------------------------------------------
+! Error Parameter
+!--------------------------------------------------------------------
+    integer(kind_integer), intent(inout) :: ierr
+!--------------------------------------------------------------------
+!  Local Variables
+!--------------------------------------------------------------------
+
+    call zgetrs(trans1,m,n,obj1%element,ld1,ipiv, &
+  &   obj2%element,ld2,ierr)
+
+!--------------------------------------------------------------------
+  end subroutine ggetrs
 !--------------------------------------------------------------------
 
 !--------------------------------------------------------------------
