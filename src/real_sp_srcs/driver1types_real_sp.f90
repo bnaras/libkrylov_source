@@ -432,7 +432,7 @@ contains
     nrhs = data%n_rhs
 
 !! choice based on problem description
-    threshold = real(3,kind=kind_float)
+    threshold = real(2.7,kind=kind_float)
 
 !! reasonable number of iterations before things go bad
     maxiter = 25

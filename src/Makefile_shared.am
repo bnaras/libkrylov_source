@@ -20,6 +20,11 @@ real_sp_blastypedir = $(PWD)/real_sp_test
 real_sp_blastype_PROGRAMS = test_blastypes_real_sp
 test_blastypes_real_sp_SOURCES = test_blastypes.f90
 test_blastypes_real_sp_LDADD = libkrylov_real_sp.la
+# test of implemented subroutines in interface
+real_sp_krylovintrfcdir = $(PWD)/real_sp_test
+real_sp_krylovintrfc_PROGRAMS = test_libkrylovinterface_real_sp
+test_libkrylovinterface_real_sp_SOURCES = test_libkrylovinterface_real_sp.f90
+test_libkrylovinterface_real_sp_LDADD = libkrylov_real_sp.la
 # check of quality for restart files
 real_sp_restartdir = $(PWD)/real_sp_lib
 real_sp_restart_PROGRAMS = restart_check_libkrylov_real_sp
@@ -95,6 +100,11 @@ cmplx_sp_blastypedir = $(PWD)/cmplx_sp_test
 cmplx_sp_blastype_PROGRAMS = test_blastypes_cmplx_sp
 test_blastypes_cmplx_sp_SOURCES = test_blastypes.f90
 test_blastypes_cmplx_sp_LDADD = libkrylov_cmplx_sp.la
+# test of implemented subroutines in interface
+cmplx_sp_krylovintrfcdir = $(PWD)/cmplx_sp_test
+cmplx_sp_krylovintrfc_PROGRAMS = test_libkrylovinterface_cmplx_sp
+test_libkrylovinterface_cmplx_sp_SOURCES = test_libkrylovinterface_cmplx_sp.f90
+test_libkrylovinterface_cmplx_sp_LDADD = libkrylov_cmplx_sp.la
 # check of quality for restart files
 cmplx_sp_restartdir = $(PWD)/cmplx_sp_lib
 cmplx_sp_restart_PROGRAMS = restart_check_libkrylov_cmplx_sp
@@ -160,7 +170,11 @@ real_dp_blastypedir = $(PWD)/real_dp_test
 real_dp_blastype_PROGRAMS = test_blastypes_real_dp
 test_blastypes_real_dp_SOURCES = test_blastypes.f90
 test_blastypes_real_dp_LDADD = libkrylov_real_dp.la
-## test of krylov subspace solver's subroutines
+# test of implemented subroutines in interface
+real_dp_krylovintrfcdir = $(PWD)/real_dp_test
+real_dp_krylovintrfc_PROGRAMS = test_libkrylovinterface_real_dp
+test_libkrylovinterface_real_dp_SOURCES = test_libkrylovinterface_real_dp.f90
+test_libkrylovinterface_real_dp_LDADD = libkrylov_real_dp.la
 # check of quality for restart files
 real_dp_restartdir = $(PWD)/real_dp_lib
 real_dp_restart_PROGRAMS = restart_check_libkrylov_real_dp
@@ -226,11 +240,11 @@ cmplx_dp_blastypedir = $(PWD)/cmplx_dp_test
 cmplx_dp_blastype_PROGRAMS = test_blastypes_cmplx_dp
 test_blastypes_cmplx_dp_SOURCES = test_blastypes.f90
 test_blastypes_cmplx_dp_LDADD = libkrylov_cmplx_dp.la
-## test of krylov subspace solver's subroutines
-#cmplx_dp_krylovtypedir = $(PWD)/cmplx_dp_test
-#cmplx_dp_krylovtype_PROGRAMS = test_krylovtypes_a_cmplx_dp
-#test_krylovtypes_a_cmplx_dp_SOURCES = test_krylovtypes_a.f90
-#test_krylovtypes_a_cmplx_dp_LDADD = libkrylov_cmplx_dp.la
+# test of implemented subroutines in interface
+cmplx_dp_krylovintrfcdir = $(PWD)/cmplx_dp_test
+cmplx_dp_krylovintrfc_PROGRAMS = test_libkrylovinterface_cmplx_dp
+test_libkrylovinterface_cmplx_dp_SOURCES = test_libkrylovinterface_cmplx_dp.f90
+test_libkrylovinterface_cmplx_dp_LDADD = libkrylov_cmplx_dp.la
 # check of quality for restart files
 cmplx_dp_restartdir = $(PWD)/cmplx_dp_lib
 cmplx_dp_restart_PROGRAMS = restart_check_libkrylov_cmplx_dp
