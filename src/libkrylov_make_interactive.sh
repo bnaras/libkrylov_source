@@ -67,7 +67,7 @@ then
   make install-real_sp_arrayfilePROGRAMS
   make install-real_sp_basetypePROGRAMS
   make install-real_sp_blastypePROGRAMS
-#  make install-real_sp_krylovtypePROGRAMS
+  make install-real_sp_krylovintrfcPROGRAMS
   echo '----------Real Single Precision unit-tests made----------'
   make install-real_sp_restartPROGRAMS
   echo '----------Real Single Precision utility programs made----------'
@@ -93,7 +93,7 @@ then
   make install-cmplx_sp_arrayfilePROGRAMS
   make install-cmplx_sp_basetypePROGRAMS
   make install-cmplx_sp_blastypePROGRAMS
-#  make install-cmplx_sp_krylovtypePROGRAMS
+  make install-cmplx_sp_krylovintrfcPROGRAMS
   echo '----------Complex Single Precision unit-tests made----------'
   make install-cmplx_sp_restartPROGRAMS
   echo '----------Complex Single Precision utility programs made----------'
@@ -119,7 +119,7 @@ then
   make install-real_dp_arrayfilePROGRAMS
   make install-real_dp_basetypePROGRAMS
   make install-real_dp_blastypePROGRAMS
-#  make install-real_dp_krylovtypePROGRAMS
+  make install-real_dp_krylovintrfcPROGRAMS
   echo '----------Real Double Precision unit-tests made----------'
   make install-real_dp_restartPROGRAMS
   echo '----------Real Double Precision utility programs made----------'
@@ -145,7 +145,7 @@ then
   make install-cmplx_dp_arrayfilePROGRAMS
   make install-cmplx_dp_basetypePROGRAMS
   make install-cmplx_dp_blastypePROGRAMS
-#  make install-cmplx_dp_krylovtypePROGRAMS
+  make install-cmplx_dp_krylovintrfcPROGRAMS
   echo '----------Complex Double Precision unit-tests made----------'
   make install-cmplx_dp_restartPROGRAMS
   echo '----------Complex Double Precision utility programs made----------'

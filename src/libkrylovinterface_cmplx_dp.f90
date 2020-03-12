@@ -669,7 +669,7 @@ contains
     occupation_limit = real(0.1,kind=lkl_double_k)
 !! threshold 'energy' is the test_value
     test_value = T100000K_au*log((1/occupation_limit)-1)&
-  &      +((sorter(n2+1)-sorter(n2))&
+  &      +((sorter(n2+1)+sorter(n2))&
   &      *real(0.5,kind=lkl_double_k))
 
 !! set nstart to full basis first, as an error condition

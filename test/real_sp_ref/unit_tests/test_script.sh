@@ -31,7 +31,15 @@ echo error statements: >> ../testing.summary
 grep 'failed' real_sp_blas_test.out >> ../testing.summary
 echo '~~~~~Real Single type(base) array tests done~~~~~'
 echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~' >> ../testing.summary
-#echo '~~~krylov_problem_a_subroutines_test~~~' >> ../testing.summary
+echo '~~~krylov_interface_subroutines_test~~~' >> ../testing.summary
+mv real_sp_interface_test.out real_sp_interface_test.out.old
+echo 'test output in' >> ../testing.summary
+echo 'test/real_sp_testing.results/unit_tests/real_sp_interface_test.out' >> ../testing.summary
+../../../src/real_sp_test/test_libkrylovinterface_real_sp
+echo '~~~~~Real Single subroutine tests done~~~~~'
+grep 'tested' real_sp_interface_test.out >> ../testing.summary
+echo error statements: >> ../testing.summary
+grep 'failed' real_sp_interface_test.out >> ../testing.summary
 #mv real_sp_krylov_a_test.out real_sp_krylov_a_test.out.old
 #echo 'test output in' >> ../testing.summary
 #echo 'test/real_sp_testing.results/real_sp_krylov_a_test.out' >> ../testing.summary

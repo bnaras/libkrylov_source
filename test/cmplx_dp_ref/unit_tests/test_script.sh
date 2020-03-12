@@ -31,15 +31,15 @@ echo error statements: >> ../testing.summary
 grep 'failed' cmplx_dp_blas_test.out >> ../testing.summary
 echo '~~~~~Complex Double type(base) array tests done~~~~~'
 echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~' >> ../testing.summary
-#echo '~~~krylov_problem_a_subroutines_test~~~' >> ../testing.summary
-#mv cmplx_dp_krylov_a_test.out cmplx_dp_krylov_a_test.out.old
-#echo 'test output in' >> ../testing.summary
-#echo 'test/cmplx_dp_testing.results/cmplx_dp_krylov_a_test.out' >> ../testing.summary
-#../../../src/cmplx_dp_test/test_krylovtypes_a_cmplx_dp > cmplx_dp_krylov_a_test.out
-#echo '~~~~~Complex Double subroutine tests done~~~~~'
-#grep 'tested' cmplx_dp_krylov_a_test.out >> ../testing.summary
-#echo error statements: >> ../testing.summary
-#grep 'failed' cmplx_dp_krylov_a_test.out >> ../testing.summary
+echo '~~~krylov_interface_subroutines_test~~~' >> ../testing.summary
+mv cmplx_dp_interface_test.out cmplx_dp_interface_test.out.old
+echo 'test output in' >> ../testing.summary
+echo 'test/cmplx_dp_testing.results/cmplx_dp_interface_test.out' >> ../testing.summary
+../../../src/cmplx_dp_test/test_libkrylovinterface_cmplx_dp 
+echo '~~~~~Complex Double subroutine tests done~~~~~'
+grep 'tested' cmplx_dp_interface_test.out >> ../testing.summary
+echo error statements: >> ../testing.summary
+grep 'failed' cmplx_dp_interface_test.out >> ../testing.summary
 #echo different to reference: >> ../testing.summary
 #grep 'different' cmplx_dp_krylov_a_test.out >> ../testing.summary
 #echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~' >> ../testing.summary

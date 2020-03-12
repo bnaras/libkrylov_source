@@ -109,7 +109,7 @@ program test_blastypes
 !! set ierr to 0
     ierr = 0
   else
-!! if wrong, write gheev runs
+!! if false, write gheev runs
     write(unit=funit,fmt=*) 'gheev runs'
   end if
 !! write an explanation of the function and result
@@ -637,7 +637,7 @@ program test_blastypes
 !! if false, write gpocon runs
     write(unit=funit,fmt=*) 'gpocon runs'
   end if
-!! write an explanation of the funtion
+!! write an explanation of the subroutine
   write(unit=funit,fmt=*) 'printing', &
   & 'type(base) solution for the reciprocal of the condition number'
 !! assign the test output to real(kind_float) test scalar variable
@@ -666,7 +666,7 @@ program test_blastypes
   end if
 !! check value of logical check
   if (check) then
-!! if true, write the subroutne gpocon failed to the output file
+!! if true, write the subroutine gpocon failed to the output file
     print *, 'subroutine gpocon failed'
   else
 !! if false, write the subroutin gpocon tested to the output file

@@ -31,15 +31,15 @@ echo error statements: >> ../testing.summary
 grep 'failed' real_dp_blas_test.out >> ../testing.summary
 echo '~~~~~Real Double type(base) array tests done~~~~~'
 echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~' >> ../testing.summary
-#echo '~~~krylov_problem_a_subroutines_test~~~' >> ../testing.summary
-#mv real_dp_krylov_a_test.out real_dp_krylov_a_test.out.old
-#echo 'test output in' >> ../testing.summary
-#echo 'test/real_dp_testing.results/real_dp_krylov_a_test.out' >> ../testing.summary
-#../../../src/real_dp_test/test_krylovtypes_a_real_dp > real_dp_krylov_a_test.out
-#echo '~~~~~Real Single subroutine tests done~~~~~'
-#grep 'tested' real_dp_krylov_a_test.out >> ../testing.summary
-#echo error statements: >> ../testing.summary
-#grep 'failed' real_dp_krylov_a_test.out >> ../testing.summary
+echo '~~~krylov_interface_subroutines_test~~~' >> ../testing.summary
+mv real_dp_interface_test.out real_dp_interface_test.out.old
+echo 'test output in' >> ../testing.summary
+echo 'test/real_dp_testing.results/real_dp_interface_test.out' >> ../testing.summary
+../../../src/real_dp_test/test_libkrylovinterface_real_dp 
+echo '~~~~~Real double subroutine tests done~~~~~'
+grep 'tested' real_dp_interface_test.out >> ../testing.summary
+echo error statements: >> ../testing.summary
+grep 'failed' real_dp_interface_test.out >> ../testing.summary
 #echo different to reference: >> ../testing.summary
 #grep 'different' real_dp_krylov_a_test.out >> ../testing.summary
 #echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~' >> ../testing.summary
