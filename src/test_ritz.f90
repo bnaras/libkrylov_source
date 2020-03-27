@@ -619,6 +619,8 @@ program test_ritz
     print *, 'krylov_a_ritz failed, ierr=',ierr
 !! set ierr to 0
     ierr = 0
+!! test is failed so set logical check = .true.
+    check = .true.
   else
 !! if false, write subroutine runs
     print *, 'krylov_a_ritz runs'
