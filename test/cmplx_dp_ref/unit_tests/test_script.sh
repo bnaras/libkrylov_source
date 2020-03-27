@@ -31,6 +31,16 @@ echo error statements: >> ../testing.summary
 grep 'failed' cmplx_dp_blas_test.out >> ../testing.summary
 echo '~~~~~Complex Double type(base) array tests done~~~~~'
 echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~' >> ../testing.summary
+echo '~~~solver_subroutines_test~~~' >> ../testing.summary
+mv cmplx_dp_ritz_test.out cmplx_dp_ritz_test.out.old
+echo 'test output in' >> ../testing.summary
+echo 'test/cmplx_dp_testing.results/unit_tests/cmplx_dp_ritz_test.out' >> ../testing.summary
+../../../src/real_dp_test/test_ritz_cmplx_dp >> cmplx_dp_ritz_test.out
+cat cmplx_dp_ritz_test.sum >> ../testing.summary
+echo error statements: >> ../testing.summary
+grep 'failed' cmplx_dp_ritz_test.out >> ../testing.summary
+echo '~~~~~Complex Double solver subroutine tests done~~~~~'
+echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~' >> ../testing.summary
 echo '~~~krylov_interface_subroutines_test~~~' >> ../testing.summary
 mv cmplx_dp_interface_test.out cmplx_dp_interface_test.out.old
 echo 'test output in' >> ../testing.summary
@@ -40,8 +50,15 @@ echo '~~~~~Complex Double subroutine tests done~~~~~'
 grep 'tested' cmplx_dp_interface_test.out >> ../testing.summary
 echo error statements: >> ../testing.summary
 grep 'failed' cmplx_dp_interface_test.out >> ../testing.summary
-#echo different to reference: >> ../testing.summary
-#grep 'different' cmplx_dp_krylov_a_test.out >> ../testing.summary
-#echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~' >> ../testing.summary
+echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~' >> ../testing.summary
+echo '~~~norms_subroutines_test~~~' >> ../testing.summary
+mv cmplx_dp_norms_test.out cmplx_dp_norms_test.out.old
+echo 'test output in' >> ../testing.summary
+echo 'test/cmplx_dp_testing.results/unit_tests/cmplx_dp_norms_test.out' >> ../testing.summary
+../../../src/cmplx_dp_test/test_norms_cmplx_dp >> cmplx_dp_norms_test.out
+cat cmplx_dp_norms_test.sum >> ../testing.summary
+echo error statements: >> ../testing.summary
+grep 'failed' cmplx_dp_norms_test.out >> ../testing.summary
+echo '~~~~~Complex Double norms subroutine tests done~~~~~'
 echo '~~~~~Complex Double Unit tests done~~~~~'
 

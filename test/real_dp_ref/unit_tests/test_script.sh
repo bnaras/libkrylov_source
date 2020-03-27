@@ -31,17 +31,33 @@ echo error statements: >> ../testing.summary
 grep 'failed' real_dp_blas_test.out >> ../testing.summary
 echo '~~~~~Real Double type(base) array tests done~~~~~'
 echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~' >> ../testing.summary
+echo '~~~solver_subroutines_test~~~' >> ../testing.summary
+mv real_dp_ritz_test.out real_dp_ritz_test.out.old
+echo 'test output in' >> ../testing.summary
+echo 'test/real_dp_testing.results/unit_tests/real_dp_ritz_test.out' >> ../testing.summary
+../../../src/real_dp_test/test_ritz_real_dp >> real_dp_ritz_test.out
+cat real_dp_ritz_test.sum >> ../testing.summary
+echo error statements: >> ../testing.summary
+grep 'failed' real_dp_ritz_test.out >> ../testing.summary
+echo '~~~~~Real Double solver subroutine tests done~~~~~'
+echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~' >> ../testing.summary
 echo '~~~krylov_interface_subroutines_test~~~' >> ../testing.summary
 mv real_dp_interface_test.out real_dp_interface_test.out.old
 echo 'test output in' >> ../testing.summary
 echo 'test/real_dp_testing.results/real_dp_interface_test.out' >> ../testing.summary
 ../../../src/real_dp_test/test_libkrylovinterface_real_dp 
-echo '~~~~~Real double subroutine tests done~~~~~'
+echo '~~~~~Real Double interface subroutine tests done~~~~~'
 grep 'tested' real_dp_interface_test.out >> ../testing.summary
 echo error statements: >> ../testing.summary
 grep 'failed' real_dp_interface_test.out >> ../testing.summary
-#echo different to reference: >> ../testing.summary
-#grep 'different' real_dp_krylov_a_test.out >> ../testing.summary
-#echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~' >> ../testing.summary
+echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~' >> ../testing.summary
+echo '~~~norms_subroutines_test~~~' >> ../testing.summary
+mv real_dp_norms_test.out real_dp_norms_test.out.old
+echo 'test output in' >> ../testing.summary
+echo 'test/real_dp_testing.results/unit_tests/real_dp_norms_test.out' >> ../testing.summary
+../../../src/real_dp_test/test_norms_real_dp >> real_dp_norms_test.out
+cat real_dp_norms_test.sum >> ../testing.summary
+echo error statements: >> ../testing.summary
+grep 'failed' real_dp_norms_test.out >> ../testing.summary
+echo '~~~~~Real Double norms subroutine tests done~~~~~'
 echo '~~~~~Real Double Unit tests done~~~~~'
-
