@@ -7,7 +7,7 @@ program test_basetypes
 !--------------------------------------------------------------------
 !< Description:
 !< This program tests the overloaded operators
-!< calls defined in a basetypes_* file
+!< defined in a basetypes_* file
 !< structured like the print subroutines in arrayfile
 !--------------------------------------------------------------------
 !
@@ -89,7 +89,7 @@ program test_basetypes
 
 
 !! testing real_to_base (integer)
-!! writing start real_to _base to the output file
+!! writing test real_to _base to the output file
   write(unit=funit,fmt=*) 'test type(base)',&
   & ', check real_to_base (integer)'
 !! running real_to_base on assigning real number 3 to type(base) z1
