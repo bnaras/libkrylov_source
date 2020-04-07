@@ -117,7 +117,7 @@ program test_blastypes
 !! if false, write gheev runs
     write(unit=funit,fmt=*) 'gheev runs'
 !! write an explanation of the function and result
-    write(unit=funit,fmt=*) 'printing type(base) eigenvectors = z_array1'
+    write(unit=funit,fmt=*) 'type(base) eigenvectors = z_array1'
     write(unit=funit,fmt=*) 'This should be an identity'   
 !! write test to check each element
 !! in both test array and reference 
@@ -147,8 +147,7 @@ program test_blastypes
       end do
     end do
 !! write the explanation of function and result
-    write(unit=funit,fmt=*) 'printing',&
-    &' real(kind_float) eigenvalues = x_array1'
+    write(unit=funit,fmt=*) 'real(kind_float) eigenvalues = x_array1'
     write(unit=funit,fmt=*) 'This should be 1,2,3'
 !! write start to check each element
 !! in both test array and reference
@@ -219,8 +218,7 @@ program test_blastypes
 !! if wrong, write ghesv runs
     write(unit=funit,fmt=*) 'ghesv runs'
 !! write an explanation of the function and result
-    write(unit=funit,fmt=*) 'printing',&
-    &' type(base) result of a linear equation'
+    write(unit=funit,fmt=*) 'type(base) result of a linear equation'
     write(unit=funit,fmt=*) 'This should be an identity'
 !! write start to check each element
 !! in test arrya and reference
@@ -286,8 +284,7 @@ program test_blastypes
 !! call ggemm on test input onto test output
   call ggemm('n','n',n,n,n,z1,z_array1,n,z_array2,n,z2,z_array3,n)
 !! write  an explanation of the function, using formula
-  write(unit=funit,fmt=*) 'printing', &
-  &' type(base) z_array3 = z1 * z_array1 * z_array2 +  z2 * z_array_3'
+  write(unit=funit,fmt=*) 'type(base) z_array3 = z1 * z_array1 * z_array2 +  z2 * z_array_3'
 !! explain the output z_array3
   write(unit=funit,fmt=*) 'z_array3 should be diagonal matrix', &
   &' with 3, 12 ,27 on the diagonal'
@@ -308,7 +305,7 @@ program test_blastypes
 !! using if statement to take the absolute difference
 !! between elements in test array and elements in reference
 !! to see whether it is greater than eps
-      if (abs(r_testarray1(j1,j2)-r_refarray1(j1,j2)).gt.eps) then
+      if (abs(r_test(1)-r_ref(1)).gt.eps) then
 !! if true, write the test failed
 !! and the position of the element that failed the test
         write(unit=funit,fmt=*) 'failed for elements', j1, j2
@@ -341,8 +338,7 @@ program test_blastypes
 !! call ggemm on test input onto tes output
   call ggemm('c','n',n,n,n,z1,z_array1,n,z_array1,n,z2,z_array4,n)
 !! write the explanation of the function using formula 
-  write(unit=funit,fmt=*) 'printing', &
-  &' type(base) z_array4 = z1 * (z_array1^H) * z_array1 +  z2 * z_array4'
+  write(unit=funit,fmt=*) 'type(base) z_array4 = z1 * (z_array1^H) * z_array1 +  z2 * z_array4'
 !! explain the output z_array4
   write(unit=funit,fmt=*) 'z_array4 should be a diagonal matrix', &
   & ' with 3,12,27 on the diagonal'
@@ -363,7 +359,7 @@ program test_blastypes
 !! using if statement to take the absolute difference 
 !! between elements in test array and elements in reference
 !! to see whether it isis greater than eps
-      if (abs(r_testarray1(j1,j2)-r_refarray1(j1,j2)).gt.eps) then
+      if (abs(r_test(1)-r_ref(1)).gt.eps) then
 !! if true, write the test failed
 !! and the position of the element that failed the test
         write(unit=funit,fmt=*) 'failed for elements', j1, j2
@@ -415,8 +411,7 @@ program test_blastypes
 !! if false, write gdot runs 
     write(unit=funit,fmt=*) 'gdot runs'
 !! write an explanation of the function 
-    write(unit=funit,fmt=*) 'printing', &
-    &', type(base) solution for the dot product' 
+    write(unit=funit,fmt=*) 'type(base) solution is a dot product' 
 !! assign the test output to a real(kind_float) test scalar variable
 !! for comparison to referene
     r_test = z3
@@ -488,48 +483,44 @@ program test_blastypes
 !! if false, write gpotrf runs
     write(unit=funit,fmt=*) 'gpotrf runs'
 !! write an explanation of the funtion
-    write(unit=funit,fmt=*) 'printing', &
-    &', type(base) solution for cholesky decomposition' 
-!! assign the test output to real(kind_float) test array
-!! for comparision to reference
-    r_testarray1 = z_array1
-!! assign a reference array (real(kind_float)) 
-!! by operations on real(kind_float) numbers
-!! using a do loop to fill in the matrix for the reference array  
-    r_refarray1 = real(0,kind=kind_float)
-    do j1 = 1, n
-      r_refarray1(j1,j1) = real(j1,kind=kind_float)
-    end do
-!! write the reference array (unformatted) to the output file
-    write(unit=funit,fmt=*) 'z_array1 should be equal to', r_refarray1
+    write(unit=funit,fmt=*) 'type(base) results a cholesky decomposition' 
+! write the reference array (unformatted) to the output file
+    write(unit=funit,fmt=*) 'z_array1 should be a diagonal matrix',&
+    &' with 1,2,3 on the diagonal'
 !! write start to check each element in both test array and reference  
     write(unit=funit,fmt=*) 'test gpotrf, for each element'
-!! set logical check = .false.
-    check = .false.
-!! using do loops to take the absolute difference 
-!! between the elements in test array and the elements in reference value
-    do j1 = 1, n 
-      do j2 = 1,n
+!! using do loops to assign z_array1 to t_test element by element
+!! and the elements in reference value
+!! since r_ref is supposed to be a diagonal matrix
+!! with 1,2,3 on diagonal matirx
+!! using if ststemnt to assign real number 1,2,3 if row =  column number
+!! else assign real number 0
+    do j2 = 1, n 
+      do j1 = 1,n
+        r_test = z_array1(j1,j2)
+        if (j1.eq.j2) then
+          r_ref = real(j2,kind=kind_float)
+        else 
+          r_ref = real(0,kind=kind_float)
+        end if
 !! test if difference is greater than machine precision
 !! defined by the constant eps
-        if (abs(r_testarray1(j1,j2)-r_refarray1(j1,j2)).gt.eps) then
+        if (abs(r_test(1)-r_ref(1)).gt.eps) then
 !! if true, write the test failed and the position of element failed
           write(unit=funit,fmt=*) 'failed for element', j1, j2
 !! set logical check = .true.
           check = .true.
-        else
-!! if false, write the test succeeded 
-!! and the position of element succeeded
-          write(unit=funit,fmt=*) 'succeeded for element', j1, j2
         end if
       end do
     end do  
 !! check value of logical check
     if (check) then
-!! if true, write the subroutine gpotrf test failed to the output file
+!! if true, write subroutine gpotrf failed to the output and output file
+      write(unit=funit,fmt=*) 'subroutine gpotrf failed'
       print *, 'subroutine gpotrf failed'
     else
-!! if false, write the subroutine gpotrf test tested to the output file
+!! if false, write subroutine gpotrf tested to the output and ouput file
+      write(unit=funit,fmt=*) 'tested subroutine gpotrf'
       print *, 'tested subroutine gpotrf'
     end if
   end if
