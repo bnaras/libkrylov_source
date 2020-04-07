@@ -44,6 +44,26 @@ module libkrylovinterface
 !--------------------------------------------------------------------
 
 !! abstract type for a function that
+!! interacts with a real element in an array of the two indexes selected
+  type, abstract :: libkrylov_scalar_subroutine
+  contains
+    procedure(libkrylov_scalar_interface), deferred :: scalar_fill
+  end type libkrylov_scalar_subroutine
+  abstract interface
+    subroutine libkrylov_scalar_interface(data,n1,n2,obj,ierr)
+      import :: lkl_double_k, lkl_int_k,libkrylov_scalar_subroutine
+      class(libkrylov_scalar_subroutine) :: data
+!!    rows of obj
+      integer(lkl_int_k), intent(in) :: n1
+!!    columns of obj
+      integer(lkl_int_k), intent(in) :: n2
+!!    obj to be interacted with
+      real(lkl_double_k), intent(inout) :: obj
+      integer(lkl_int_k), intent(inout) :: ierr
+    end subroutine libkrylov_scalar_interface
+  end interface
+
+!! abstract type for a function that
 !! interacts with a real array with two dimensions
   type, abstract :: libkrylov_matrix_subroutine
   contains
