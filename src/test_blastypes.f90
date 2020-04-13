@@ -36,10 +36,6 @@ program test_blastypes
   real(kind_float) :: x1
   real(kind_float) :: x2
   real(kind_float) :: x_array1(n)
-  real(kind_float) :: r_testarray1(n,n)
-  real(kind_float) :: r_refarray1(n,n)
-  real(kind_float) :: r_testarray2(n)
-  real(kind_float) :: r_refarray2(n)
   integer(kind_integer) :: ipiv(n)
   integer(kind_integer) :: iseed(4)
   type(base) :: z_array1(n,n)
@@ -533,6 +529,10 @@ program test_blastypes
   do j1 = 1, n
     z_array1(j1,j1) = real(j1,kind=kind_float)
   end do
+!! set original r_test and r_ref to real number 0
+  r_test = real(0,kind=kind_float)
+!! set logical check = .false.
+  check = .false.
 !! write glanhe and operation  
   write(unit=funit,fmt=*) 'test glanhe', &
 & ',calculate the 1-norm of z_array1'
@@ -548,8 +548,7 @@ program test_blastypes
  !! if false, write glanhe runs
     write(unit=funit,fmt=*) 'glanhe runs'
 !! write an explanation of the function
-    write(unit=funit,fmt=*) 'printing'&
-    &' type(base) solution of a norm'
+    write(unit=funit,fmt=*) 'test the norm of a type(base)'
 !! assign the test output to a real(kind_float) test scalar variable
 !! for comparison to reference
     r_test = x1
@@ -560,8 +559,6 @@ program test_blastypes
     write(unit=funit,fmt=*) 'x1 should be equal to', r_ref
 !! write start to check each element in both test and reference value 
     write(unit=funit,fmt=*) 'test glanhe, for each element'
-!! set logical check = .false.
-    check = .false.
 !! test if the difference of test and reference is greater than 
 !!machine precision (defined by the constant eps)
     if (abs(r_test(1)-r_ref(1)).gt.eps) then
@@ -570,17 +567,15 @@ program test_blastypes
       write(unit=funit,fmt=*) 'failed for elements', j1
 !! set logical check = .true.
       check = .true.
-    else
-!! if false, wirte the test succeeded for every elements
-!! and the position of the element succeeded
-      write(unit=funit,fmt=*) 'succeeded for elements', j1
     end if
 !! check value of logical check
     if (check) then
-!! if true, write subroutine glanhe failed to the output file
+!! if true, write subroutine glanhe failed to output and output file
+      write(unit=funit,fmt=*) 'subroutine glanhe failed'
       print *, 'subroutine glanhe failed'
     else
-!! if false, write test subroutine glanhe tested to the output file
+!! if false, write test subroutine glanhe tested to output and output file
+      write(unit=funit,fmt=*) 'tested subroutine glanhe'
       print *, 'tested subroutine glanhe'
     end if
   end if
@@ -594,6 +589,11 @@ program test_blastypes
     z_array1(j1,j1) = real(j1,kind=kind_float)
   end do
   x1 = real(3,kind=kind_float)
+!! set original r_test and r_ref to real number 0
+  r_test = real(0,kind=kind_float)
+  r_ref = real(0,kind=kind_float)
+!! set logical check = .false.
+  check = .false.
 !! write gpocon and operation
   write(unit=funit,fmt=*) 'test gpocon',&
   &',calculate for the reciprocal of the condition number'
@@ -609,8 +609,7 @@ program test_blastypes
 !! if false, write gpocon runs
     write(unit=funit,fmt=*) 'gpocon runs'
 !! write an explanation of the subroutine
-    write(unit=funit,fmt=*) 'printing', &
-    & 'type(base) solution for the reciprocal of the condition number'
+    write(unit=funit,fmt=*) 'test type(base) is the reciprocal of the condition number'
 !! assign the test output to real(kind_float) test scalar variable
 !! for comparison to reference
     r_test = x2
@@ -620,8 +619,6 @@ program test_blastypes
     write(unit=funit,fmt=*) 'x2 should be equal to', x2
 !! write start to check each element in both test and reference
     write(unit=funit,fmt=*) 'test gpocon, for each element'
-!! set logical check = .false.
-    check = .false.
 !! test if the difference of test and reference is greater than
 !! machine precision (defined by the constant eps)  
     if (abs(r_test(1)-r_ref(1)).gt.eps) then
@@ -630,17 +627,14 @@ program test_blastypes
       write(unit=funit,fmt=*) 'failed for elements', j1
 !! set logical check = .true.
       check = .true.
-    else
-!! if false, write test succeeded
-!! and the position of element succeeded
-      write(unit=funit,fmt=*) 'succeeded for elements', j1
-    end if
-!! check value of logical check
+    end if 
     if (check) then
-!! if true, write the subroutine gpocon failed to the output file
+!! if true, write the subroutine gpocon failed to output and output file
+      write(unit=funit,fmt=*) 'subroutine gpocon failed'
       print *, 'subroutine gpocon failed'
     else
-!! if false, write the subroutin gpocon tested to the output file
+!! if false, write the subroutin gpocon tested to output and output file
+      write(unit=funit,fmt=*) 'tested subroutine gpocon'
       print *, 'tested subroutine gpocon'
     end if
   end if
@@ -658,6 +652,11 @@ program test_blastypes
     z_array2(j1,j1) = real(j1,kind=kind_float)
   end do
   z1 = real(1,kind=kind_float)
+!! set original r_test and r_ref to real number 0
+  r_test = real(0,kind=kind_float)
+  r_ref = real(0,kind=kind_float)
+!! set logical check = .false.
+  check = .false.
 !! write gtrsm and operation
   write(unit=funit,fmt=*) 'test gtrsm',&
   &', calculate for one of the matrix equations'
@@ -666,53 +665,35 @@ program test_blastypes
 !! on test input onto test output
   call gtrsm('l','l','c','n',n,n,z1,z_array2,n,z_array1,n)
 !! write an explanation of the function using formula  
-  write(unit=funit,fmt=*) 'printing'&
-  &'type(base) z_array1 = z_array1^H * z1 * z_array2'
-!! assign the test output to real(kind_float) test array
-!! for comparison to reference
-  r_testarray1 = z_array1
-!! assign a reference array (real(kind_float))
-!! by operation on real(kind_float) numbers
-!! using a do loop to fill in the matrix 
-  r_refarray1 = real(0,kind=kind_float)
-  do j1 = 1, n
-    r_refarray1(j1,j1) = (real(1,kind=kind_float) / &
-  & real(j1,kind=kind_float)) * real(j1,kind=kind_float)
-  end do
+  write(unit=funit,fmt=*) 'type(base) z_array1 = z_array1^H * z1 * z_array2'
 !! write the reference array (unformatted) to the output file
-  write(unit=funit,fmt=*) 'z_array1 should be equal to', r_refarray1
+  write(unit=funit,fmt=*) 'z_array1 should be equal to identity'
 !! write start to check each element 
 !! in both test array and reference array
   write(unit=funit,fmt=*) 'test gtrsm, for each element'
-!! set logical check = .false.
-  check = .false.
-!! using do loops to take the absolute difference
-!! between the elements in test array and elements in reference value
-  do j1 = 1, n 
-    do j2 = 1,n
-!! test if difference is greater than machine precision
-!! (defined by the constant eps)
-      if (abs(r_testarray1(j1,j2)-r_refarray1(j1,j2)).gt.eps) then
+!! using do loops to assign z_array1 element by element to r_test
+!! assign r_ref to be a identity matrix
+  do j2 = 1, n 
+    do j1 = 1,n
+       r_test = z_array1(j1,j2)
+       if (j1.eq.j2) then
+         r_ref = (real(1,kind=kind_float) / &
+         & real(j2,kind=kind_float)) * real(j2,kind=kind_float)
+       else
+         r_ref = real(0,kind=kind_float)
+       end if 
+!! test if the absolute difference of r_test and r_ref 
+!! is greater than machine precision (defined by the constant eps)
+      if (abs(r_test(1)-r_ref(1)).gt.eps) then
 !! if true, write the test failed
 !! and the position of the element that failed
         write(unit=funit,fmt=*) 'failed for elements', j1, j2
 !! set logical check = .true.
       check = .true.
-      else
-!! if false, write the test succeeded
-!! and the position of the element that succeeded
-        write(unit=funit,fmt=*) 'succeeded for elements', j1, j2
       end if
     end do
   end do  
-!! check value of logical check
-  if (check) then
-!! if true, write subroutine gtrsm failed to the output file
-    print *, 'subroutine gtrsm failed'
-  else
-!! if false, write subroutine gtrsm tested to the output file
-    print *, 'tested subroutine gtrsm'
-  end if
+
 
 
 !!! testing gtrsm
@@ -727,6 +708,11 @@ program test_blastypes
     z_array2(j1,j1) = real(j1,kind=kind_float)
   end do
   z1 = real(1,kind=kind_float)
+!! set original r_test and r_ref to real number 0
+  r_test = real(0,kind=kind_float)
+  r_ref = real(0,kind=kind_float)
+!! set logical check = .false.
+  check =.false.
 !! write gtrsm and operation
   write(unit=funit,fmt=*) 'test gtrsm', &
   &', calculate for one of the matrix equations'
@@ -735,53 +721,34 @@ program test_blastypes
 !! on test input onto test output
   call gtrsm('l','l','n','n',n,n,z1,z_array2,n,z_array1,n)
 !! write an explanation of the function using formula
-  write(unit=funit,fmt=*) 'printing'&
-  &',type(base) z_array1 = z_array1^H * z1 * z_array2' 
-!! assign the test output to a real(kind_float) test array
-!! for comparison to reference
-  r_testarray1 = z_array1
-!! assign a reference array (real(kind_float)) 
-!! by operations on real(kind_float) numbers
-!1 using a do loop to fill in the matrix for reference
-  r_refarray1 = real(0,kind=kind_float)
-  do j1 = 1, n
-    r_refarray1(j1,j1) = (real(1,kind=kind_float) / &
-  & real(j1,kind=kind_float)) * real(j1,kind=kind_float)
-  end do
+  write(unit=funit,fmt=*) 'type(base) z_array1 = z_array1^H * z1 * z_array2' 
 !! write the reference array (unformatted) to the output file
-  write(unit=funit,fmt=*) 'z_array1 should be equal to', r_refarray1
+  write(unit=funit,fmt=*) 'z_array1 should be equal to identity'
 !! write start to check each element
 !! in both test array and reference array
   write(unit=funit,fmt=*) 'test gtrsm, for each element'
-!! set logical check = .false.
-  check = .false.
-!! using do loops to take the absolute difference
-!! between elements in test array and elements in reference array
-  do j1 = 1, n 
-    do j2 = 1,n
-!! test if difference is greater than machine precision
-!! (defined by the constant eps
-      if (abs(r_testarray1(j1,j2)-r_refarray1(j1,j2)).gt.eps) then
+!! using do loops to assign z_array1 element by element to r_test
+!! assign r_ref to be a identity matrix
+  do j2 = 1, n 
+    do j1 = 1,n
+       r_test = z_array1(j1,j2)
+       if (j1.eq.j2) then
+         r_ref = (real(1,kind=kind_float) / &
+         & real(j2,kind=kind_float)) * real(j2,kind=kind_float)
+       else
+         r_ref = real(0,kind=kind_float)
+       end if 
+!! test if the absolute difference of r_test and r_ref 
+!! is greater than machine precision (defined by the constant eps)
+      if (abs(r_test(1)-r_ref(1)).gt.eps) then
 !! if true, write the test failed
 !! and the position of the element that failed
         write(unit=funit,fmt=*) 'failed for elements', j1, j2
 !! set logical check = .true.
-        check = .true.
-      else
-!! if flase, write the test succeeded
-!! and the position of the element that succeeded
-        write(unit=funit,fmt=*) 'succeeded for elements', j1, j2
+      check = .true.
       end if
     end do
-  end do  
-!! check value of logical check
-  if (check) then
-!! if true, write subroutine gtrsm failed to the output file
-    print *, 'subroutine gtrsm failed'
-  else
-!! if false, write subroutine gtrsm tested to the output file
-    print *, 'tested subroutine gtrsm'
-  end if
+  end do 
 
 
 !!! testing gtrsm
@@ -796,6 +763,11 @@ program test_blastypes
     z_array2(j1,j1) = real(j1,kind=kind_float)
   end do
   z1 = real(1,kind=kind_float)
+!! set origional r_test and r_ref to real number 0
+  r_test = real(0,kind=kind_float)
+  r_ref = real(0,kind=kind_float)
+!! set logical check = .false.
+  check = .false.
 !! write gtrsm and operation
   write(unit=funit,fmt=*) 'test gtrsm', &
   &', calculate for one of the matrix equations'  
@@ -806,51 +778,44 @@ program test_blastypes
 !! write an explanation of the function using formula
   write(unit=funit,fmt=*) 'printing',&
   &'type(base) z_array1 = z1 * z_array2 * z_array1^H'
-!! assign the test output to a real(kind_float) test array
-!! for comparison to reference
-  r_testarray1 = z_array1
-!! assign a reference array (real(kind_float))
-!! by operations on real(kind_float) numbers
-!! using a do loop to fill in the matrix for the reference array
-  r_refarray1 = real(0,kind=kind_float)
-  do j1 = 1, n
-    r_refarray1(j1,j1) = real(j1,kind=kind_float) * &
-  & (real(1,kind=kind_float) / real(j1,kind=kind_float))
-  end do
 !! write the reference array (unformatted) to the output file
-  write (unit=funit, fmt=*) 'z_array1 should be equal to', r_refarray1
+  write (unit=funit, fmt=*) 'z_array1 should be equal to identity'
 !! write start to check each element 
 !! in both test array and reference array
   write(unit=funit,fmt=*) 'test gtrsm, for each element'
-!! set logical check = .false.
-  check = .false.
-!! using do loops to take the absolute difference
-!! between the elements in test array and the elements in reference array
-  do j1 = 1, n 
-    do j2 = 1,n
-!! test if difference is greater than machine precision
-!! (defined by the constant eps)
-      if (abs(r_testarray1(j1,j2)-r_refarray1(j1,j2)).gt.eps) then
+!! using do loops to assign z_array1 element by element to r_test
+!! assign r_ref to be a identity matrix
+  do j2 = 1, n 
+    do j1 = 1,n
+       r_test = z_array1(j1,j2)
+       if (j1.eq.j2) then
+         r_ref = (real(1,kind=kind_float) / &
+         & real(j2,kind=kind_float)) * real(j2,kind=kind_float)
+       else
+         r_ref = real(0,kind=kind_float)
+       end if 
+!! test if the absolute difference of r_test and r_ref 
+!! is greater than machine precision (defined by the constant eps)
+      if (abs(r_test(1)-r_ref(1)).gt.eps) then
 !! if true, write the test failed
 !! and the position of the element that failed
         write(unit=funit,fmt=*) 'failed for elements', j1, j2
 !! set logical check = .true.
-        check = .true.
-      else
-!! if false. write the test succeeded
-!! and the position of the element that succeeded
-        write(unit=funit,fmt=*) 'succeeded for elements', j1, j2
+      check = .true.
       end if
     end do
   end do  
 !! check value of logical check
   if (check) then
-!! if true, write subroutine gtrsm failed to the output
-    print *, 'subtoutine gtrsm failed'
+!! if true, write subroutine gtrsm failed to output and output file
+    write(unit=funit,fmt=*) 'subroutine gtrsm failed'
+    print *, 'subroutine gtrsm failed'
   else
-!! if false, write subroutine gtrsm tested to the output
+!! if false, write subroutine gtrsm tested to output and output file
+    write(unit=funit,fmt=*) 'tested subroutine gtrsm'
     print *, 'tested subroutine gtrsm'
   end if
+
 
 
 
@@ -861,6 +826,11 @@ program test_blastypes
   do j1 = 1, n
     z_array2(j1,j1) = real(j1,kind=kind_float)
   end do
+!! set original r_test and r_ref to real number 0
+  r_test = real(0,kind=kind_float)
+  r_ref = real(0,kind=kind_float)
+!! set logical check = .false.
+  check = .false.
 !! write ggetrf and operation
   write(unit=funit,fmt=*) 'test ggetrf', &
   &', calculate for LU decomposition of a matrix'
@@ -877,50 +847,32 @@ program test_blastypes
 !! if false, write gpotrf runs
     write(unit=funit,fmt=*) 'ggetrf runs'
 !! write an explanation of the funtion
-    write(unit=funit,fmt=*) 'printing', &
-    &', type(base) solution for LU decomposition' 
-!! assign the test output to real(kind_float) test array
-!! for comparision to reference
-    r_testarray1 = z_array2
-!! assign a reference array (real(kind_float)) 
-!! by operations on real(kind_float) numbers
-!! using a do loop to fill in the matrix for the reference array  
-    r_refarray1 = real(0,kind=kind_float)
-    do j1 = 1, n
-      r_refarray1(j1,j1) = real(j1,kind=kind_float)
-    end do
-!! write the reference array (unformatted) to the output file
-    write(unit=funit,fmt=*) 'z_array2 should be equal to', r_refarray1
+    write(unit=funit,fmt=*) 'type(base) solution for LU decomposition' 
+!! write explanation to the output file
+    write(unit=funit,fmt=*) 'z_array2 should be equal to', &
+    & ' a diagonal matrix with 1,2,3 on diagonal'
 !! write start to check each element in both test array and reference  
     write(unit=funit,fmt=*) 'test ggetrf, for each element'
-!! set logical check = .false.
-    check = .false.
-!! using do loops to take the absolute difference 
-!! between the elements in test array and the elements in reference value
-    do j1 = 1, n 
-      do j2 = 1,n
-!! test if difference is greater than machine precision
-!! defined by the constant eps
-        if (abs(r_testarray1(j1,j2)-r_refarray1(j1,j2)).gt.eps) then
+!! using do loops to assign z_array2 to r_test element by elemnt
+!! and r_ref as a diagonal matrix with 1,2,3 on the diagonal
+    do j2 = 1, n 
+      do j1 = 1,n
+        r_test = z_array2(j1,j2)
+        if (j1.eq.j2) then
+          r_ref = real(j2,kind=kind_float)
+        else
+          r_ref = real(0,kind=kind_float) 
+        end if
+!! test the absolute difference of r_test and r_ref 
+!! whether it is greater than machine precision defined by constant eps
+        if (abs(r_test(1)-r_ref(1)).gt.eps) then
 !! if true, write the test failed and the position of element failed
           write(unit=funit,fmt=*) 'failed for element', j1, j2
 !! set logical check = .true.
           check = .true.
-        else
-!! if false, write the test succeeded 
-!! and the position of element succeeded
-          write(unit=funit,fmt=*) 'succeeded for element', j1, j2
         end if
       end do
     end do  
-!! check value of logical check
-    if (check) then
-!! if true, write the subroutine gpotrf test failed to the output file
-      print *, 'subroutine ggetrf failed'
-    else
-!! if false, write the subroutine gpotrf test tested to the output file
-      print *, 'tested subroutine ggetrf'
-    end if
   end if
 
 
@@ -951,50 +903,41 @@ program test_blastypes
   else
 !! if false, write gpocon runs
     write(unit=funit,fmt=*) 'ggetrs runs'
-!! assign the test output to a real(kind_float) test array
-!! for comparison to reference
-    r_testarray1 = z_array1
-!! assign a reference array (real(kind_float)) 
-!! by operations on real(kind_float) numbers
-!1 using a do loop to fill in the matrix for reference
-    r_refarray1 = real(0,kind=kind_float)
-    do j1 = 1, n
-      r_refarray1(j1,j1) = (real(1,kind=kind_float) / &
-      & real(j1,kind=kind_float)) * real(j1,kind=kind_float)
-    end do
-!! write the reference array (unformatted) to the output file
-    write(unit=funit,fmt=*) 'z_array1 should be equal to', r_refarray1
+!! write the explanation  to the output file
+    write(unit=funit,fmt=*) 'z_array1 should be equal to', &
+    & ' a diagonal matrix with 1,2,3 on the diagonal'
 !! write start to check each element
 !! in both test array and reference array
     write(unit=funit,fmt=*) 'test ggetrs, for each element'
-!! set logical check = .false.
-    check = .false.
-!! using do loops to take the absolute difference
-!! between elements in test array and elements in reference array
-    do j1 = 1, n 
-      do j2 = 1,n
-!! test if difference is greater than machine precision
-!! (defined by the constant eps
-        if (abs(r_testarray1(j1,j2)-r_refarray1(j1,j2)).gt.eps) then
-!! if true, write the test failed
-!! and the position of the element that failed
-          write(unit=funit,fmt=*) 'failed for elements', j1, j2
+!! using do loops to assign z_array2 to r_test element by elemnt
+!! and r_ref as a diagonal matrix with 1,2,3 on the diagonal
+    do j2 = 1, n 
+      do j1 = 1,n
+        r_test = z_array2(j1,j2)
+        if (j1.eq.j2) then
+          r_ref = real(j2,kind=kind_float)
+        else
+          r_ref = real(0,kind=kind_float) 
+        end if
+!! test the absolute difference of r_test and r_ref 
+!! whether it is greater than machine precision defined by constant eps
+        if (abs(r_test(1)-r_ref(1)).gt.eps) then
+!! if true, write the test failed and the position of element failed
+          write(unit=funit,fmt=*) 'failed for element', j1, j2
 !! set logical check = .true.
           check = .true.
-        else
-!! if flase, write the test succeeded
-!! and the position of the element that succeeded
-          write(unit=funit,fmt=*) 'succeeded for elements', j1, j2
         end if
       end do
     end do  
 !! check value of logical check
     if (check) then
-!! if true, write subroutine gtrsm failed to the output file
-      print *, 'subroutine ggetrs failed'
+!! if true, write subroutine gpotrf failed to output and output file
+      write(unit=funit,fmt=*) 'subroutine ggetrf failed'
+      print *, 'subroutine ggetrf failed'
     else
-!! if false, write subroutine gtrsm tested to the output file
-      print *, 'tested subroutine ggetrs'
+!! if false, write the subroutine gpotrf tested to output and output file
+      write(unit=funit,fmt=*) 'tested subroutine ggetrf'
+      print *, 'tested subroutine ggetrf'
     end if
   end if
 
