@@ -197,7 +197,7 @@ module libkrylovinterface
   end type libkrylov_precon_subroutine
   abstract interface
     subroutine libkrylov_precon_interface(data,n1,n2,n3,approx_spectra,&
-  &   precon_roots,basis_vectors,residuals,ierr)
+  &   precon_roots,full_solutions,residuals,ierr)
       import :: lkl_double_k, lkl_int_k , libkrylov_precon_subroutine
       class(libkrylov_precon_subroutine) :: data
 !!    rows of residuals, nbasis
@@ -211,7 +211,7 @@ module libkrylovinterface
 !!    approximate spectra
       real(lkl_double_k), intent(in) :: precon_roots(n2)
 !!    basis vectors
-      real(lkl_double_k), intent(in) :: basis_vectors(n1,n3)
+      real(lkl_double_k), intent(in) :: full_solutions(n1,n2)
 !!    residuals
       real(lkl_double_k), intent(inout) :: residuals(n1,n2)
 !!    error variable
@@ -871,7 +871,7 @@ contains
 
 !--------------------------------------------------------------------
   subroutine lkl_precon_none(data,n1,n2,n3,approx_spectra,&
-   &   precon_roots,basis_vectors,residuals,ierr)
+   &   precon_roots,full_solutions,residuals,ierr)
 !--------------------------------------------------------------------
 !
 !--------------------------------------------------------------------
@@ -907,7 +907,7 @@ contains
 !!    frequencies
     real(lkl_double_k), intent(in) :: precon_roots(n2)
 !!    basis vectors
-    real(lkl_double_k), intent(in) :: basis_vectors(n1,n3)
+    real(lkl_double_k), intent(in) :: full_solutions(n1,n2)
 !--------------------------------------------------------------------
 ! Input/Output Parameters
 !--------------------------------------------------------------------
@@ -929,7 +929,7 @@ contains
 
 !--------------------------------------------------------------------
   subroutine lkl_precon_approx(data,n1,n2,n3,approx_spectra,&
-   &   precon_roots,basis_vectors,residuals,ierr)
+   &   precon_roots,full_solutions,residuals,ierr)
 !--------------------------------------------------------------------
 !
 !--------------------------------------------------------------------
@@ -965,7 +965,7 @@ contains
 !!    frequencies
     real(lkl_double_k), intent(in) :: precon_roots(n2)
 !!    basis vectors
-    real(lkl_double_k), intent(in) :: basis_vectors(n1,n3)
+    real(lkl_double_k), intent(in) :: full_solutions(n1,n2)
 !--------------------------------------------------------------------
 ! Input/Output Parameters
 !--------------------------------------------------------------------
@@ -994,7 +994,7 @@ contains
 
 !--------------------------------------------------------------------
   subroutine lkl_precon_davidson(data,n1,n2,n3,approx_spectra,&
-   &   precon_roots,basis_vectors,residuals,ierr)
+   &   precon_roots,full_solutions,residuals,ierr)
 !--------------------------------------------------------------------
 !
 !--------------------------------------------------------------------
@@ -1030,7 +1030,7 @@ contains
 !!    frequencies
     real(lkl_double_k), intent(in) :: precon_roots(n2)
 !!    basis vectors
-    real(lkl_double_k), intent(in) :: basis_vectors(n1,n3)
+    real(lkl_double_k), intent(in) :: full_solutions(n1,n2)
 !--------------------------------------------------------------------
 ! Input/Output Parameters
 !--------------------------------------------------------------------

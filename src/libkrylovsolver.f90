@@ -1146,7 +1146,8 @@ contains
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
   subroutine krylov_a_norms(nbasis,nsubspace,nroots,&
-  &     mvproduct,basis_vectors,solutions,overlap,roots,&
+  &     mvproduct,basis_vectors,full_solutions,solutions,&
+  &     overlap,roots,&
   &     approx_spectra,krylov_precon,residuals,&
   &     euc_norm,largest_euc_norm,fro_norm,&
   &     nresiduals,iverb,ierr)
@@ -1185,6 +1186,7 @@ contains
     integer(kind_integer), intent(in) :: nroots
     type(base), intent(in) :: mvproduct(nbasis,nsubspace)
     type(base), intent(in) :: basis_vectors(nbasis,nsubspace)
+    type(base), intent(in) :: full_solutions(nbasis,nroots)
     type(base), intent(in) :: solutions(nsubspace,nroots)
     type(base), intent(in) :: overlap(nsubspace,nsubspace)
     real(kind_float), intent(in) :: roots(nroots)
@@ -1209,6 +1211,7 @@ contains
     type(base) :: one_kb
     type(base) :: zero_kb
     type(base), allocatable :: all_residuals(:,:)
+    type(base), allocatable :: all_solutions(:,:)
     real(kind_float), allocatable :: all_roots(:)
     logical, allocatable :: eps_converged(:)
     real(kind_float) :: lognbasis
@@ -1223,6 +1226,7 @@ contains
 
 ! Allocate local arrays
     allocate(all_residuals(nbasis,nroots))
+    allocate(all_solutions(nbasis,nroots))
     allocate(eps_converged(nroots))
     allocate(xo(nsubspace,nroots))
     allocate(vxo(nbasis,nroots))
@@ -1331,20 +1335,22 @@ contains
         if (.not.eps_converged(k)) then
           l = l + 1
           all_residuals(1:nbasis,l) = all_residuals(1:nbasis,k)
+          all_solutions(1:nbasis,l) = full_solutions(1:nbasis,k)
           all_roots(l) = roots(k)
         end if
       end do
     else
+      all_solutions = full_solutions
       all_roots = roots
     end if
 
 !! Precondition with input function!
 !!NAMBI
-    associate(interfacing_bv => basis_vectors%element,&
+    associate(interfacing_fs => all_solutions%element,&
   &           interfacing_rd => all_residuals%element)
       call krylov_precon%lkl_precon(nbasis,ntemp,nsubspace,&
   &     approx_spectra,&
-  &     all_roots(1:ntemp),interfacing_bv,&
+  &     all_roots(1:ntemp),interfacing_fs,&
   &     interfacing_rd(1:nbasis,1:ntemp),ierr)
     end associate
     if (ierr.ne.0) then
@@ -1563,6 +1569,9 @@ contains
 !< roots = eigenvalues of current subspace calculation that are relevant = omega
 !< solutions = eigenvectors of current subspace calculation that are relevant = x
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!! filled in between ritz and norms
+    type(base), allocatable :: full_solutions(:,:)
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !! filled in at krylov_a_norms
     type(base), allocatable :: residuals(:,:)
     real(kind_float), allocatable :: euc_norm(:)
@@ -1736,6 +1745,7 @@ contains
     allocate(overlap(maxsubspace,maxsubspace)) !maximum
     allocate(roots(nroots))
     allocate(diag_overlap(maxsubspace)) !maximum
+    allocate(full_solutions(nbasis,nroots))
     allocate(residuals(nbasis,nroots)) !maximum
     allocate(euc_norm(nroots))
     allocate(jconverged(nroots))
@@ -2049,10 +2059,18 @@ contains
         exit ! This exits subspace loop
       end if
 
+!! calculation of solutions on full space
+      call ggemm('n','n',nbasis,nroots,nsubspace,one_kb,&
+  &      basis_vectors,nbasis,&
+  &      solutions,maxsubspace,&
+  &      zero_kb,&
+  &      full_solutions,&
+  &      nbasis)
+
 ! call krylov norms subroutine
       call krylov_a_norms(nbasis,nsubspace,nroots,&
   &     mvproduct(1:nbasis,1:nsubspace),& 
-  &     basis_vectors(1:nbasis,1:nsubspace),& 
+  &     basis_vectors(1:nbasis,1:nsubspace),full_solutions,& 
   &     solutions(1:nsubspace,1:nroots),&
   &     overlap(1:nsubspace,1:nsubspace),&
   &     roots,approx_spectra,krylov_precon,&
@@ -2600,7 +2618,8 @@ contains
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
   subroutine krylov_b_norms(nbasis,nsubspace,nrhs,&
-  &     mvproduct,basis_vectors,solutions,overlap,rhs,&
+  &     mvproduct,basis_vectors,full_solutions,solutions,&
+  &     overlap,rhs,&
   &     approx_spectra,krylov_precon,residuals,&
   &     euc_norm,largest_euc_norm,fro_norm,&
   &     nresiduals,iverb,ierr)
@@ -2639,6 +2658,7 @@ contains
     integer(kind_integer), intent(in) :: nrhs
     type(base), intent(in) :: mvproduct(nbasis,nsubspace)
     type(base), intent(in) :: basis_vectors(nbasis,nsubspace)
+    type(base), intent(in) :: full_solutions(nbasis,nrhs)
     type(base), intent(in) :: solutions(nsubspace,nrhs)
     type(base), intent(in) :: overlap(nsubspace,nsubspace)
     type(base), intent(in) :: rhs(nbasis,nrhs)
@@ -2663,6 +2683,7 @@ contains
     type(base) :: one_kb
     type(base) :: zero_kb
     type(base), allocatable :: all_residuals(:,:)
+    type(base), allocatable :: all_solutions(:,:)
     real(kind_float), allocatable :: all_omega(:) !for generic interface
     logical, allocatable :: eps_converged(:)
     real(kind_float) :: lognbasis
@@ -2678,6 +2699,7 @@ contains
 
 ! Allocate local arrays
     allocate(all_residuals(nbasis,nrhs))
+    allocate(all_solutions(nbasis,nrhs))
     allocate(eps_converged(nrhs))
     allocate(euc_sq(nrhs))
     allocate(all_omega(nrhs))
@@ -2765,23 +2787,25 @@ contains
         if (.not.eps_converged(k)) then
           l = l + 1
           all_residuals(1:nbasis,l) = all_residuals(1:nbasis,k)
+          all_solutions(1:nbasis,l) = full_solutions(1:nbasis,k)
 ! rhs not needed for preconditioning
         end if
       end do
       all_omega(1:ntemp) = real(0,kind=kind_float)
     else ! all residuals above machine precision
       all_omega = real(0,kind=kind_float)
+      all_solutions = full_solutions
 ! rhs not needed for preconditioning
 ! no shifting for all_residuals' index
     end if
 
 !! Precondition with input function!
 !! NAMBI: TESTING
-    associate(interfacing_bv => basis_vectors%element,&
+    associate(interfacing_fs => all_solutions%element,&
   &            interfacing_rd => all_residuals%element)
       call krylov_precon%lkl_precon(nbasis,ntemp,nsubspace,&
   &     approx_spectra,&
-  &     all_omega(1:ntemp),interfacing_bv,&
+  &     all_omega(1:ntemp),interfacing_fs,&
   &     interfacing_rd(1:nbasis,1:ntemp),ierr)
     end associate
 
@@ -3005,7 +3029,10 @@ contains
     type(base), allocatable ::  lagrangian(:)
 !< solutions = eigenvectors of current subspace calculation that are relevant = x
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-!! filled in at krylov_a_norms
+!! filled in at between ritz and norms
+    type(base), allocatable :: full_solutions(:,:)
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!! filled in at krylov_b_norms
     type(base), allocatable :: residuals(:,:)
     real(kind_float), allocatable :: euc_norm(:)
     real(kind_float) :: fro_norm
@@ -3177,6 +3204,7 @@ contains
     allocate(proj_rhs(maxsubspace,nrhs)) !maximum
     allocate(lagrangian(nrhs))
     allocate(solutions(maxsubspace,nrhs)) !maximum
+    allocate(full_solutions(nbasis,nrhs))
     allocate(overlap(maxsubspace,maxsubspace)) !maximum
     allocate(diag_overlap(maxsubspace)) !maximum
     allocate(residuals(nbasis,nrhs)) !maximum
@@ -3586,10 +3614,18 @@ contains
         exit ! This exits subspace loop
       end if
 
+!! calculation of solutions on full space
+      call ggemm('n','n',nbasis,nrhs,nsubspace,one_kb,&
+  &      basis_vectors,nbasis,&
+  &      solutions,maxsubspace,&
+  &      zero_kb,&
+  &      full_solutions,&
+  &      nbasis)
+
 ! call krylov norms subroutine
       call krylov_b_norms(nbasis,nsubspace,nrhs,&
   &     mvproduct(1:nbasis,1:nsubspace),& 
-  &     basis_vectors(1:nbasis,1:nsubspace),& 
+  &     basis_vectors(1:nbasis,1:nsubspace),full_solutions,& 
   &     solutions(1:nsubspace,1:nrhs),&
   &     overlap(1:nsubspace,1:nsubspace),&
   &     rhs,approx_spectra,krylov_precon,&
@@ -4314,7 +4350,8 @@ contains
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
   subroutine krylov_c_norms(nbasis,nsubspace,nomega,nrhs,nroots,&
-  &     mvproduct,basis_vectors,solutions,overlap,omega,rhs,&
+  &     mvproduct,basis_vectors,full_solutions,solutions,&
+  &     overlap,omega,rhs,&
   &     approx_spectra,krylov_precon,residuals,&
   &     euc_norm,largest_euc_norm,fro_norm,&
   &     nresiduals,iverb,ierr)
@@ -4355,6 +4392,7 @@ contains
     integer(kind_integer), intent(in) :: nroots
     type(base), intent(in) :: mvproduct(nbasis,nsubspace)
     type(base), intent(in) :: basis_vectors(nbasis,nsubspace)
+    type(base), intent(in) :: full_solutions(nbasis,nroots)
     type(base), intent(in) :: solutions(nsubspace,nroots)
     type(base), intent(in) :: overlap(nsubspace,nsubspace)
     real(kind_float), intent(in) :: omega(nomega)
@@ -4529,11 +4567,11 @@ contains
 
 !! Precondition with input function!
 !!NAMBI
-    associate(interfacing_bv => basis_vectors%element,&
+    associate(interfacing_fs => full_solutions%element,&
   &            interfacing_rd => all_residuals%element)
     call krylov_precon%lkl_precon(nbasis,nroots,nsubspace,&
   &     approx_spectra,&
-  &     all_omega(1:nroots),interfacing_bv,&
+  &     all_omega(1:nroots),interfacing_fs,&
   &     interfacing_rd(1:nbasis,1:nroots),ierr)
     end associate
     if (ierr.ne.0) then
@@ -4790,6 +4828,8 @@ contains
     type(base), allocatable ::  lagrangian(:)
 !< solutions = eigenvectors of current subspace calculation that are relevant = x
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    type(base), allocatable :: full_solutions(:,:)
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !! filled in at krylov_a_norms
     type(base), allocatable :: residuals(:,:)
     real(kind_float), allocatable :: euc_norm(:)
@@ -5013,6 +5053,7 @@ contains
     allocate(proj_rhs(maxsubspace,nrhs)) !maximum
     allocate(lagrangian(nroots))
     allocate(solutions(maxsubspace,nroots)) !maximum
+    allocate(full_solutions(nbasis,nroots))
     allocate(overlap(maxsubspace,maxsubspace)) !maximum
     allocate(omega(nomega)) 
     allocate(diag_overlap(maxsubspace)) !maximum
@@ -5438,10 +5479,18 @@ contains
         exit ! This exits subspace loop
       end if
 
+!! calculation of solutions on full space
+      call ggemm('n','n',nbasis,nroots,nsubspace,one_kb,&
+  &      basis_vectors,nbasis,&
+  &      solutions,maxsubspace,&
+  &      zero_kb,&
+  &      full_solutions,&
+  &      nbasis)
+
 ! call krylov norms subroutine
       call krylov_c_norms(nbasis,nsubspace,nomega,nrhs,nroots,&
   &     mvproduct(1:nbasis,1:nsubspace),& 
-  &     basis_vectors(1:nbasis,1:nsubspace),& 
+  &     basis_vectors(1:nbasis,1:nsubspace),full_solutions,& 
   &     solutions(1:nsubspace,1:nroots),&
   &     overlap(1:nsubspace,1:nsubspace),&
   &     omega,rhs,approx_spectra,krylov_precon,&
