@@ -70,6 +70,8 @@ program test_libkrylovinterface_cmplx_dp
   real(lkl_double_k), allocatable :: precon_roots(:)
 ! residuals
   complex(lkl_double_k), allocatable :: residuals(:,:)
+! full solutions
+  complex(lkl_double_k), allocatable :: full_solutions(:,:)
 !--------------------------------------------------------------------
 !!  find free unit numbers for files
 !!  presumes first 14 unit numbers are saved for
@@ -354,6 +356,7 @@ program test_libkrylovinterface_cmplx_dp
 !! alocate precon_roots and residuals
   allocate(precon_roots(n4))   
   allocate(residuals(n1,n4))
+  allocate(full_solutions(n1,n4))
 !! fill in the approx_spectra with real(kind_float) elements
 !! approx_spectra is an array with 100 elements
 !! first element is real number 1
@@ -363,20 +366,10 @@ program test_libkrylovinterface_cmplx_dp
   do j1 = 2, n1
     approx_spectra(j1) = approx_spectra(j1-1) + real(0.1,kind=lkl_double_k)
   end do
-!! call lkl_start_elec_gas to get the output nstart
-  call lkl_start_elec_gas(data_s_elec_gas,n1,n2,approx_spectra,nstart,ierr)    
-!! using a do loop to reassign numbers in approx_spectra
-!! between nstart+1 and nstart+2 to the same number
-!! as the number in approx_spectra(nstart)
-!! to save a new input based on the result 
-   do j1 = (nstart+1),(nstart+2)
-    approx_spectra(j1) = approx_spectra(nstart) 
+  full_solutions = real(0,kind=lkl_double_k)
+  do j1 = 1, n4
+    full_solutions(j1,j1) = real(1,kind=lkl_double_k)
   end do
-!! call lkl_start_elec_gas to get the new output of nstart
-  call lkl_start_elec_gas(data_s_elec_gas,n1,n2,approx_spectra,nstart,ierr)    
-!! call lkl_guess_unit_vec to get the basis_vectors
-  call lkl_guess_unit_vec(data_g_unit_vec,n1,nstart,n3,&
-  & approx_spectra,basis_vectors,ierr)  
 !! assign input precon_roots as real number 0.5
 !! assign input residuals as real number 1
   precon_roots = real(0.5,kind=lkl_double_k)
@@ -386,7 +379,7 @@ program test_libkrylovinterface_cmplx_dp
   & ', to solve for preconditiing and it remains the same as output'
 !! call lkl_precon_none on test input
   call lkl_precon_none(data_pc_none,n1,n4,n3,approx_spectra,&
-  & precon_roots,basis_vectors,residuals,ierr)
+  & precon_roots,full_solutions,residuals,ierr)
 !! check ierr value to see if the subroutine terminated with an error
 !! test if ierr is not equal to 0
   if (ierr.ne.0) then
@@ -443,20 +436,10 @@ program test_libkrylovinterface_cmplx_dp
   do j1 = 2, n1
     approx_spectra(j1) = approx_spectra(j1-1) + real(0.1,kind=lkl_double_k)
   end do
-!! call lkl_start_elec_gas to get the output nstart
-  call lkl_start_elec_gas(data_s_elec_gas,n1,n2,approx_spectra,nstart,ierr)    
-!! using a do loop to reassign numbers in approx_spectra
-!! between nstart+1 and nstart+2 to the same number
-!! as the number in approx_spectra(nstart)
-!! to save a new input based on the result 
-  do j1 = (nstart+1),(nstart+2)
-    approx_spectra(j1) = approx_spectra(nstart) 
+  full_solutions = real(0,kind=lkl_double_k)
+  do j1 = 1, n4
+    full_solutions(j1,j1) = real(1,kind=lkl_double_k)
   end do
-!! call lkl_start_elec_gas to get the new output of nstart
-  call lkl_start_elec_gas(data_s_elec_gas,n1,n2,approx_spectra,nstart,ierr)    
-!! call lkl_guess_unit_vec to get the basis_vectors
-  call lkl_guess_unit_vec(data_g_unit_vec,n1,nstart,n3,&
-  & approx_spectra,basis_vectors,ierr)  
 !! assign input precon_roots as real number 0.5
 !! assign input residuals as real number 1
   precon_roots = real(0.5,kind=lkl_double_k)
@@ -466,7 +449,7 @@ program test_libkrylovinterface_cmplx_dp
   & ', to solve for preconditiing in inverse approximate spectra'
 !! call lkl_precon_approx on test input
   call lkl_precon_approx(data_pc_approx,n1,n4,n3,approx_spectra,&
-  & precon_roots,basis_vectors,residuals,ierr)
+  & precon_roots,full_solutions,residuals,ierr)
 !! check ierr value to see if the subroutine terminated with an error
 !! test if ierr is not equal to 0
   if (ierr.ne.0) then
@@ -524,20 +507,10 @@ program test_libkrylovinterface_cmplx_dp
   do j1 = 2, n1
     approx_spectra(j1) = approx_spectra(j1-1) + real(0.1,kind=lkl_double_k)
   end do
-!! call lkl_start_elec_gas to get the output nstart
- call lkl_start_elec_gas(data_s_elec_gas,n1,n2,approx_spectra,nstart,ierr)    
-!! using a do loop to reassign numbers in approx_spectra
-!! between nstart+1 and nstart+2 to the same number
-!! as the number in approx_spectra(nstart)
-!! to save a new input based on the result 
-  do j1 = (nstart+1),(nstart+2)
-    approx_spectra(j1) = approx_spectra(nstart) 
+  full_solutions = real(0,kind=lkl_double_k)
+  do j1 = 1, n4
+    full_solutions(j1,j1) = real(1,kind=lkl_double_k)
   end do
-!! call lkl_start_elec_gas to get the new output of nstart
-  call lkl_start_elec_gas(data_s_elec_gas,n1,n2,approx_spectra,nstart,ierr)    
-!! call lkl_guess_unit_vec to get the basis_vectors
-  call lkl_guess_unit_vec(data_g_unit_vec,n1,nstart,n3,&
-  & approx_spectra,basis_vectors,ierr)  
 !! assign input precon_roots as real number 0.5
 !! assign input residuals as real number 1
   precon_roots = real(0.5,kind=lkl_double_k)
@@ -547,7 +520,7 @@ program test_libkrylovinterface_cmplx_dp
   &, solve for preconditing davison'
 !! call lkl_precon_davidson on test output
   call lkl_precon_davidson(data_pc_davidson,n1,n4,n3,approx_spectra,&
-  & precon_roots,basis_vectors,residuals,ierr)
+  & precon_roots,full_solutions,residuals,ierr)
 !! check ierr value to see if the subtoutine terminated with an error
 !! test if ierr is not equal to 0
   if (ierr.ne.0) then
