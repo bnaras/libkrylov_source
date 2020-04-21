@@ -1135,11 +1135,7 @@ contains
 
     do k = 1, n2
       denominator = ddot(n1,mx(1:n1,k),1,full_solutions(1:n1,k),1)
-      if ( ierr .ne. 0) return
-      print *, 'denominator:',k,denominator
       numerator = ddot(n1,mx(1:n1,k),1,residuals(1:n1,k),1)
-      print *, 'numerator:',k,numerator
-      if ( ierr .ne. 0) return
       do j = 1, n1
         residuals(j,k) = ((residuals(j,k) &
   &  - ((numerator/denominator)*full_solutions(j,k))) &
