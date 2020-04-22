@@ -40,6 +40,11 @@ real_sp_restartdir = $(PWD)/real_sp_lib
 real_sp_restart_PROGRAMS = restart_check_libkrylov_real_sp
 restart_check_libkrylov_real_sp_SOURCES = restart_check.f90
 restart_check_libkrylov_real_sp_LDADD = libkrylov_real_sp.la
+# generate symmetric matrix for driver1a
+real_sp_sym_problem1adir = $(PWD)/real_sp_test
+real_sp_sym_problem1a_PROGRAMS = problem1a_sym_real_sp
+problem1a_sym_real_sp_SOURCES = problem_1a_symmetric.f90
+problem1a_sym_real_sp_LDADD = libkrylov_real_sp.la
 # generate vandermonde matrix for driver1a
 real_sp_vm_problem1adir = $(PWD)/real_sp_test
 real_sp_vm_problem1a_PROGRAMS = problem1a_vm_real_sp

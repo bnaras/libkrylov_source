@@ -82,7 +82,7 @@ then
   make install-real_sp_test_restart_cPROGRAMS
   echo '----------Real Double Precision restart tests made----------'
 #  make install-real_sp_rand_problem1aPROGRAMS
-  make install-real_sp_vm_problem1aPROGRAMS
+  make install-real_sp_sym_problem1aPROGRAMS
   echo '----------Real Single Precision reference problems made----------'
   cp *.mod real_sp_mods/.
   cp *.o real_sp_mods/.
