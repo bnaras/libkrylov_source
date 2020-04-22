@@ -47,4 +47,17 @@ grep 'failed' real_dp_apc_driver1b.out >> ../testing.summary
 echo 'lagrangians:' >> ../testing.summary
 sed '7,9!d' real_dp_1b_apc_lagr.json >> ../testing.summary
 echo '' >> ../testing.summary
+mv real_dp_spc_driver1b.out real_dp_spc_driver1b.out.old
+echo 'solve reference problem with Jacobi-Davidson preconditioner' >> ../testing.summary
+echo 'test output in' >> ../testing.summary
+echo 'test/real_dp_testing.results/random_1b/real_dp_spc_driver1b.out' >> ../testing.summary
+echo 'sleijpen' | ../../../src/real_dp_test/driver1b_real_dp > real_dp_spc_driver1b.out
+mv real_dp_1b_lagr.json real_dp_1b_spc_lagr.json
+mv real_dp_1b_vecs.json real_dp_1b_spc_vecs.json
+grep 'Converged' real_dp_spc_driver1b.out >> ../testing.summary
+echo 'error statments:' >> ../testing.summary
+grep 'failed' real_dp_spc_driver1b.out >> ../testing.summary
+echo 'lagrangians:' >> ../testing.summary
+sed '7,9!d' real_dp_1b_spc_lagr.json >> ../testing.summary
+echo '' >> ../testing.summary
 echo '~~~~~Real Double reference_b test done~~~~~'

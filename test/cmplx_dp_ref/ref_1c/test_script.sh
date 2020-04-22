@@ -72,4 +72,20 @@ sed '7,12!d' cmplx_dp_1c_dpc_indx.json >> ../testing.summary
 echo 'lagrangian:' >> ../testing.summary
 sed '7,12!d' cmplx_dp_1c_dpc_lagr.json >> ../testing.summary
 echo '' >> ../testing.summary
+mv cmplx_dp_spc_driver1c.out cmplx_dp_spc_driver1c.out.old
+echo 'solve reference problem with Jacobi-Davidson preconditioner' >> ../testing.summary
+echo 'test output in' >> ../testing.summary
+echo 'test/cmplx_dp_testing.results/ref_1c/cmplx_dp_spc_driver1c.out' >> ../testing.summary
+echo 'sleijpen' | ../../../src/cmplx_dp_test/driver1c_cmplx_dp > cmplx_dp_spc_driver1c.out
+mv cmplx_dp_1c_lagr.json cmplx_dp_1c_spc_lagr.json
+mv cmplx_dp_1c_vecs.json cmplx_dp_1c_spc_vecs.json
+mv cmplx_dp_1c_indx.json cmplx_dp_1c_spc_indx.json
+grep 'Converged' cmplx_dp_spc_driver1c.out >> ../testing.summary
+echo 'error statments:' >> ../testing.summary
+grep 'failed' cmplx_dp_spc_driver1c.out >> ../testing.summary
+echo 'for frequencies:' >> ../testing.summary
+sed '7,12!d' cmplx_dp_1c_spc_indx.json >> ../testing.summary
+echo 'lagrangian:' >> ../testing.summary
+sed '7,12!d' cmplx_dp_1c_spc_lagr.json >> ../testing.summary
+echo '' >> ../testing.summary
 echo '~~~~~Complex Double reference_c test done~~~~~'

@@ -19,12 +19,6 @@ sed '7,11!d' cmplx_sp_1a_exact_vals.json >> ../testing.summary
 echo '' >> ../testing.summary
 rm cmplx_sp_1a_vals.json
 rm cmplx_sp_1a_vecs.json
-rm cmplx_sp_1a_npc_vals.json
-rm cmplx_sp_1a_npc_vecs.json
-rm cmplx_sp_1a_apc_vals.json
-rm cmplx_sp_1a_apc_vecs.json
-rm cmplx_sp_1a_dpc_vals.json
-rm cmplx_sp_1a_dpc_vecs.json
 mv cmplx_sp_npc_driver1a.out cmplx_sp_npc_driver1a.out.old
 echo 'solve reference problem with no preconditioner' >> ../testing.summary
 echo 'test output in' >> ../testing.summary
@@ -63,5 +57,18 @@ echo 'error statments:' >> ../testing.summary
 grep 'failed' cmplx_sp_dpc_driver1a.out >> ../testing.summary
 echo 'eigenvalues' >> ../testing.summary
 sed '7,11!d' cmplx_sp_1a_dpc_vals.json >> ../testing.summary
+echo '' >> ../testing.summary
+mv cmplx_sp_spc_driver1a.out cmplx_sp_spc_driver1a.out.old
+echo 'solve reference problem with Jacobi-Davidson preconditioner' >> ../testing.summary
+echo 'test output in' >> ../testing.summary
+echo 'test/cmplx_sp_testing.results/ref_1a/cmplx_sp_spc_driver1a.out' >> ../testing.summary
+echo 'sleijpen' | ../../../src/cmplx_sp_test/driver1a_cmplx_sp > cmplx_sp_spc_driver1a.out
+mv cmplx_sp_1a_vals.json cmplx_sp_1a_spc_vals.json
+mv cmplx_sp_1a_vecs.json cmplx_sp_1a_spc_vecs.json
+grep 'Converged' cmplx_sp_spc_driver1a.out >> ../testing.summary
+echo 'error statments:' >> ../testing.summary
+grep 'failed' cmplx_sp_spc_driver1a.out >> ../testing.summary
+echo 'eigenvalues' >> ../testing.summary
+sed '7,11!d' cmplx_sp_1a_spc_vals.json >> ../testing.summary
 echo '' >> ../testing.summary
 echo '~~~~~Complex Single reference tests done~~~~~'

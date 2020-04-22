@@ -81,7 +81,6 @@ then
   make install-real_sp_test_restart_bPROGRAMS
   make install-real_sp_test_restart_cPROGRAMS
   echo '----------Real Double Precision restart tests made----------'
-#  make install-real_sp_rand_problem1aPROGRAMS
   make install-real_sp_sym_problem1aPROGRAMS
   echo '----------Real Single Precision reference problems made----------'
   cp *.mod real_sp_mods/.
@@ -110,7 +109,7 @@ then
   make install-cmplx_sp_test_restart_cPROGRAMS
   echo '----------Complex Single Precision restart tests made----------'
 #  make install-cmplx_sp_rand_problem1aPROGRAMS
-  make install-cmplx_sp_vm_problem1aPROGRAMS
+#  make install-cmplx_sp_vm_problem1aPROGRAMS
   echo '----------Complex Single Precision reference problems made----------'
   cp *.mod cmplx_sp_mods/.
   cp *.o cmplx_sp_mods/.
@@ -138,7 +137,7 @@ then
   make install-real_dp_test_restart_cPROGRAMS
   echo '----------Real Double Precision restart tests made----------'
 #  make install-real_dp_rand_problem1aPROGRAMS
-  make install-real_dp_vm_problem1aPROGRAMS
+#  make install-real_dp_vm_problem1aPROGRAMS
   echo '----------Real Double Precision reference problems made----------'
   cp *.mod real_dp_mods/.
   cp *.o real_dp_mods/.
@@ -166,7 +165,7 @@ then
   make install-cmplx_dp_test_restart_cPROGRAMS
   echo '----------Complex Double Precision restart tests made----------'
 #  make install-cmplx_dp_rand_problem1aPROGRAMS
-  make install-cmplx_dp_vm_problem1aPROGRAMS
+#  make install-cmplx_dp_vm_problem1aPROGRAMS
   echo '----------Complex Double Precision reference problems made----------'
   cp *.mod cmplx_dp_mods/.
   cp *.o cmplx_dp_mods/.

@@ -65,6 +65,8 @@ program test_norms_cmplx_sp
   type(base) :: basis_vectors(n1,n2)
 ! solutions
   type(base) :: solutions(n2,n3)
+! full_solutions
+  type(base) :: full_solutions(n1,n3)
 ! rhs
   type(base) :: rhs(n1,n3)
 ! overlap
@@ -143,6 +145,10 @@ program test_norms_cmplx_sp
   do j1 = 1, n3
     solutions(j1,j1) = real(1,kind=kind_float)
   end do
+  full_solutions = real(0,kind=kind_float)
+  do j1 = 1, n3
+    full_solutions(j1,j1) = real(1,kind=kind_float)
+  end do
   roots = real(0,kind=kind_float)
   do j1 = 1, n3
     roots(j1) = real(j1,kind=kind_float)
@@ -177,8 +183,8 @@ program test_norms_cmplx_sp
   print *, 'input overlap is identity'
   print *, 'input roots are integers'
 !! call normalize subroutine
-  call krylov_a_norms(n1,n2,n3,mvproduct,basis_vectors,solutions,&
-  & overlap,roots,approx_spectra,krylov_pc_none,&
+  call krylov_a_norms(n1,n2,n3,mvproduct,basis_vectors,full_solutions,&
+  & solutions,overlap,roots,approx_spectra,krylov_pc_none,&
   & residuals,euc_norm,largest_euc_norm,fro_norm,nresiduals,iverb,ierr)
 !! check ierr value to see whether routine terminated with an error
 !! test if ierr is not equal to 0
@@ -319,8 +325,8 @@ program test_norms_cmplx_sp
   print *, 'input overlap is identity'
   print *, 'input rhs are diagonal matrix of integers'
 !! call normalize subroutine
-  call krylov_b_norms(n1,n2,n3,mvproduct,basis_vectors,solutions,&
-  & overlap,rhs,approx_spectra,krylov_pc_none,&
+  call krylov_b_norms(n1,n2,n3,mvproduct,basis_vectors,full_solutions,&
+  & solutions,overlap,rhs,approx_spectra,krylov_pc_none,&
   & residuals,euc_norm,largest_euc_norm,fro_norm,nresiduals,iverb,ierr)
 !! check ierr value to see whether routine terminated with an error
 !! test if ierr is not equal to 0
@@ -471,7 +477,8 @@ program test_norms_cmplx_sp
   print *, 'input overlap is identity'
   print *, 'input rhs are diagonal matrix of integers'
 !! call normalize subroutine
-  call krylov_c_norms(n1,n2,n4,n3,n5,mvproduct,basis_vectors,solutions,&
+  call krylov_c_norms(n1,n2,n4,n3,n5,mvproduct,basis_vectors,&
+  & full_solutions,solutions,&
   & overlap,omega,rhs,approx_spectra,krylov_pc_none,&
   & residuals,euc_norm,largest_euc_norm,fro_norm,nresiduals,iverb,ierr)
 !! check ierr value to see whether routine terminated with an error

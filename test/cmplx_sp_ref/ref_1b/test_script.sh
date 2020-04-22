@@ -47,4 +47,17 @@ grep 'failed' cmplx_sp_apc_driver1b.out >> ../testing.summary
 echo 'lagrangians:' >> ../testing.summary
 sed '7,9!d' cmplx_sp_1b_apc_lagr.json >> ../testing.summary
 echo '' >> ../testing.summary
+mv cmplx_sp_spc_driver1b.out cmplx_sp_spc_driver1b.out.old
+echo 'solve reference problem with Jacobi-Davidson preconditioner' >> ../testing.summary
+echo 'test output in' >> ../testing.summary
+echo 'test/cmplx_sp_testing.results/random_1b/cmplx_sp_spc_driver1b.out' >> ../testing.summary
+echo 'sleijpen' | ../../../src/cmplx_sp_test/driver1b_cmplx_sp > cmplx_sp_spc_driver1b.out
+mv cmplx_sp_1b_lagr.json cmplx_sp_1b_spc_lagr.json
+mv cmplx_sp_1b_vecs.json cmplx_sp_1b_spc_vecs.json
+grep 'Converged' cmplx_sp_spc_driver1b.out >> ../testing.summary
+echo 'error statments:' >> ../testing.summary
+grep 'failed' cmplx_sp_spc_driver1b.out >> ../testing.summary
+echo 'lagrangians:' >> ../testing.summary
+sed '7,9!d' cmplx_sp_1b_spc_lagr.json >> ../testing.summary
+echo '' >> ../testing.summary
 echo '~~~~~Complex Single reference_b test done~~~~~'

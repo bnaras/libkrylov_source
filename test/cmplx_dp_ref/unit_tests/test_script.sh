@@ -35,7 +35,7 @@ echo '~~~solver_subroutines_test~~~' >> ../testing.summary
 mv cmplx_dp_ritz_test.out cmplx_dp_ritz_test.out.old
 echo 'test output in' >> ../testing.summary
 echo 'test/cmplx_dp_testing.results/unit_tests/cmplx_dp_ritz_test.out' >> ../testing.summary
-../../../src/real_dp_test/test_ritz_cmplx_dp >> cmplx_dp_ritz_test.out
+../../../src/cmplx_dp_test/test_ritz_cmplx_dp >> cmplx_dp_ritz_test.out
 cat cmplx_dp_ritz_test.sum >> ../testing.summary
 echo error statements: >> ../testing.summary
 grep 'failed' cmplx_dp_ritz_test.out >> ../testing.summary
