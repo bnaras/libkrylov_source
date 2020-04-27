@@ -52,6 +52,7 @@ program krylovdriver_1b
   type(lkl_pc_none) :: krylov_pc_none
   type(lkl_pc_approx) :: krylov_pc_approx
   type(lkl_pc_davidson) :: krylov_pc_davidson
+  type(lkl_pc_sleijpen) :: krylov_pc_sleijpen
   type(kl_mvp) :: krylov_mvp
   type(kl_output_b) :: krylov_output
 !--------------------------------------------------------------------
@@ -173,7 +174,12 @@ program krylovdriver_1b
   krylov_rhs%krylov_p => krylov_p
 
 ! call solver
-  if (preconditioner.eq.'davidson') then
+  if (preconditioner.eq.'sleijpen') then
+    call problem_b_solver(krylov_approx,krylov_s_eg,&
+  &   krylov_rhs, &
+  &   krylov_problem,krylov_g_uv,krylov_mvp,krylov_pc_sleijpen, &
+  &   krylov_output,ierr)
+  else if (preconditioner.eq.'davidson') then
     print *, 'equivalent to approx_spectra'
     call problem_b_solver(krylov_approx,krylov_s_eg,&
   &   krylov_rhs, &

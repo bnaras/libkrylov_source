@@ -245,6 +245,14 @@ module libkrylovinterface
     procedure :: lkl_precon => lkl_precon_davidson
   end type lkl_pc_davidson
 
+!! defining input function for null preconditioning
+  type, extends(libkrylov_precon_subroutine) :: lkl_pc_sleijpen
+! external data required for the function
+!! IDEALLY, NO EXTERNAL DATA
+  contains
+    procedure :: lkl_precon => lkl_precon_sleijpen
+  end type lkl_pc_sleijpen
+
 !--------------------------------------------------------------------
 
 !--------------------------------------------------------------------
@@ -1035,6 +1043,90 @@ contains
 
 !--------------------------------------------------------------------
   end subroutine lkl_precon_davidson
+!--------------------------------------------------------------------
+
+!--------------------------------------------------------------------
+  subroutine lkl_precon_sleijpen(data,n1,n2,n3,approx_spectra,&
+   &   precon_roots,full_solutions,residuals,ierr)
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Description:
+!--------------------------------------------------------------------
+!! subroutine for preconditioning residuals
+!! using the jacobi-davidson method proposed by sleijen
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Modules and Global Variables
+!--------------------------------------------------------------------
+! Blank
+!--------------------------------------------------------------------
+!
+    implicit none
+!
+!--------------------------------------------------------------------
+! External data (IDEALLY EMPTY)
+!--------------------------------------------------------------------
+    class(lkl_pc_sleijpen) :: data
+!--------------------------------------------------------------------
+! Input Parameters
+!--------------------------------------------------------------------
+!!    rows of residuals, nbasis
+    integer(lkl_int_k), intent(in) :: n1
+!!    columns of residuals, nresiduals
+    integer(lkl_int_k), intent(in) :: n2
+!!    columns of basis_vectors, nsubspace
+    integer(lkl_int_k), intent(in) :: n3
+!!    approximate spectra
+    real(lkl_single_k), intent(in) :: approx_spectra(n1)
+!!    frequencies
+    real(lkl_single_k), intent(in) :: precon_roots(n2)
+!!    basis vectors
+    real(lkl_single_k), intent(in) :: full_solutions(n1,n2)
+!--------------------------------------------------------------------
+! Input/Output Parameters
+!--------------------------------------------------------------------
+!!    guess vectors
+    real(lkl_single_k), intent(inout) :: residuals(n1,n2)
+!--------------------------------------------------------------------
+! Error Parameter
+!--------------------------------------------------------------------
+    integer(lkl_int_k), intent(inout) :: ierr
+!--------------------------------------------------------------------
+!  Local Variables
+!--------------------------------------------------------------------
+    integer(lkl_int_k) :: j,k = 0
+    real(lkl_single_k) :: numerator
+    real(lkl_single_k) :: denominator
+    real(lkl_single_k), external :: sdot
+    real(lkl_single_k), allocatable :: mx(:,:)
+!--------------------------------------------------------------------
+
+    allocate(mx(n1,n2))
+
+!! create scaled full solutions required for epsilon
+    do k = 1, n2
+      do j = 1, n1
+        mx(j,k) = full_solutions(j,k)/&
+  &       ( approx_spectra(j) - precon_roots(k) )
+      end do
+    end do
+
+    do k = 1, n2
+      denominator = sdot(n1,mx(1:n1,k),1,full_solutions(1:n1,k),1)
+      numerator = sdot(n1,mx(1:n1,k),1,residuals(1:n1,k),1)
+      do j = 1, n1
+        residuals(j,k) = ((residuals(j,k) &
+  &  - ((numerator/denominator)*full_solutions(j,k))) &
+ &   / ( approx_spectra(j) - precon_roots(k) ))
+      end do
+    end do
+
+    deallocate(mx)
+
+!--------------------------------------------------------------------
+  end subroutine lkl_precon_sleijpen
 !--------------------------------------------------------------------
 
 !--------------------------------------------------------------------

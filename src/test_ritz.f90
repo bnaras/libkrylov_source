@@ -114,6 +114,7 @@ program test_ritz
   &' matrix of integer values'
 !! call normalize subroutine
   call krylov_normalize(n,m,z_array1,ierr)
+  print *, 'hi'
 !! check ierr value to see whether routine terminated with an error
 !! test if ierr is not equal to 0
   if (ierr.ne.0) then

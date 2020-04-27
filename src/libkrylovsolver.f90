@@ -167,18 +167,18 @@ contains
     logical :: problem = .false.
 !--------------------------------------------------------------------
 
-    allocate(inner_product(nsubspace,nsubspace))
+    allocate(inner_product(nrhs,nrhs))
 
 !! Set constants required for BLAS
     one_kb = real(1,kind=kind_float)
     zero_kb = real(0,kind=kind_float)
 
-    call ggemm('c','n',nsubspace,nsubspace,nrhs,one_kb,&
+    call ggemm('c','n',nrhs,nrhs,nsubspace,one_kb,&
   &       proj_rhs,nsubspace,&
   &       proj_rhs,nsubspace,&
   &       zero_kb,&
   &       inner_product,&
-  &       nsubspace)
+  &       nrhs)
 
     if (iverb.ge.5) then
       print *, ''
