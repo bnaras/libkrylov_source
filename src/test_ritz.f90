@@ -137,11 +137,11 @@ program test_ritz
 !! and the elements in reference value
   do j2 = 1, m 
     do j1 = 1,n
-      r_ref = z_array1(j1,j2)
+      r_test = z_array1(j1,j2)
       if (j1.eq.j2) then
-        r_test = real(1,kind=kind_float)
+        r_ref = real(1,kind=kind_float)
       else
-        r_test = real(0,kind=kind_float)
+        r_ref = real(0,kind=kind_float)
       end if
 !! test if difference if greater than machine precision
 !! (defined by the constant eps)
@@ -203,11 +203,11 @@ program test_ritz
 !! and the elements in reference value
   do j2 = 1, m 
     do j1 = 1,n
-      r_ref = z_array1(j1,j2)
+      r_test = z_array1(j1,j2)
       if (j1.eq.j2) then
-        r_test = real(1,kind=kind_float)
+        r_ref = real(1,kind=kind_float)
       else
-        r_test = real(0,kind=kind_float)
+        r_ref = real(0,kind=kind_float)
       end if
 !! test if difference if greater than machine precision
 !! (defined by the constant eps)
@@ -308,11 +308,11 @@ program test_ritz
 !! and the elements in reference value
   do j2 = 1, p 
     do j1 = 1,n
-      r_ref = z_array2(j1,j2)
+      r_test = z_array2(j1,j2)
       if (j1.eq.j2) then
-        r_test = real(1,kind=kind_float)
+        r_ref = real(1,kind=kind_float)
       else
-        r_test = real(0,kind=kind_float)
+        r_ref = real(0,kind=kind_float)
       end if
 !! test if difference if greater than machine precision
 !! (defined by the constant eps)
@@ -334,11 +334,11 @@ program test_ritz
 !! and the elements in reference value
   do j2 = 1, q 
     do j1 = 1, q
-      r_ref = z_array3(j1,j2)
+      r_test = z_array3(j1,j2)
       if (j1.eq.j2) then
-        r_test = real(1,kind=kind_float)
+        r_ref = real(1,kind=kind_float)
       else
-        r_test = real(0,kind=kind_float)
+        r_ref = real(0,kind=kind_float)
       end if
 !! test if difference if greater than machine precision
 !! (defined by the constant eps)
@@ -376,10 +376,11 @@ program test_ritz
     write(unit=funit,fmt=*) 'subroutine krylov_extend failed'
   else
 !! write subroutine gheev succeeded to output file
-    print *, 'tested subroutine krylov_normalize'
+    print *, 'tested subroutine krylov_extend'
     write(unit=funit,fmt=*) 'tested subroutine krylov_extend'
   end if
   print *, ''
+
 
 !!! tests of krylov_check
   check = .false.
@@ -395,7 +396,7 @@ program test_ritz
     r_vector1(j1) = real(1,kind=kind_float)
   end do
 !! write statement on test
-  print *, 'negative test krylov_unique',&
+  print *, 'negative test krylov_check',&
   &', which prints to standard output'
   print *, 'input z_array3 is identity which is positive definite'
   print *, 'input r_vector1 is all 1'
@@ -424,11 +425,11 @@ program test_ritz
 !! and the elements in reference value
   do j2 = 1, q 
     do j1 = 1, q
-      r_ref = z_array3(j1,j2)
+      r_test = z_array3(j1,j2)
       if (j1.eq.j2) then
-        r_test = real(1,kind=kind_float)
+        r_ref = real(1,kind=kind_float)
       else
-        r_test = real(0,kind=kind_float)
+        r_ref = real(0,kind=kind_float)
       end if
 !! test if difference if greater than machine precision
 !! (defined by the constant eps)
@@ -466,7 +467,7 @@ program test_ritz
     write(unit=funit,fmt=*) 'subroutine krylov_check failed'
   else
 !! write subroutine succeeded to output file
-    print *, 'tested subroutine krylov_unique'
+    print *, 'tested subroutine krylov_check'
     write(unit=funit,fmt=*) 'tested subroutine krylov_check'
   end if
   print *, ''
@@ -548,8 +549,8 @@ program test_ritz
 !! and the elements in reference value
   do j2 = 1, m
     do j1 = 1, n
-      r_ref = sqrt(base_det(z_array1(j1,j2)))
-      r_test = sqrt(base_det(z_array4(j1,j2)))
+      r_test = sqrt(base_det(z_array1(j1,j2)))
+      r_ref = sqrt(base_det(z_array4(j1,j2)))
 !! test if difference if greater than machine precision
 !! (defined by the constant eps)
       if (abs(r_test-r_ref).gt.eps) then
@@ -762,11 +763,11 @@ program test_ritz
 !! and the elements in reference value
   do j2 = 1, m 
     do j1 = 1, q
-      r_ref = z_array5(j1,j2)
+      r_test = z_array5(j1,j2)
       if (j1.eq.j2) then
-        r_test = real(1,kind=kind_float)
+        r_ref = real(1,kind=kind_float)
       else
-        r_test = real(0,kind=kind_float)
+        r_ref = real(0,kind=kind_float)
       end if
 !! test if difference if greater than machine precision
 !! (defined by the constant eps)
@@ -856,11 +857,11 @@ program test_ritz
 !! and the elements in reference value
   do j2 = 1, m 
     do j1 = 1, q
-      r_ref = z_array5(j1,j2)
+      r_test = z_array5(j1,j2)
       if (j1.eq.j2) then
-        r_test = real(1,kind=kind_float)
+        r_ref = real(1,kind=kind_float)
       else
-        r_test = real(0,kind=kind_float)
+        r_ref = real(0,kind=kind_float)
       end if
 !! test if difference if greater than machine precision
 !! (defined by the constant eps)

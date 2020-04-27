@@ -215,7 +215,7 @@ program test_libkrylovinterface_real_sp
   & + real(0.1,kind=lkl_single_k)
   end do
 !! write lkl_start_elec_gas and operation on test input
-  write(unit=funit,fmt=*) 'test lkl_start_elec_gas',&
+  write(unit=funit,fmt=*) 'test lkl_start_elec_gas', &
   &', to determine the number of guess vectors'
 !! call lkl_start_elec_gas to get the output nstart
   call lkl_start_elec_gas(data_s_elec_gas,n1,n2,&
@@ -349,11 +349,12 @@ program test_libkrylovinterface_real_sp
       print *, 'subroutine lkl_guess_unit_vec tested'
     end if
   end if
-  
+!! deallocate basis_vectors  
+  deallocate(basis_vectors) 
 
 
 !!! test lkl_precon_none
-!! alocate precon_roots and residuals
+!! allocate precon_roots, residuals and full solutions
   allocate(precon_roots(n4))   
   allocate(residuals(n1,n4))
   allocate(full_solutions(n1,n4))
@@ -364,7 +365,8 @@ program test_libkrylovinterface_real_sp
   approx_spectra = real(0,kind=lkl_single_k)
   approx_spectra(1) = real(1,kind=lkl_single_k)
   do j1 = 2, n1
-    approx_spectra(j1) = approx_spectra(j1-1) + real(0.1,kind=lkl_single_k)
+    approx_spectra(j1) = approx_spectra(j1-1) &
+    & + real(0.1,kind=lkl_single_k)
   end do
   full_solutions = real(0,kind=lkl_single_k)
   do j1 = 1, n4
@@ -378,7 +380,7 @@ program test_libkrylovinterface_real_sp
   write(unit=funit,fmt=*) 'test lkl_precon_none', &
   & ', to solve for preconditiing and it remains the same as output'
 !! call lkl_precon_none on test input
-  call lkl_precon_none(data_pc_none,n1,n4,n3,approx_spectra,&
+  call lkl_precon_none(data_pc_none,n1,n4,n3,approx_spectra, &
   & precon_roots,full_solutions,residuals,ierr)
 !! check ierr value to see if the subroutine terminated with an error
 !! test if ierr is not equal to 0
@@ -434,7 +436,8 @@ program test_libkrylovinterface_real_sp
   approx_spectra = real(0,kind=lkl_single_k)
   approx_spectra(1) = real(1,kind=lkl_single_k)
   do j1 = 2, n1
-    approx_spectra(j1) = approx_spectra(j1-1) + real(0.1,kind=lkl_single_k)
+    approx_spectra(j1) = approx_spectra(j1-1) & 
+    & + real(0.1,kind=lkl_single_k)
   end do
   full_solutions = real(0,kind=lkl_single_k)
   do j1 = 1, n4
@@ -461,8 +464,8 @@ program test_libkrylovinterface_real_sp
 !! if false, write the subroutine runs
     write(unit=funit,fmt=*) 'lkl_precon_approx runs'
 !! write an explanation of the subroutine
-    write(unit=funit,fmt=*) 'residuals should be the inverse of &
-    & approx_spectra'
+    write(unit=funit,fmt=*) 'residuals should be the inverse of', &
+    &' approx_spectra'
 !! set r_test2 and r_ref2 to real number 0
     r_test2= real(0,kind=lkl_single_k)
     r_ref2= real(0,kind=lkl_single_k)
@@ -505,7 +508,8 @@ program test_libkrylovinterface_real_sp
   approx_spectra = real(0,kind=lkl_single_k)
   approx_spectra(1) = real(1,kind=lkl_single_k)
   do j1 = 2, n1
-    approx_spectra(j1) = approx_spectra(j1-1) + real(0.1,kind=lkl_single_k)
+    approx_spectra(j1) = approx_spectra(j1-1) &
+    & + real(0.1,kind=lkl_single_k)
   end do
   full_solutions = real(0,kind=lkl_single_k)
   do j1 = 1, n4
@@ -516,8 +520,8 @@ program test_libkrylovinterface_real_sp
   precon_roots = real(0.5,kind=lkl_single_k)
   residuals = real(1,kind=lkl_single_k)
 !! write subroutine lkl_precon_davidson and operation on test input
-  write(unit=funit,fmt=*) 'test lkl_precon_davidson&
-  &, solve for preconditing davison'
+  write(unit=funit,fmt=*) 'test lkl_precon_davidson', &
+  &', solve for preconditing davison'
 !! call lkl_precon_davidson on test output
   call lkl_precon_davidson(data_pc_davidson,n1,n4,n3,approx_spectra,&
   & precon_roots,full_solutions,residuals,ierr)
@@ -532,8 +536,8 @@ program test_libkrylovinterface_real_sp
 !! if false, write the subroutine runs
     write(unit=funit,fmt=*) 'lkl_precon_davidson runs'
 !! write an explanation of the subroutine
-    write(unit=funit,fmt=*) 'residuals should be the inverse of&
-    & the substraction of approx_spectra and precon_roots'
+    write(unit=funit,fmt=*) 'residuals should be the inverse of', &
+    &' the substraction of approx_spectra and precon_roots'
 !! set r_test2 and r_ref2 to real number 0  
     r_test2= real(0,kind=lkl_single_k)
     r_ref2= real(0,kind=lkl_single_k)
@@ -567,7 +571,11 @@ program test_libkrylovinterface_real_sp
       print *, 'subroutine lkl_precon_davidson tested'
     end if
   end if
-  
+!! deallocate precon_roots, residuals and full_solutions
+  deallocate(precon_roots)   
+  deallocate(residuals)
+  deallocate(full_solutions)
+ 
 
 
 
