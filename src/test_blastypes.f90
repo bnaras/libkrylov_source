@@ -31,8 +31,8 @@ program test_blastypes
   type(base) :: z1
   type(base) :: z2
   type(base) :: z3
-  real(kind_float) :: r_test(1)
-  real(kind_float) :: r_ref(1)
+  real(kind_float) :: r_test
+  real(kind_float) :: r_ref
   real(kind_float) :: x1
   real(kind_float) :: x2
   real(kind_float) :: x_array1(n)
@@ -133,7 +133,7 @@ program test_blastypes
          end if
 !! test if difference is greater than machine precision
 !! (defined by the constant eps)
-         if (abs(r_test(1)-r_ref(1)).gt.eps) then
+         if (abs(r_test-r_ref).gt.eps) then
 !! if true, write failed for elements
 !! and the position of the element that failed
            write(unit=funit,fmt=*) 'failed for elements', j1, j2 
@@ -159,7 +159,7 @@ program test_blastypes
 !! and elements in reference value
 !! test if difference is greater than machine precision
 !! (defined by the constant eps)
-      if (abs(r_test(1)-r_ref(1)).gt.eps) then
+      if (abs(r_test-r_ref).gt.eps) then
 !! if true, write the test failed 
 !! and the position of the element that failed
         write(unit=funit,fmt=*) 'failed for elements', j1
@@ -234,7 +234,7 @@ program test_blastypes
          end if
 !! test if difference if greater than machine precision
 !! (defined by thecon)
-        if (abs(r_test(1)-r_ref(1)).gt.eps) then
+        if (abs(r_test-r_ref).gt.eps) then
 !! if true, write failed for elements
 !! and the position of the element that failed
           write(unit=funit,fmt=*) 'failed for elements', j1, j2
@@ -280,7 +280,8 @@ program test_blastypes
 !! call ggemm on test input onto test output
   call ggemm('n','n',n,n,n,z1,z_array1,n,z_array2,n,z2,z_array3,n)
 !! write  an explanation of the function, using formula
-  write(unit=funit,fmt=*) 'type(base) z_array3 = z1 * z_array1 * z_array2 +  z2 * z_array_3'
+  write(unit=funit,fmt=*) 'type(base) z_array3', &
+  &' = z1 * z_array1 * z_array2 +  z2 * z_array_3'
 !! explain the output z_array3
   write(unit=funit,fmt=*) 'z_array3 should be diagonal matrix', &
   &' with 3, 12 ,27 on the diagonal'
@@ -301,7 +302,7 @@ program test_blastypes
 !! using if statement to take the absolute difference
 !! between elements in test array and elements in reference
 !! to see whether it is greater than eps
-      if (abs(r_test(1)-r_ref(1)).gt.eps) then
+      if (abs(r_test-r_ref).gt.eps) then
 !! if true, write the test failed
 !! and the position of the element that failed the test
         write(unit=funit,fmt=*) 'failed for elements', j1, j2
@@ -334,13 +335,15 @@ program test_blastypes
 !! call ggemm on test input onto tes output
   call ggemm('c','n',n,n,n,z1,z_array1,n,z_array1,n,z2,z_array4,n)
 !! write the explanation of the function using formula 
-  write(unit=funit,fmt=*) 'type(base) z_array4 = z1 * (z_array1^H) * z_array1 +  z2 * z_array4'
+  write(unit=funit,fmt=*) 'type(base) z_array4', &
+  &' = z1 * (z_array1^H) * z_array1 +  z2 * z_array4'
 !! explain the output z_array4
   write(unit=funit,fmt=*) 'z_array4 should be a diagonal matrix', &
   & ' with 3,12,27 on the diagonal'
 !! write start to check each element
 !! in both test array and reference
-  write(unit=funit,fmt=*) 'test ggemm on conjugated matrix, for each element'
+  write(unit=funit,fmt=*) 'test ggemm',&
+  &' on conjugated matrix, for each element'
 !! using do loops to assign z_array4 element by element to r_test
 !! assign r_ref to be a diagonal matrix with 3,12,27 on diagonal
   do j2 = 1, n 
@@ -355,7 +358,7 @@ program test_blastypes
 !! using if statement to take the absolute difference 
 !! between elements in test array and elements in reference
 !! to see whether it isis greater than eps
-      if (abs(r_test(1)-r_ref(1)).gt.eps) then
+      if (abs(r_test-r_ref).gt.eps) then
 !! if true, write the test failed
 !! and the position of the element that failed the test
         write(unit=funit,fmt=*) 'failed for elements', j1, j2
@@ -416,7 +419,8 @@ program test_blastypes
 !! using a do loop to fill in the matrix for reference 
     r_ref = real(0,kind=kind_float) 
     do j1 = 1,n
-      r_ref = r_ref + real(j1,kind=kind_float) * real(j1,kind=kind_float)
+      r_ref = r_ref + &
+      & real(j1,kind=kind_float) * real(j1,kind=kind_float)
     end do
 !! write the reference to the output file
     write(unit=funit, fmt=*) 'z3 should be equal to', r_ref
@@ -430,7 +434,7 @@ program test_blastypes
     do j1 = 1, n 
 !! test if difference is greater than machine precision
 !! (defined by the constant eps)
-      if (abs(r_test(1)-r_ref(1)).gt.eps) then
+      if (abs(r_test-r_ref).gt.eps) then
 !! if true, write failed for elements
 !! and the position of the element that failed
         write(unit=funit,fmt=*) 'failed for element', j1
@@ -444,7 +448,7 @@ program test_blastypes
       write(unit=funit,fmt=*) 'subroutine gdot failed'
       print *, 'subroutine gdot failed'
     else
-!! if false, write the subroutine gdot tested to output and  output file
+!! if false, write the subroutine gdot tested to output and output file
       write(unit=funit,fmt=*) 'tested subroutine gdot'
       print *, 'tested subroutine gdot'
     end if 
@@ -456,7 +460,8 @@ program test_blastypes
 !! z_array1 
   z_array1 = real(0,kind=kind_float)
   do j1 = 1, n
-    z_array1(j1,j1) = real(j1,kind=kind_float) * real(j1,kind=kind_float)
+    z_array1(j1,j1) = real(j1,kind=kind_float) &
+    & * real(j1,kind=kind_float)
   end do
 !! set origin value of r_test and r_ref to real number 0
   r_test = real(0,kind=kind_float)
@@ -479,7 +484,7 @@ program test_blastypes
 !! if false, write gpotrf runs
     write(unit=funit,fmt=*) 'gpotrf runs'
 !! write an explanation of the funtion
-    write(unit=funit,fmt=*) 'type(base) results a cholesky decomposition' 
+    write(unit=funit,fmt=*) 'type(base) result a cholesky decomposition' 
 ! write the reference array (unformatted) to the output file
     write(unit=funit,fmt=*) 'z_array1 should be a diagonal matrix',&
     &' with 1,2,3 on the diagonal'
@@ -501,7 +506,7 @@ program test_blastypes
         end if
 !! test if difference is greater than machine precision
 !! defined by the constant eps
-        if (abs(r_test(1)-r_ref(1)).gt.eps) then
+        if (abs(r_test-r_ref).gt.eps) then
 !! if true, write the test failed and the position of element failed
           write(unit=funit,fmt=*) 'failed for element', j1, j2
 !! set logical check = .true.
@@ -561,7 +566,7 @@ program test_blastypes
     write(unit=funit,fmt=*) 'test glanhe, for each element'
 !! test if the difference of test and reference is greater than 
 !!machine precision (defined by the constant eps)
-    if (abs(r_test(1)-r_ref(1)).gt.eps) then
+    if (abs(r_test-r_ref).gt.eps) then
 !! if true, write the test failed for every elements
 !! and the position of the element failed
       write(unit=funit,fmt=*) 'failed for elements', j1
@@ -574,7 +579,7 @@ program test_blastypes
       write(unit=funit,fmt=*) 'subroutine glanhe failed'
       print *, 'subroutine glanhe failed'
     else
-!! if false, write test subroutine glanhe tested to output and output file
+!! if false, write tested subroutine glanhe to output and output file
       write(unit=funit,fmt=*) 'tested subroutine glanhe'
       print *, 'tested subroutine glanhe'
     end if
@@ -609,7 +614,8 @@ program test_blastypes
 !! if false, write gpocon runs
     write(unit=funit,fmt=*) 'gpocon runs'
 !! write an explanation of the subroutine
-    write(unit=funit,fmt=*) 'test type(base) is the reciprocal of the condition number'
+    write(unit=funit,fmt=*) 'test type(base)', &
+    &' is the reciprocal of the condition number'
 !! assign the test output to real(kind_float) test scalar variable
 !! for comparison to reference
     r_test = x2
@@ -621,7 +627,7 @@ program test_blastypes
     write(unit=funit,fmt=*) 'test gpocon, for each element'
 !! test if the difference of test and reference is greater than
 !! machine precision (defined by the constant eps)  
-    if (abs(r_test(1)-r_ref(1)).gt.eps) then
+    if (abs(r_test-r_ref).gt.eps) then
 !! if true, write the test failed
 !! and the position of the element that failed the test
       write(unit=funit,fmt=*) 'failed for elements', j1
@@ -629,11 +635,11 @@ program test_blastypes
       check = .true.
     end if 
     if (check) then
-!! if true, write the subroutine gpocon failed to output and output file
+!! if true, write subroutine gpocon failed to output and output file
       write(unit=funit,fmt=*) 'subroutine gpocon failed'
       print *, 'subroutine gpocon failed'
     else
-!! if false, write the subroutin gpocon tested to output and output file
+!! if false, write subroutin gpocon tested to output and output file
       write(unit=funit,fmt=*) 'tested subroutine gpocon'
       print *, 'tested subroutine gpocon'
     end if
@@ -665,7 +671,8 @@ program test_blastypes
 !! on test input onto test output
   call gtrsm('l','l','c','n',n,n,z1,z_array2,n,z_array1,n)
 !! write an explanation of the function using formula  
-  write(unit=funit,fmt=*) 'type(base) z_array1 = z_array1^H * z1 * z_array2'
+  write(unit=funit,fmt=*) 'type(base)', &
+  &' z_array1 = z_array1^H * z1 * z_array2'
 !! write the reference array (unformatted) to the output file
   write(unit=funit,fmt=*) 'z_array1 should be equal to identity'
 !! write start to check each element 
@@ -684,7 +691,7 @@ program test_blastypes
        end if 
 !! test if the absolute difference of r_test and r_ref 
 !! is greater than machine precision (defined by the constant eps)
-      if (abs(r_test(1)-r_ref(1)).gt.eps) then
+      if (abs(r_test-r_ref).gt.eps) then
 !! if true, write the test failed
 !! and the position of the element that failed
         write(unit=funit,fmt=*) 'failed for elements', j1, j2
@@ -721,7 +728,8 @@ program test_blastypes
 !! on test input onto test output
   call gtrsm('l','l','n','n',n,n,z1,z_array2,n,z_array1,n)
 !! write an explanation of the function using formula
-  write(unit=funit,fmt=*) 'type(base) z_array1 = z_array1^H * z1 * z_array2' 
+  write(unit=funit,fmt=*) 'type(base)', &
+  &' z_array1 = z_array1^H * z1 * z_array2' 
 !! write the reference array (unformatted) to the output file
   write(unit=funit,fmt=*) 'z_array1 should be equal to identity'
 !! write start to check each element
@@ -740,7 +748,7 @@ program test_blastypes
        end if 
 !! test if the absolute difference of r_test and r_ref 
 !! is greater than machine precision (defined by the constant eps)
-      if (abs(r_test(1)-r_ref(1)).gt.eps) then
+      if (abs(r_test-r_ref).gt.eps) then
 !! if true, write the test failed
 !! and the position of the element that failed
         write(unit=funit,fmt=*) 'failed for elements', j1, j2
@@ -796,7 +804,7 @@ program test_blastypes
        end if 
 !! test if the absolute difference of r_test and r_ref 
 !! is greater than machine precision (defined by the constant eps)
-      if (abs(r_test(1)-r_ref(1)).gt.eps) then
+      if (abs(r_test-r_ref).gt.eps) then
 !! if true, write the test failed
 !! and the position of the element that failed
         write(unit=funit,fmt=*) 'failed for elements', j1, j2
@@ -865,7 +873,7 @@ program test_blastypes
         end if
 !! test the absolute difference of r_test and r_ref 
 !! whether it is greater than machine precision defined by constant eps
-        if (abs(r_test(1)-r_ref(1)).gt.eps) then
+        if (abs(r_test-r_ref).gt.eps) then
 !! if true, write the test failed and the position of element failed
           write(unit=funit,fmt=*) 'failed for element', j1, j2
 !! set logical check = .true.
@@ -921,7 +929,7 @@ program test_blastypes
         end if
 !! test the absolute difference of r_test and r_ref 
 !! whether it is greater than machine precision defined by constant eps
-        if (abs(r_test(1)-r_ref(1)).gt.eps) then
+        if (abs(r_test-r_ref).gt.eps) then
 !! if true, write the test failed and the position of element failed
           write(unit=funit,fmt=*) 'failed for element', j1, j2
 !! set logical check = .true.
@@ -935,7 +943,7 @@ program test_blastypes
       write(unit=funit,fmt=*) 'subroutine ggetrf failed'
       print *, 'subroutine ggetrf failed'
     else
-!! if false, write the subroutine gpotrf tested to output and output file
+!! if false, write subroutine gpotrf tested to output and output file
       write(unit=funit,fmt=*) 'tested subroutine ggetrf'
       print *, 'tested subroutine ggetrf'
     end if
