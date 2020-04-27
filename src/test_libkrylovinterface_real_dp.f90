@@ -13,11 +13,9 @@ program test_libkrylovinterface_real_dp
 !--------------------------------------------------------------------
 ! Modules and Global Variables
 !--------------------------------------------------------------------
+!! these two modules are used to load our machine precision
   use basekinds
   use floatformat
-  use basetypes
-  use blastypes
-  use arrayfile
   use libkrylovinterface
 !--------------------------------------------------------------------
 !
@@ -610,8 +608,8 @@ program test_libkrylovinterface_real_dp
     write(unit=funit,fmt=*) 'residuals should be the inverse of&
     & the substraction of approx_spectra and precon_roots'
 !! set r_test2 and r_ref2 to real number 0  
-    r_test2= real(0,kind=lkl_double_k)
-    r_ref2= real(0,kind=lkl_double_k)
+    r_test2 = real(0,kind=lkl_double_k)
+    r_ref2 = real(0,kind=lkl_double_k)
 !! set check = .false.
     check = .false.
 !! using do loop to fill in elements from test output to residuals
@@ -619,8 +617,12 @@ program test_libkrylovinterface_real_dp
     do j2 = 1, n4
       do j1 = 1, n1
         r_test2 = residuals(j1,j2)
-        r_ref2 = real(1,kind=lkl_double_k) / &
-        & (approx_spectra(j1) - precon_roots(j2))
+        if (j1.eq.j2) then
+          r_ref2 = real(0,kind=lkl_double_k)
+        else
+          r_ref2 = real(1,kind=lkl_double_k) / &
+  &     (approx_spectra(j1) - precon_roots(j2))
+        end if
 !! test if the absolute difference of r_test2 and r_ref2
 !! is greater than eps
         if (abs(r_test2(1)-r_ref2(1)).gt.eps) then
