@@ -241,6 +241,15 @@ module libkrylovinterface
     procedure :: lkl_guess => lkl_guess_unit_vec
   end type lkl_g_unit_vec
 
+!! defining input function with all options
+  type, extends(libkrylov_precon_subroutine) :: lkl_pc_all
+! external data required for the function
+!! string indicating which preconditioner
+    character(len=32) :: precon_string = 'davidson'
+  contains
+    procedure :: lkl_precon => lkl_precon_all
+  end type lkl_pc_all
+
 !! defining input function for null preconditioning
   type, extends(libkrylov_precon_subroutine) :: lkl_pc_none
 ! external data required for the function
@@ -1139,7 +1148,7 @@ contains
       do j = 1, n1
         residuals(j,k) = ((residuals(j,k) &
   &  - ((numerator/denominator)*full_solutions(j,k))) &
- &   / ( approx_spectra(j) - precon_roots(k) ))
+  &   / ( approx_spectra(j) - precon_roots(k) ))
       end do
     end do
 
@@ -1147,6 +1156,107 @@ contains
 
 !--------------------------------------------------------------------
   end subroutine lkl_precon_sleijpen
+!--------------------------------------------------------------------
+
+!--------------------------------------------------------------------
+  subroutine lkl_precon_all(data,n1,n2,n3,approx_spectra,&
+   &   precon_roots,full_solutions,residuals,ierr)
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Description:
+!--------------------------------------------------------------------
+!! subroutine for preconditioning residuals
+!! using the jacobi-davidson method proposed by sleijen
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Modules and Global Variables
+!--------------------------------------------------------------------
+! Blank
+!--------------------------------------------------------------------
+!
+    implicit none
+!
+!--------------------------------------------------------------------
+! External data (IDEALLY EMPTY)
+!--------------------------------------------------------------------
+    class(lkl_pc_all) :: data
+!--------------------------------------------------------------------
+! Input Parameters
+!--------------------------------------------------------------------
+!!    rows of residuals, nbasis
+    integer(lkl_int_k), intent(in) :: n1
+!!    columns of residuals, nresiduals
+    integer(lkl_int_k), intent(in) :: n2
+!!    columns of basis_vectors, nsubspace
+    integer(lkl_int_k), intent(in) :: n3
+!!    approximate spectra
+    real(lkl_double_k), intent(in) :: approx_spectra(n1)
+!!    frequencies
+    real(lkl_double_k), intent(in) :: precon_roots(n2)
+!!    basis vectors
+    real(lkl_double_k), intent(in) :: full_solutions(n1,n2)
+!--------------------------------------------------------------------
+! Input/Output Parameters
+!--------------------------------------------------------------------
+!!    guess vectors
+    real(lkl_double_k), intent(inout) :: residuals(n1,n2)
+!--------------------------------------------------------------------
+! Error Parameter
+!--------------------------------------------------------------------
+    integer(lkl_int_k), intent(inout) :: ierr
+!--------------------------------------------------------------------
+!  Local Variables
+!--------------------------------------------------------------------
+    integer(lkl_int_k) :: j,k = 0
+    real(lkl_double_k) :: numerator
+    real(lkl_double_k) :: denominator
+    real(lkl_double_k), external :: ddot
+    real(lkl_double_k), allocatable :: mx(:,:)
+!--------------------------------------------------------------------
+
+    if (data%precon_string.eq.'none') then
+    else if (data%precon_string.eq.'approx_spectra') then
+      do k = 1, n2
+        do j = 1, n1
+          residuals(j,k) = residuals(j,k)/&
+ &         ( approx_spectra(j) )
+        end do
+      end do
+    else if (data%precon_string.eq.'davidson') then
+      do k = 1, n2
+        do j = 1, n1
+          residuals(j,k) = residuals(j,k)/&
+ &         ( approx_spectra(j) - precon_roots(k) )
+        end do
+      end do
+    else if (data%precon_string.eq.'sleijpen') then
+      allocate(mx(n1,n2))
+  
+  !! create scaled full solutions required for epsilon
+      do k = 1, n2
+        do j = 1, n1
+          mx(j,k) = full_solutions(j,k)/&
+  &         ( approx_spectra(j) - precon_roots(k) )
+        end do
+      end do
+  
+      do k = 1, n2
+        denominator = ddot(n1,mx(1:n1,k),1,full_solutions(1:n1,k),1)
+        numerator = ddot(n1,mx(1:n1,k),1,residuals(1:n1,k),1)
+        do j = 1, n1
+          residuals(j,k) = ((residuals(j,k) &
+  &  - ((numerator/denominator)*full_solutions(j,k))) &
+  &   / ( approx_spectra(j) - precon_roots(k) ))
+        end do
+      end do
+  
+      deallocate(mx)
+    end if
+
+!--------------------------------------------------------------------
+  end subroutine lkl_precon_all
 !--------------------------------------------------------------------
 
 !--------------------------------------------------------------------
