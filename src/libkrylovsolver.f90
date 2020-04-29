@@ -2266,17 +2266,9 @@ contains
         print *, 'class(libkrylov_a_output_subroutine) not called'
       end if
     else ! iterations exited with no serious errors, possible useful data!
-!! Set constants required for BLAS
-      one_kb = real(1,kind=kind_float)
-      zero_kb = real(0,kind=kind_float)
-!! overwrite mvp with solutions on the full space to create savefile
-      call ggemm('n','n',nbasis,nroots,nsubspace,&
-  &       one_kb,basis_vectors(1:nbasis,1:nsubspace),nbasis,&
-  &       solutions(1:nsubspace,1:nroots),nsubspace,zero_kb,&
-  &       mvproduct(1:nbasis,1:nroots),nbasis)
       if (irestart.ge.1) then ! user asked for save files
         call array_print_rstrt(sname,nbasis,nroots,&
-  &       mvproduct(1:nbasis,1:nroots),iverb,ierr)
+  &       full_solutions(1:nbasis,1:nroots),iverb,ierr)
         if (ierr.eq.0) then ! save file printed! safe to delete restart
           if (irestart.ge.2) then
             call array_del_rstrt(vname,iverb,ierr) 
@@ -2299,11 +2291,11 @@ contains
 !! call user output function
 !!NAMBI
       associate(interfacing_lg => lagrangian%element,&
-  &             interfacing_mv => mvproduct%element)
+  &             interfacing_fs => full_solutions%element)
         call krylov_output_a%lkl_output_a(nbasis,nsubspace,nroots,&
   &       nconverged,jconverged,&
   &       roots(1:nroots),interfacing_lg(1:nroots),&
-  &       interfacing_mv(1:nbasis,1:nroots),&
+  &       interfacing_fs(1:nbasis,1:nroots),&
   &       euc_norm(1:nroots),fro_norm,id_string,ierr)
       end associate
 !! final ierr check and adjustments
@@ -2332,6 +2324,7 @@ contains
     deallocate(approx_spectra)
     deallocate(lagrangian)
     deallocate(solutions)
+    deallocate(full_solutions)
     deallocate(overlap)
     deallocate(roots)
     deallocate(diag_overlap)
@@ -3842,17 +3835,9 @@ contains
         print *, 'class(user_krylov_a_output_subroutine) not called'
       end if
     else ! iterations exited with no serious errors, possible useful data!
-!! Set constants required for BLAS
-      one_kb = real(1,kind=kind_float)
-      zero_kb = real(0,kind=kind_float)
-!! overwrite mvp with solutions on the full space to create savefile
-      call ggemm('n','n',nbasis,nrhs,nsubspace,&
-  &       one_kb,basis_vectors(1:nbasis,1:nsubspace),nbasis,&
-  &       solutions(1:nsubspace,1:nrhs),nsubspace,zero_kb,&
-  &       mvproduct(1:nbasis,1:nrhs),nbasis)
       if (irestart.ge.1) then ! user asked for save files
         call array_print_rstrt(sname,nbasis,nrhs,&
-  &       mvproduct(1:nbasis,1:nrhs),iverb,ierr)
+  &       full_solutions(1:nbasis,1:nrhs),iverb,ierr)
         if (ierr.eq.0) then ! save file printed! safe to delete restart
           if (irestart.ge.2) then
             call array_del_rstrt(vname,iverb,ierr)
@@ -3880,10 +3865,10 @@ contains
 !! call user output function
       associate(interfacing_lg => lagrangian%element,&
   &             interfacing_rhs => rhs%element,&
-  &             interfacing_mv => mvproduct%element)
+  &             interfacing_fs => full_solutions%element)
       call krylov_output_b%lkl_output_b(nbasis,nsubspace,nrhs,&
   &     nconverged,jconverged,interfacing_rhs,interfacing_lg,&
-  &     interfacing_mv(1:nbasis,1:nrhs),&
+  &     interfacing_fs(1:nbasis,1:nrhs),&
   &     euc_norm,fro_norm,id_string,ierr)
       end associate
 !! final ierr check and adjustments
@@ -3913,6 +3898,7 @@ contains
     deallocate(proj_rhs)
     deallocate(lagrangian)
     deallocate(solutions)
+    deallocate(full_solutions)
     deallocate(overlap)
     deallocate(diag_overlap)
     deallocate(residuals)
@@ -5707,17 +5693,9 @@ contains
         print *, 'class(user_krylov_a_output_subroutine) not called'
       end if
     else ! iterations exited with no serious errors, possible useful data!
-!! Set constants required for BLAS
-      one_kb = real(1,kind=kind_float)
-      zero_kb = real(0,kind=kind_float)
-!! overwrite mvp with solutions on the full space to create savefile
-      call ggemm('n','n',nbasis,nroots,nsubspace,&
-  &       one_kb,basis_vectors(1:nbasis,1:nsubspace),nbasis,&
-  &       solutions(1:nsubspace,1:nroots),nsubspace,zero_kb,&
-  &       mvproduct(1:nbasis,1:nroots),nbasis)
       if (irestart.ge.1) then ! user asked for save files
         call array_print_rstrt(sname,nbasis,nroots,&
-  &       mvproduct(1:nbasis,1:nroots),iverb,ierr)
+  &       full_solutions(1:nbasis,1:nroots),iverb,ierr)
         if (ierr.eq.0) then ! save file printed! safe to delete restart
           if (irestart.ge.2) then
             call array_del_rstrt(vname,iverb,ierr)
@@ -5745,11 +5723,11 @@ contains
 !! call user output function
       associate(interfacing_rhs => rhs%element, &
   &             interfacing_lg => lagrangian%element, &
-  &             interfacing_mv => mvproduct%element)
+  &             interfacing_fs => full_solutions%element)
         call krylov_output_c%lkl_output_c(nbasis,nsubspace,nomega,nrhs,&
   &       nroots,nconverged,jconverged,omega,interfacing_rhs,&
   &       interfacing_lg(1:nroots),&
-  &       interfacing_mv(1:nbasis,1:nroots),&
+  &       interfacing_fs(1:nbasis,1:nroots),&
   &       euc_norm(1:nroots),fro_norm,id_string,ierr)
       end associate
 !! final ierr check and adjustments
@@ -5779,6 +5757,7 @@ contains
     deallocate(proj_rhs)
     deallocate(lagrangian)
     deallocate(solutions)
+    deallocate(full_solutions)
     deallocate(overlap)
     deallocate(omega)
     deallocate(diag_overlap)

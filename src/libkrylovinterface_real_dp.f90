@@ -341,7 +341,7 @@ module libkrylovinterface
       real(lkl_double_k), intent(in) :: roots(n3)
 !!    functional
       real(lkl_double_k), intent(in) :: lagrangian(n3)
-!!    solutions on the full space, stored on mvproduct
+!!    solutions on the full space
       real(lkl_double_k), intent(in) :: solutions(n1,n3)
 !!    residual norms of each vector
       real(lkl_double_k), intent(in) :: euc_norm(n3)
