@@ -1253,6 +1253,13 @@ contains
       end do
   
       deallocate(mx)
+    else ! default to davidson
+      do k = 1, n2
+        do j = 1, n1
+          residuals(j,k) = residuals(j,k)/&
+ &         ( approx_spectra(j) - precon_roots(k) )
+        end do
+      end do
     end if
 
 !--------------------------------------------------------------------
