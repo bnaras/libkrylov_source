@@ -2541,7 +2541,7 @@ contains
     call ghesv('l',nsubspace,nrhs,subspace,nsubspace,ipiv,&
   &     solutions,nsubspace,ierr)
     if (iverb.ge.5) then
-      print *, 'ipiv from solve',k,' :'
+      print *, 'ipiv from solve :'
       print *, ipiv
     end if
     if (ierr.ne.0) then
