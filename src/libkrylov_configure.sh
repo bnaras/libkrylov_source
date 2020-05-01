@@ -62,9 +62,12 @@ do
         echo 'present $LDFLAGS is'
         echo $LDFLAGS
 # generate Makefile.am
+        echo ''
+        echo 'generating Makefile.am from templates'
         cat Makefile_shared.am > Makefile.am
         cat Makefile_mkl_template.am >> Makefile.am
 # copy configure.ac without blas/lapack searches
+        echo 'copying configure.ac from template'
         cp configure_blas_free.ac configure.ac
         echo '----------copied MKL autoconf files----------'
         autoreconf --verbose --install --force
@@ -76,9 +79,11 @@ do
       if [[ $answer2 == no ]];
       then
 # generate Makefile.am
+        echo 'generating Makefile.am from templates'
         cat Makefile_shared.am > Makefile.am
         cat Makefile_blas_template.am >> Makefile.am
 # copy configure.ac without blas/lapack searches
+        echo 'copying configure.ac from template'
         cp configure_blas.ac configure.ac
         echo '----------copied BLAS/LAPack configure files----------'
         autoreconf --verbose --install --force
@@ -103,9 +108,11 @@ do
     echo 'blas-free not implemented yet!'
     exit 1
 # generate Makefile.am
+    echo 'generating Makefile.am from templates'
     cat Makefile_shared.am > Makefile.am
     cat Makefile_blas_free_template.am >> Makefile.am
 # copy configure.ac without blas/lapack searches
+    echo 'copying configure.ac from template'
     cp configure_blas_free.ac configure.ac
     echo '----------copied external-library-free autoconf files----------'
     autoreconf --verbose --install --force
