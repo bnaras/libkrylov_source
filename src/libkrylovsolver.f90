@@ -2046,9 +2046,13 @@ contains
         if (iverb.ge.0) then
           print *, 'preparation for krylov ritz(subspace solve) failed'
           print *, 'error variable = ',ierr
-          print *, 'using previous subspace solutions for print'
         end if
-        ierr = 0
+        if (iter.gt.1) then
+          if (iverb.ge.0) then
+            print *, 'using previous subspace solutions for print'
+          end if
+          ierr = 0
+        end if
         exit ! This exits subspace loop
       else if (ierr.ne.0) then
         if (iverb.ge.0) then
@@ -3594,9 +3598,13 @@ contains
         if (iverb.ge.0) then
           print *, 'preparation for krylov ritz(subspace solve) failed'
           print *, 'error variable = ',ierr
-          print *, 'using previous subspace solutions for print'
         end if
-        ierr = 0
+        if (iter.gt.1) then
+          if (iverb.ge.0) then
+            print *, 'using previous subspace solutions for print'
+          end if
+          ierr = 0
+        end if
         exit ! This exits subspace loop
       else if (ierr.ne.0) then
         if (iverb.ge.0) then
@@ -5452,9 +5460,13 @@ contains
         if (iverb.ge.0) then
           print *, 'preparation for krylov ritz(subspace solve) failed'
           print *, 'error variable = ',ierr
-          print *, 'using previous subspace solutions for print'
         end if
-        ierr = 0
+        if (iter.gt.1) then
+          if (iverb.ge.0) then
+            print *, 'using previous subspace solutions for print'
+          end if
+          ierr = 0
+        end if
         exit ! This exits subspace loop
       else if (ierr.ne.0) then
         if (iverb.ge.0) then
