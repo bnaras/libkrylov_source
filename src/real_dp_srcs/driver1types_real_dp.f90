@@ -108,7 +108,7 @@ module driver1types_real_dp
 ! contains the matrix problem
 ! pointer to target set outside of solver
 ! shared with kl_mvp, must be set before calling solver
-    type(base), pointer :: krylov_a(:,:) => null()
+    real(kind_float), pointer :: krylov_d(:) => null()
   contains
     procedure :: vector_fill => fill_kl_approx
   end type kl_approx
@@ -520,7 +520,7 @@ contains
 
 !! obtain approximate spectra from diagonal of problem
     do j = 1, n1
-      obj(j) = data%krylov_a(j,j)
+      obj(j) = data%krylov_d(j)
     end do    
 
 !--------------------------------------------------------------------

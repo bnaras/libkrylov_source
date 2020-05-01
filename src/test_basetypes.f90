@@ -105,7 +105,7 @@ program test_basetypes
 !! from the operation on real(kind_float) numbers
   r_ref = real(3,kind=kind_float)
 !! writing the reference value (unformatted) to the output file
-  write(unit=funit,fmt=*) 'z1 should be equal to', r_ref
+  write(unit=funit,fmt=*) 'z1 should be equal to ', r_ref
 !! taking the absolute difference 
 !! between test variable and reference value
 !! testing if the difference is greater than machine precision 
@@ -118,7 +118,8 @@ program test_basetypes
   if (check) then
 !! if true
 !! writing the test failed to the output file
-!! writing the test failed to standard output   write(unit=funit,fmt=*) 'test real_to_base (with integer) failed'
+!! writing the test failed to standard output   
+    write(unit=funit,fmt=*) 'test real_to_base (with integer) failed'
     print *, 'test real_to_base (with integer) failed'
   else
 !! if false
@@ -224,7 +225,7 @@ program test_basetypes
 !! running conjugate operator on test input  onto test output 
   z4 = conjg(z2)
 !! writing the test output to the output file
-  write(unit=funit,fmt=*) 'z4 = conjg(z2) =', z4
+  write(unit=funit,fmt=*) 'z4 = conjg(z2) = ', z4
 !! assigning the test output z4
 !! to a real(kind_float) test variable r_test
   r_test = z4
@@ -232,7 +233,7 @@ program test_basetypes
 !! from the operation on real(kind_float) numbers
   r_ref = real(25.34,kind=kind_float)
 !! writing the reference value (unformatted) to the output file
-  write(unit=funit,fmt=*) 'z4 should be equal to', r_ref 
+  write(unit=funit,fmt=*) 'z4 should be equal to ', r_ref 
 !! taking the absolute difference
 !! between test variable and reference value
 !! testing if the difference is greater than machine precision
@@ -291,8 +292,8 @@ program test_basetypes
   end if
 !! write the reference value (unformatted) to the output file
 !! separately for the real part and the imaginary part
-  write(unit=funit,fmt=*) 'real part of c1 should be equal to', r_refr
-  write(unit=funit,fmt=*) 'imaginary part of c1 should be equal to', r_refi
+  write(unit=funit,fmt=*) 'real part of c1 should be equal to ', r_refr
+  write(unit=funit,fmt=*) 'imaginary part of c1 should be equal to ', r_refi
 !! write start to test base_to_cmplx
   write(unit=funit,fmt=*) 'test base_to_cmplx'
 !! check the absolute difference of real part of the type base 
@@ -302,9 +303,6 @@ program test_basetypes
     write(unit=funit,fmt=*) 'test real part of c1 failed'
 !! set logical check = .true.
     check = .true.
-  else
-!! if false, write test for real part of complex number succeeded
-    write(unit=funit,fmt=*) 'test real part of c1 succeeded'
   end if
 !! check the absolute difference of imaginary part of the type base
 !! between the number in test and reference
@@ -313,16 +311,15 @@ program test_basetypes
     write(unit=funit,fmt=*) 'test imaginary part of c1 failed'
 !! set logical check = .true.
     check = .true.
-  else
-!! if false, write test for imaginary part of complex number succeeded
-    write(unit=funit,fmt=*) 'test imaginary part of c1 succeeded'
   end if
 !! check value of logical check
   if (check) then
 !! if true, write the base_to_cmplx test failed to the output file
+    write(unit=funit,fmt=*) 'test base_to_cmplx failed'
     print *, 'test base_to_cmplx failed'
   else
 !! if false, write the base_to_cmplx test tested to the output file
+    write(unit=funit,fmt=*) 'test base_to_cmplx succeeded'
     print *, 'tested base_to_cmplx'
   end if 
 
@@ -350,7 +347,7 @@ program test_basetypes
 !! from the operation on real(kind_float) numbers
   r_ref = real(21.23,kind=kind_float) + real(35.63,kind=kind_float)
 !! writing the reference value (unformatted) to the output file
-  write(unit=funit,fmt=*) 'z5 should be equal to', r_ref
+  write(unit=funit,fmt=*) 'z5 should be equal to ', r_ref
 !! taking the absolute difference
 !! between test variable and reference value
 !! testing if the difference is greater than machine precision
@@ -386,7 +383,7 @@ program test_basetypes
   z4 = real(35.63,kind=kind_float)
   z5 = real(53.82,kind=kind_float)
 !! writing the operation function and test input(unformatted) to output file
-  write(unit=funit,fmt=*) 'operation', z5, '-', z4
+  write(unit=funit,fmt=*) 'operation ', z5, '-', z4
 !! running base_minus_base and assigning test input onto test output 
   z6 = z5 - z4
 !! writing the test output to the output file
@@ -397,7 +394,7 @@ program test_basetypes
 !! assigning a reference value (real(kind_float))
 !! from the operation on real(kind_float) numbers
   r_ref = real(53.82,kind=kind_float) - real(35.63,kind=kind_float) 
-  write(unit=funit,fmt=*) 'z6 should be equal to', r_ref
+  write(unit=funit,fmt=*) 'z6 should be equal to ', r_ref
 !! taking the absolute difference
 !! between test variable and reference value
 !! testing if the difference is greater than machine precision
@@ -425,7 +422,7 @@ end if
 !! testing base_times_base
 !! writing start base_times_base and test input (unformatted) to output file 
   write(unit=funit,fmt=*) 'test type(base)',&
-  &',calculate multiplication operator base_times_base'
+  &', calculate multiplication operator base_times_base'
 !! set logical check = .false.
   check = .false.
 !! assigning real number 53.82 to z5
@@ -621,7 +618,7 @@ end if
   z10 = real(102.53,kind=kind_float)
   x2 = real(5.87,kind=kind_float)
 !! writing the operation function and test input(unformatted) to output file
-  write(unit=funit,fmt=*) 'operation', z10, '/', x2 
+  write(unit=funit,fmt=*) 'operation ', z10, '/', x2 
 !! running base_by_real and assignng test input onto test output
   z11 = z10 / x2
 !! writing the test output to the output file
@@ -632,7 +629,7 @@ end if
 !! assigning a reference value (real(kind_float))
 !! from the operation on real(kind_float) numbers
   r_ref = real(102.53,kind=kind_float) / real(5.87,kind=kind_float)
-  write(unit=funit,fmt=*) 'z11 should be equal to', r_ref
+  write(unit=funit,fmt=*) 'z11 should be equal to ', r_ref
 !! taking the absolute difference
 !! between test variable and reference value 
 !! testing if the difference is greater than machine precision

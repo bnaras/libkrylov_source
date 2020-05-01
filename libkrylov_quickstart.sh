@@ -158,8 +158,6 @@ then
   echo $element_type >> userlibraryconfig
 # use userinput to make a library
   ./libkrylov_make.sh
-# cp userfile to test directory
-  cp userlibraryconfig ../test/.
 # leave src directory and go to test directory 
   cd ../test/
 # clean old tests

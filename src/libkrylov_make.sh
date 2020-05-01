@@ -11,8 +11,12 @@ then
   echo 'libkrylov_quickstart.sh was run.' 
   exit 0
 fi
-echo 'Following options chosen during libkrylov_quickstart.sh'
-echo ' Run libkrylov_quickstart to generate userlibraryconfig if missing'
-# use userinput to make a library
-./libkrylov_make_interactive.sh < userlibraryconfig
-
+echo 'This script works only if particular library has been compiled'
+echo ' by libkrylov_quickstart.sh in directory ../.'
+# look for user config file
+FILE=userlibraryconfig
+if [ -f "$FILE" ]; then
+  ./libkrylov_make_interactive.sh < $FILE
+else
+  echo ' Run libkrylov_quickstart to get meaningful output'
+fi

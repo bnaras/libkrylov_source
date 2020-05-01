@@ -60,6 +60,7 @@ program test_restart_a_real_dp
   integer(kind_integer) :: user_input = 0
 ! contains the matrix problem, read in from file
   type(base), target, allocatable :: krylov_a(:,:)
+  real(kind_float), target, allocatable :: krylov_d(:)
 ! character string to become id_string in solver
   character(len=22), target :: a1_string = ''
 ! character string for file name that contains the problem
@@ -70,6 +71,7 @@ program test_restart_a_real_dp
 ! which becomes nbasis via krylov_problem%n_size
   integer(kind_integer) :: n1 = 0
   integer(kind_integer) :: n2 = 0
+  integer(kind_integer) :: j = 0
 !--------------------------------------------------------------------
 ! Error Parameter
 !--------------------------------------------------------------------
@@ -111,6 +113,7 @@ program test_restart_a_real_dp
 
 !! allocate array to contain problem
   allocate(krylov_a(krylov_problem%n_size,krylov_problem%n_size))
+  allocate(krylov_d(krylov_problem%n_size))
 
 !! read problem array size
   call array_read_base(filename_string,krylov_problem%n_size,&
@@ -121,9 +124,14 @@ program test_restart_a_real_dp
     stop
   end if
 
+  do j = 1, krylov_problem%n_size
+    krylov_d(j) = krylov_a(j,j)
+!    krylov_a(j,j) = real(0,kind=kind_float)
+  end do
+
 ! set pointers to local variables required for input subroutines
   krylov_problem%problem_string => a1_string
-  krylov_approx%krylov_a => krylov_a
+  krylov_approx%krylov_d => krylov_d
   krylov_mvp%krylov_a => krylov_a
 
 ! call solver
@@ -136,6 +144,7 @@ program test_restart_a_real_dp
 
 ! no post calculation operations, everything done within solver
   deallocate(krylov_a)
+  deallocate(krylov_d)
 
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------

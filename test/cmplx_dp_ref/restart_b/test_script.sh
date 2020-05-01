@@ -12,25 +12,24 @@
 echo '~~~test_restart_from_reference file~~~' >> ../testing.summary
 echo '' >> ../testing.summary
 echo 'using libkrylov/src/cmplx_dp_test/test_restart_b_cmplx_dp'  >> ../testing.summary
-echo 'on the same problem as the reference test' 
-echo 'with the approximate spectra preconditioner' 
+echo 'on the same problem as the reference test' >> ../testing.summary
+echo 'with the approximate spectra preconditioner' >> ../testing.summary
 cp ../ref_1b/cmplx_dp_1b_prob.json .
 cp ../ref_1b/cmplx_dp_1b_rhs.json .
-rm cmplx_dp_1b_lagr.json
-rm cmplx_dp_1b_vecs.json
-rm *.save
-rm *.rstrt
+rm cmplx_dp_1b_lagr.json 2>/dev/null
+rm cmplx_dp_1b_vecs.json 2>/dev/null
+rm *.save 2>/dev/null
+rm *.rstrt 2>/dev/null
 echo '' >> ../testing.summary
 echo 'generating restart files for' >> ../testing.summary
 echo 'restart levels' >> ../testing.summary
 echo 'test output in' >> ../testing.summary
 echo 'test/cmplx_dp_testing.results/restart_b/cmplx_dp_b_restart_k.out' >> ../testing.summary
 touch kill.libkrylov
-rm *.save
 echo '4' | ../../../src/cmplx_dp_test/test_restart_b_cmplx_dp > cmplx_dp_b_restart_k.out
 echo '' >> ../testing.summary
 rm kill.libkrylov
-mv cmplx_dp_b_restart_0.out cmplx_dp_b_restart_0.out.old
+mv cmplx_dp_b_restart_0.out cmplx_dp_b_restart_0.out.old 2>/dev/null
 echo 'generating save file for' >> ../testing.summary
 echo 'restart level 1' >> ../testing.summary
 echo 'test output in' >> ../testing.summary
@@ -39,14 +38,13 @@ echo '1' | ../../../src/cmplx_dp_test/test_restart_b_cmplx_dp > cmplx_dp_b_resta
 echo '' >> ../testing.summary
 rm cmplx_dp_1b_lagr.json
 rm cmplx_dp_1b_vecs.json
-mv cmplx_dp_b_restart_1.out cmplx_dp_b_restart_1.out.old
+mv cmplx_dp_b_restart_1.out cmplx_dp_b_restart_1.out.old 2>/dev/null
 echo 'restart level 1' >> ../testing.summary
 echo 'test output in' >> ../testing.summary
 echo 'test/cmplx_dp_testing.results/restart_b/cmplx_dp_b_restart_1.out' >> ../testing.summary
 echo '1' | ../../../src/cmplx_dp_test/test_restart_b_cmplx_dp > cmplx_dp_b_restart_1.out
 mv cmplx_dp_1b_lagr.json cmplx_dp_1b_1_lagr.json
 mv cmplx_dp_1b_vecs.json cmplx_dp_1b_1_vecs.json
-mv cmplx_dp_1b_indx.json cmplx_dp_1b_1_indx.json
 grep 'Converged' cmplx_dp_b_restart_1.out >> ../testing.summary
 echo 'error statments:' >> ../testing.summary
 grep 'failed' cmplx_dp_b_restart_1.out >> ../testing.summary
@@ -62,7 +60,7 @@ rm *.save
 echo '4' | ../../../src/cmplx_dp_test/test_restart_b_cmplx_dp > cmplx_dp_b_restart_k.out
 echo '' >> ../testing.summary
 rm kill.libkrylov
-mv cmplx_dp_b_restart_2.out cmplx_dp_b_restart_2.out.old
+mv cmplx_dp_b_restart_2.out cmplx_dp_b_restart_2.out.old 2>/dev/null
 echo 'restart level 2' >> ../testing.summary
 echo 'test output in' >> ../testing.summary
 echo 'test/cmplx_dp_testing.results/restart_b/cmplx_dp_b_restart_2.out' >> ../testing.summary
@@ -84,7 +82,7 @@ rm *.save
 echo '4' | ../../../src/cmplx_dp_test/test_restart_b_cmplx_dp > cmplx_dp_b_restart_k.out
 echo '' >> ../testing.summary
 rm kill.libkrylov
-mv cmplx_dp_b_restart_3.out cmplx_dp_b_restart_3.out.old
+mv cmplx_dp_b_restart_3.out cmplx_dp_b_restart_3.out.old 2>/dev/null
 echo 'restart level 3' >> ../testing.summary
 echo 'test output in' >> ../testing.summary
 echo 'test/cmplx_dp_testing.results/restart_b/cmplx_dp_b_restart_3.out' >> ../testing.summary
@@ -106,7 +104,7 @@ rm *.save
 echo '4' | ../../../src/cmplx_dp_test/test_restart_b_cmplx_dp > cmplx_dp_b_restart_k.out
 echo '' >> ../testing.summary
 rm kill.libkrylov
-mv cmplx_dp_b_restart_4.out cmplx_dp_b_restart_4.out.old
+mv cmplx_dp_b_restart_4.out cmplx_dp_b_restart_4.out.old 2>/dev/null
 echo 'restart level 4' >> ../testing.summary
 echo 'test output in' >> ../testing.summary
 echo 'test/cmplx_dp_testing.results/restart_b/cmplx_dp_b_restart_4.out' >> ../testing.summary

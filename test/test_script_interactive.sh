@@ -48,7 +48,7 @@ echo 'Element type is ' $element_type
 echo 'Preparing test directories'
 if [[ $precision == single && $element_type == real ]];
 then
-  mkdir real_sp_testing.results
+  mkdir real_sp_testing.results 2>/dev/null
   cp -r real_sp_ref/* real_sp_testing.results/.
   echo 'Begin test'
   echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
@@ -56,7 +56,7 @@ then
 fi
 if [[ $precision == single && $element_type == complex ]];
 then
-  mkdir cmplx_sp_testing.results
+  mkdir cmplx_sp_testing.results 2>/dev/null
   cp -r cmplx_sp_ref/* cmplx_sp_testing.results/.
   echo 'Begin test'
   echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
@@ -64,7 +64,7 @@ then
 fi
 if [[ $precision == double && $element_type == real ]];
 then
-  mkdir real_dp_testing.results
+  mkdir real_dp_testing.results 2>/dev/null
   cp -r real_dp_ref/* real_dp_testing.results/.
   echo 'Begin test'
   echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
@@ -72,7 +72,7 @@ then
 fi
 if [[ $precision == double && $element_type == complex ]];
 then
-  mkdir cmplx_dp_testing.results
+  mkdir cmplx_dp_testing.results 2>/dev/null
   cp -r cmplx_dp_ref/* cmplx_dp_testing.results/.
   echo 'Begin test'
   echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
