@@ -71,4 +71,4 @@ grep 'failed' cmplx_dp_spc_driver1a.out >> ../testing.summary
 echo 'eigenvalues' >> ../testing.summary
 sed '7,11!d' cmplx_dp_1a_spc_vals.json >> ../testing.summary
 echo '' >> ../testing.summary
-echo '~~~~~Complex Double reference tests done~~~~~'
+echo '~~~~~Complex Double reference_a tests done~~~~~'

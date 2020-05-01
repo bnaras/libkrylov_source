@@ -28,6 +28,3 @@ cd ../restart_c
 #./test_script.sh
 cd ..
 echo '~all Complex Double Precision Tests done~'
-echo '~echoing test summary~'
-cat testing.summary
-

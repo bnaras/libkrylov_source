@@ -21,10 +21,10 @@ sed '7,8!d' real_sp_1c_freq.json >> ../testing.summary
 echo ' lagrangian:' >> ../testing.summary
 sed '7,12!d' real_sp_1c_exact_lagr.json >> ../testing.summary
 echo '' >> ../testing.summary
-rm real_sp_1c_lagr.json
-rm real_sp_1c_vecs.json
-rm real_sp_1c_indx.json
-mv real_sp_npc_driver1c.out real_sp_npc_driver1c.out.old
+rm real_sp_1c_lagr.json 2>/dev/null
+rm real_sp_1c_vecs.json 2>/dev/null
+rm real_sp_1c_indx.json 2>/dev/null
+mv real_sp_npc_driver1c.out real_sp_npc_driver1c.out.old 2>/dev/null
 echo 'solve reference problem with no preconditioner' >> ../testing.summary
 echo 'test output in' >> ../testing.summary
 echo 'test/real_sp_testing.results/ref_1c/real_sp_npc_driver1c.out' >> ../testing.summary
@@ -40,7 +40,7 @@ sed '7,12!d' real_sp_1c_npc_indx.json >> ../testing.summary
 echo 'lagrangian:' >> ../testing.summary
 sed '7,12!d' real_sp_1c_npc_lagr.json >> ../testing.summary
 echo '' >> ../testing.summary
-mv real_sp_apc_driver1c.out real_sp_apc_driver1c.out.old
+mv real_sp_apc_driver1c.out real_sp_apc_driver1c.out.old 2>/dev/null
 echo 'solve reference problem with approximate spectra preconditioner' >> ../testing.summary
 echo 'test output in' >> ../testing.summary
 echo 'test/real_sp_testing.results/ref_1c/real_sp_apc_driver1c.out' >> ../testing.summary
@@ -56,7 +56,7 @@ sed '7,12!d' real_sp_1c_apc_indx.json >> ../testing.summary
 echo 'lagrangian:' >> ../testing.summary
 sed '7,12!d' real_sp_1c_apc_lagr.json >> ../testing.summary
 echo '' >> ../testing.summary
-mv real_sp_dpc_driver1c.out real_sp_dpc_driver1c.out.old
+mv real_sp_dpc_driver1c.out real_sp_dpc_driver1c.out.old 2>/dev/null
 echo 'solve reference problem with davidson preconditioner' >> ../testing.summary
 echo 'test output in' >> ../testing.summary
 echo 'test/real_sp_testing.results/ref_1c/real_sp_dpc_driver1c.out' >> ../testing.summary
@@ -72,7 +72,7 @@ sed '7,12!d' real_sp_1c_dpc_indx.json >> ../testing.summary
 echo 'lagrangian:' >> ../testing.summary
 sed '7,12!d' real_sp_1c_dpc_lagr.json >> ../testing.summary
 echo '' >> ../testing.summary
-mv real_sp_spc_driver1c.out real_sp_spc_driver1c.out.old
+mv real_sp_spc_driver1c.out real_sp_spc_driver1c.out.old 2>/dev/null
 echo 'solve reference problem with Jacobi-Davidson preconditioner' >> ../testing.summary
 echo 'test output in' >> ../testing.summary
 echo 'test/real_sp_testing.results/ref_1c/real_sp_spc_driver1c.out' >> ../testing.summary

@@ -71,4 +71,4 @@ grep 'failed' real_dp_spc_driver1a.out >> ../testing.summary
 echo 'eigenvalues' >> ../testing.summary
 sed '7,11!d' real_dp_1a_spc_vals.json >> ../testing.summary
 echo '' >> ../testing.summary
-echo '~~~~~Real Double reference tests done~~~~~'
+echo '~~~~~Real Double reference_a tests done~~~~~'

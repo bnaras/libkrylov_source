@@ -17,9 +17,9 @@ echo ' libkrylov/test/real_sp_ref/ref_1a/real_sp_1a_prob.json' >> ../testing.sum
 echo 'comparing to exact solutions' >> ../testing.summary
 sed '7,11!d' real_sp_1a_exact_vals.json >> ../testing.summary
 echo '' >> ../testing.summary
-rm real_sp_1a_vals.json
-rm real_sp_1a_vecs.json
-mv real_sp_npc_driver1a.out real_sp_npc_driver1a.out.old
+rm real_sp_1a_vals.json 2>/dev/null
+rm real_sp_1a_vecs.json 2>/dev/null
+mv real_sp_npc_driver1a.out real_sp_npc_driver1a.out.old 2>/dev/null
 echo 'solve reference problem with no preconditioner' >> ../testing.summary
 echo 'test output in' >> ../testing.summary
 echo 'test/real_sp_testing.results/ref_1a/real_sp_npc_driver1a.out' >> ../testing.summary
@@ -32,7 +32,7 @@ grep 'failed' real_sp_npc_driver1a.out >> ../testing.summary
 echo 'eigenvalues' >> ../testing.summary
 sed '7,11!d' real_sp_1a_npc_vals.json >> ../testing.summary
 echo '' >> ../testing.summary
-mv real_sp_apc_driver1a.out real_sp_apc_driver1a.out.old
+mv real_sp_apc_driver1a.out real_sp_apc_driver1a.out.old 2>/dev/null
 echo 'solve reference problem with approximate spectra preconditioner' >> ../testing.summary
 echo 'test output in' >> ../testing.summary
 echo 'test/real_sp_testing.results/ref_1a/real_sp_apc_driver1a.out' >> ../testing.summary
@@ -45,7 +45,7 @@ grep 'failed' real_sp_apc_driver1a.out >> ../testing.summary
 echo 'eigenvalues' >> ../testing.summary
 sed '7,11!d' real_sp_1a_apc_vals.json >> ../testing.summary
 echo '' >> ../testing.summary
-mv real_sp_dpc_driver1a.out real_sp_dpc_driver1a.out.old
+mv real_sp_dpc_driver1a.out real_sp_dpc_driver1a.out.old 2>/dev/null
 echo 'solve reference problem with davidson preconditioner' >> ../testing.summary
 echo 'test output in' >> ../testing.summary
 echo 'test/real_sp_testing.results/ref_1a/real_sp_dpc_driver1a.out' >> ../testing.summary
@@ -58,7 +58,7 @@ grep 'failed' real_sp_dpc_driver1a.out >> ../testing.summary
 echo 'eigenvalues' >> ../testing.summary
 sed '7,11!d' real_sp_1a_dpc_vals.json >> ../testing.summary
 echo '' >> ../testing.summary
-mv real_sp_spc_driver1a.out real_sp_spc_driver1a.out.old
+mv real_sp_spc_driver1a.out real_sp_spc_driver1a.out.old 2>/dev/null
 echo 'solve reference problem with Jacobi-Davidson preconditioner' >> ../testing.summary
 echo 'test output in' >> ../testing.summary
 echo 'test/real_sp_testing.results/ref_1a/real_sp_spc_driver1a.out' >> ../testing.summary
@@ -71,4 +71,4 @@ grep 'failed' real_sp_spc_driver1a.out >> ../testing.summary
 echo 'eigenvalues' >> ../testing.summary
 sed '7,11!d' real_sp_1a_spc_vals.json >> ../testing.summary
 echo '' >> ../testing.summary
-echo '~~~~~Real Single reference tests done~~~~~'
+echo '~~~~~Real Single reference_a tests done~~~~~'
