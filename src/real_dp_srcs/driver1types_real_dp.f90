@@ -236,15 +236,15 @@ contains
       maxstart = nbasis
     else if (nbasis.lt.50) then
       nroots = 2
-      minstart = 8
+      minstart = 0
       maxstart = 16
     else if (nbasis.lt.200) then
       nroots = 5
-      minstart = floor(0.2*nbasis,kind=kind_integer)
+      minstart = 0
       maxstart = floor(0.5*nbasis,kind=kind_integer)
     else
       nroots = 5
-      minstart = floor(0.1*nbasis,kind=kind_integer)
+      minstart = 0
       maxstart = floor(0.3*nbasis,kind=kind_integer)
     end if
 
@@ -341,13 +341,13 @@ contains
       minstart = nbasis
       maxstart = nbasis
     else if (nbasis.lt.50) then
-      minstart = 8
+      minstart = 0
       maxstart = 16
     else if (nbasis.lt.200) then
-      minstart = floor(0.2*nbasis,kind=kind_integer)
+      minstart = 0
       maxstart = floor(0.5*nbasis,kind=kind_integer)
     else
-      minstart = floor(0.1*nbasis,kind=kind_integer)
+      minstart = 0
       maxstart = floor(0.3*nbasis,kind=kind_integer)
     end if
 
@@ -444,13 +444,13 @@ contains
       minstart = nbasis
       maxstart = nbasis
     else if (nbasis.lt.50) then
-      minstart = 8
+      minstart = 0
       maxstart = 16
     else if (nbasis.lt.200) then
-      minstart = floor(0.2*nbasis,kind=kind_integer)
+      minstart = 0
       maxstart = floor(0.5*nbasis,kind=kind_integer)
     else
-      minstart = floor(0.1*nbasis,kind=kind_integer)
+      minstart = 0
       maxstart = floor(0.3*nbasis,kind=kind_integer)
     end if
 
