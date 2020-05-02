@@ -431,7 +431,7 @@ contains
           print *, 'scaled overlap matrix is linearly dependent!'
           print *, 'root ',j,' is less than machine precision.'
         end if
-        ierr = -25
+        ierr = -30
       end if
     end do
 
@@ -1406,6 +1406,10 @@ contains
       print *, 'number of preconditioned residuals: ',nresiduals
     end if
 
+!! preconditioned residual less than eps even though residual is
+!! not less than eps IS A PRECONDITIONER PROBLEM
+!! ierr = -10
+
 !! store preconditioned residuals on output array
     l = 0 ! cycle over all not converged preconditioned residuals
     if(ntemp.eq.nresiduals) then
@@ -1418,6 +1422,7 @@ contains
           residuals(1:nbasis,l) = all_residuals(1:nbasis,k)
         end if
       end do
+      ierr = -10
     end if
 
 ! Deallocate local arrays
@@ -2868,6 +2873,7 @@ contains
           residuals(1:nbasis,l) = all_residuals(1:nbasis,k)
         end if
       end do
+      ierr = -10
     end if
 
 ! Deallocate local arrays
@@ -4654,6 +4660,7 @@ contains
           residuals(1:nbasis,l) = all_residuals(1:nbasis,k)
         end if
       end do
+      ierr = -10
     end if
 
 ! Deallocate local arrays
