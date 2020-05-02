@@ -51,13 +51,14 @@ program problem_1
   character(len=32) :: freqname_string = ''
 ! integers for the size of the problem
   integer(kind_integer) :: n = 100
-  integer(kind_integer) :: m = 10
+  integer(kind_integer) :: m = 1
+  integer(kind_integer) :: l = 2
 !! dummy indexes
   integer(kind_integer) :: j,k = 0
 !! output variable for BLAS
   integer(kind_integer), allocatable :: ipiv(:)
 !! diagonal for lapack and eigenvalues
-  real(kind_float), allocatable :: diag(:)
+  real(kind_float), allocatable :: diag(:), freq(:)
 !! one in kind base
   type(base) :: one_kb
 !! zero in kind base
@@ -85,9 +86,10 @@ program problem_1
   allocate(ipiv(n))
   allocate(diag(n))
   allocate(rhs(n,m))
-  allocate(soln(n,m))
+  allocate(soln(n,m*l))
   allocate(ax(n,m))
-  allocate(lagr(1,m))
+  allocate(lagr(l,m))
+  allocate(freq(l))
 
   print *, 'all allocations successful'
 
@@ -333,30 +335,51 @@ program problem_1
     stop
   end if
 
-  soln = rhs
+  do j = 0, l-1
+    soln(1:n,(1+m*j):(m+m*j)) = rhs
+    if ( j .ne. 0 ) then
+      do k = 1, n
+        krylov_a(k,k) = krylov_a(k,k) - freq(j+1)
+      end do
+    end if
 
 ! call exact solver
-  call ghesv('l',n,m,krylov_a,n,ipiv,soln,n,ierr)
+    call ghesv('l',n,m,krylov_a,n,ipiv,&
+   &  soln(1:n,(1+m*j):(m+m*j)),n,ierr)
 
-  if (ierr.ne.0) then
-    print *, 'problem solving problem b!'
-    stop
-  end if
+    if (ierr.ne.0) then
+      print *, 'problem solving problem c, frequency = ', (j+1)
+      stop
+    end if
+
+    if ( j .ne. 0 ) then
+      do k = 1, n
+        krylov_a(k,k) = krylov_a(k,k) - (-freq(j+1))
+      end do
+    end if
 
 ! generate lagragian
-  lagr = real(0,kind=kind_float)
-  call ggemm('n','n',n,m,n,one_kb,krylov_a,n,soln,n,&
+    lagr = real(0,kind=kind_float)
+    call ggemm('n','n',n,m,n,one_kb,krylov_a,n,&
+  &  soln(1:n,(1+m*j):(m+m*j)),n,&
   &  zero_kb,ax,n)
-  do k = 1, m
-    call gdot(n,soln(1:n,k),1,ax(1:n,k), &
+    do k = 1, m
+      call gdot(n,soln(1:n,(k+m*j)),1,ax(1:n,k), &
   &       1,xax,ierr)
-    call gdot(n,soln(1:n,k),1,rhs(1:n,k), &
+      call gdot(n,soln(1:n,(k+m*j)),1,rhs(1:n,k), &
   &       1,xp,ierr)
-    call gdot(n,rhs(1:n,k),1,soln(1:n,k), &
+      call gdot(n,rhs(1:n,k),1,soln(1:n,(k+m*j)), &
   &       1,px,ierr)
-    lagr(1,k) = xax - xp - px
-  end do
-   
+      if ( j .eq. 0 ) then
+        lagr(j+1,k) = xax - xp - px
+      else
+        call gdot(n,soln(1:n,(k+m*j)),1,soln(1:n,(k+m*j)), &
+  &       1,xx,ierr)
+        lagr(j+1,k) = xax - (xx*freq(j+1)) - xp - px
+      end if
+    end do
+  end do   
+
 !! set a1_string based on basetypes
   p1_string = trim(base_print_string)//'_1b'
 
@@ -365,12 +388,27 @@ program problem_1
 
 !! print problem array size
   call array_print_base(lagr_string,1,&
+  &   m,lagr(1,1:m),ierr)
+
+    if (ierr.ne.0) then
+      print *, 'problem printing problem b lagragian!'
+      stop
+    end if 
+
+!! set a1_string based on basetypes
+    p1_string = trim(base_print_string)//'_1c'
+
+!! set the filename_string for the file name 
+    lagr_string = trim(p1_string)//'_exact_lagr'
+
+!! print problem array size
+    call array_print_base(lagr_string,l,&
   &   m,lagr,ierr)
 
-  if (ierr.ne.0) then
-    print *, 'problem printing problem b lagragian!'
-    stop
-  end if
+    if (ierr.ne.0) then
+      print *, 'problem printing problem c lagragian!'
+      stop
+    end if 
 
   deallocate(krylov_a)
   deallocate(obj1)
@@ -381,6 +419,7 @@ program problem_1
   deallocate(soln)
   deallocate(ax)
   deallocate(lagr)
+  deallocate(freq)
 
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
