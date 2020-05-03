@@ -239,12 +239,12 @@ contains
       minstart = 0
       maxstart = 16
     else if (nbasis.lt.200) then
-      nroots = 5
-      minstart = 0
-      maxstart = floor(0.5*nbasis,kind=kind_integer)
+      nroots = 4
+      minstart = 20
+      maxstart = floor(0.8*nbasis,kind=kind_integer)
     else
       nroots = 5
-      minstart = 0
+      minstart = nroots
       maxstart = floor(0.3*nbasis,kind=kind_integer)
     end if
 
