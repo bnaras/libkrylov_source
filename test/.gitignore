@@ -1,5 +1,3 @@
 # ignore testing.results
 *_testing.results/*
 
-# ignore user config
-userlibraryconfig
