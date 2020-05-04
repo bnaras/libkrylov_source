@@ -484,9 +484,9 @@ contains
       print *, ' condition number: ',rcond
     end if
 !! check condition number
-    if (log10(rcond).lt.(logeps)) then
+    if (log10(rcond).lt.(logeps-1)) then
       if (iverb.ge.0) then
-        print *, 'new scalled overlap is ill-conditioned'
+        print *, 'new scaled overlap is ill-conditioned'
       end if
       ierr = -30
       return ! return to solver loop
@@ -1080,7 +1080,7 @@ contains
       print *, ' condition number: ',rcond
     end if
 !! check condition number
-    if (log10(rcond).lt.(logeps)) then
+    if (log10(rcond).lt.(logeps-1)) then
       if (iverb.ge.0) then
         print *, 'overlap is ill-conditioned, exit ritz step'
       end if
@@ -2303,25 +2303,53 @@ contains
 !! Putting X(full solutions) as new previous V(basis)
         basis_vectors(1:nbasis,1:nroots) = &
   &      full_solutions(1:nbasis,1:nroots)
-!! Putting R in the correct place
-        basis_vectors(1:nbasis,(nroots+1):(nroots+nresiduals)) = &
-  &      basis_vectors(1:nbasis,(prev_nsubspace+1):nsubspace)
 !! set nsubspace to new value
         nsubspace = nroots+nresiduals
+        prev_nsubspace = nroots
+! alternative to discarding start vectors
+!! Putting vectors in the correct place
+!        basis_vectors(1:nbasis,(nroots+1):(nsubspace-nstart+nroots)) = &
+!  &      basis_vectors(1:nbasis,(nstart+1):nsubspace)
+!        mvproduct(1:nbasis,(nroots+1):(nsubspace-nstart+nroots)) = &
+!  &      mvproduct(1:nbasis,(nstart+1):nsubspace)
+!! reorganizing overlap
+!        overlap(1:nsubspace,(nroots+1):(nsubspace-nstart+nroots)) = &
+!  &      overlap(1:nsubspace,(nstart+1):nsubspace)
+!        overlap((nroots+1):(nsubspace-nstart+nroots),&
+!  &      1:(nsubspace-nstart+nroots)) = &
+!  &      overlap((nstart+1):nsubspace,1:(nsubspace-nstart+nroots))
+!! set nsubspace to new value
+!        nsubspace = nsubspace-nstart+nroots
 !! Set constants required for BLAS
         one_kb = real(1,kind=kind_float)
         zero_kb = real(0,kind=kind_float)
-!! determine overlap
-        call ggemm('c','n',nsubspace,nsubspace,nbasis,one_kb,&
-  &       basis_vectors(1:nbasis,1:nsubspace),nbasis,&
-  &       basis_vectors(1:nbasis,1:nsubspace),nbasis,&
+!! determine old part of new overlap
+        call ggemm('c','n',nroots,nroots,nbasis,one_kb,&
+  &       basis_vectors(1:nbasis,1:nroots),nbasis,&
+  &       basis_vectors(1:nbasis,1:nroots),nbasis,&
   &       zero_kb,&
-  &       overlap(1:nsubspace,1:nsubspace),&
-  &       nsubspace)
-!! determine diag_overlap
-        do j = 1 , nsubspace
+  &       overlap(1:nroots,1:nroots),&
+  &       nroots)
+        do j = 1, nroots
           diag_overlap(j) = overlap(j,j)
         end do
+!! re-extend
+        call krylov_extend(nbasis,nsubspace,&
+  &       nresiduals,prev_nsubspace,&
+  &       residuals(1:nbasis,1:nresiduals),&
+  &       basis_vectors(1:nbasis,1:nsubspace),&
+  &       overlap(1:nsubspace,1:nsubspace),&
+  &       diag_overlap(1:nsubspace),iverb,ierr)
+        if (ierr.ne.0) then
+          if (iverb.ge.0) then
+            print *, 'new krylov subspace expansion failed'
+            print *, 'error variable = ',ierr
+            print *, 'using previous subspace solutions for print'
+          end if
+          nsubspace = prev_nsubspace
+          ierr = 0
+          exit ! This exits subspace loop
+        end if
         call krylov_check(nsubspace,&
   &         overlap(1:nsubspace,1:nsubspace),&
   &         diag_overlap(1:nsubspace),iverb,ierr)
@@ -2332,6 +2360,8 @@ contains
             print *, 'continuing iterations'
           end if
           prev_nsubspace = nroots
+! alternative for discarding some vectors
+!          prev_nsubspace = nsubspace - nresiduals
         else
           if (iverb.ge.0) then
             print *, 'rescued subspace still failed stability check'
@@ -2348,6 +2378,10 @@ contains
           call krylov_mvp%lkl_mvp(nbasis,nsubspace,&
   &         interfacing_bv(1:nbasis,1:nsubspace),&
   &         interfacing_mv(1:nbasis,1:nsubspace),ierr)
+! alternative for discarding some vectors
+!          call krylov_mvp%lkl_mvp(nbasis,nsubspace,&
+!  &         interfacing_bv(1:nbasis,prev_nsubspace+1:nsubspace),&
+!  &         interfacing_mv(1:nbasis,prev_nsubspace+1:nsubspace),ierr)
         end associate
         if (ierr.ne.0) then
           if (iverb.ge.0) then
@@ -2691,7 +2725,7 @@ contains
       print *, ' condition number: ',rcond
     end if
 !! check condition number
-    if (log10(rcond).lt.(logeps)) then
+    if (log10(rcond).lt.(logeps-1)) then
       if (iverb.ge.0) then
         print *, 'overlap is ill-conditioned, exit ritz step'
       end if
@@ -4275,7 +4309,7 @@ contains
       print *, ' condition number: ',rcond
     end if
 !! check condition number
-    if (log10(rcond).lt.(logeps)) then
+    if (log10(rcond).lt.(logeps-1)) then
       if (iverb.ge.0) then
         print *, 'overlap is ill-conditioned, exit ritz step'
       end if
