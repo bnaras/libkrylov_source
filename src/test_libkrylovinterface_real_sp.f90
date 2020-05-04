@@ -15,9 +15,6 @@ program test_libkrylovinterface_real_sp
 !--------------------------------------------------------------------
   use basekinds
   use floatformat
-  use basetypes
-  use blastypes
-  use arrayfile
   use libkrylovinterface
 !--------------------------------------------------------------------
 !
@@ -26,16 +23,18 @@ program test_libkrylovinterface_real_sp
 ! Local Variables
 !--------------------------------------------------------------------
 ! External data
-  class(lkl_s_elec_gas), pointer :: data_s_elec_gas
-  class(lkl_g_unit_vec), pointer :: data_g_unit_vec
-  class(lkl_pc_davidson), pointer :: data_pc_davidson
-  class(lkl_pc_none), pointer :: data_pc_none
-  class(lkl_pc_approx), pointer :: data_pc_approx
+  type(lkl_s_elec_gas) :: data_s_elec_gas
+  type(lkl_g_unit_vec) :: data_g_unit_vec
+  type(lkl_pc_davidson) :: data_pc_davidson
+  type(lkl_pc_sleijpen) :: data_pc_sleijpen
+  type(lkl_pc_none) :: data_pc_none
+  type(lkl_pc_approx) :: data_pc_approx
+  type(lkl_pc_all) :: data_pc_all
 ! parameter for array sizes for the test
   integer(lkl_int_k), parameter :: n1 = 100
   integer(lkl_int_k), parameter :: n2 = 4
   integer(lkl_int_k), parameter :: n3 = 0
-  integer(lkl_int_k), parameter :: n4 = 1
+  integer(lkl_int_k), parameter :: n4 = 4
 ! integer for loops
   integer(lkl_int_k) :: j1,j2 = 0
 ! test and reference for real numbers
@@ -353,8 +352,9 @@ program test_libkrylovinterface_real_sp
   deallocate(basis_vectors) 
 
 
+
 !!! test lkl_precon_none
-!! allocate precon_roots, residuals and full solutions
+!! alocate precon_roots and residuals
   allocate(precon_roots(n4))   
   allocate(residuals(n1,n4))
   allocate(full_solutions(n1,n4))
@@ -365,8 +365,7 @@ program test_libkrylovinterface_real_sp
   approx_spectra = real(0,kind=lkl_single_k)
   approx_spectra(1) = real(1,kind=lkl_single_k)
   do j1 = 2, n1
-    approx_spectra(j1) = approx_spectra(j1-1) &
-    & + real(0.1,kind=lkl_single_k)
+    approx_spectra(j1) = approx_spectra(j1-1) + real(0.1,kind=lkl_single_k)
   end do
   full_solutions = real(0,kind=lkl_single_k)
   do j1 = 1, n4
@@ -380,7 +379,7 @@ program test_libkrylovinterface_real_sp
   write(unit=funit,fmt=*) 'test lkl_precon_none', &
   & ', to solve for preconditiing and it remains the same as output'
 !! call lkl_precon_none on test input
-  call lkl_precon_none(data_pc_none,n1,n4,n3,approx_spectra, &
+  call lkl_precon_none(data_pc_none,n1,n4,n3,approx_spectra,&
   & precon_roots,full_solutions,residuals,ierr)
 !! check ierr value to see if the subroutine terminated with an error
 !! test if ierr is not equal to 0
@@ -500,7 +499,7 @@ program test_libkrylovinterface_real_sp
   end if
 
 
-!!! test lkl_precon_davidsion
+!!! test lkl_precon_davidson
 !! fill in the approx_spectra with real(kind_float) elements
 !! approx_spectra is an array with 100 elements
 !! first element is real number 1
@@ -523,15 +522,16 @@ program test_libkrylovinterface_real_sp
   write(unit=funit,fmt=*) 'test lkl_precon_davidson', &
   &', solve for preconditing davison'
 !! call lkl_precon_davidson on test output
-  call lkl_precon_davidson(data_pc_davidson,n1,n4,n3,approx_spectra,&
+  call lkl_precon_davidson(data_pc_davidson,n1,n4,n3,approx_spectra, &
   & precon_roots,full_solutions,residuals,ierr)
+!! set check = .false.
+  check = .false.
 !! check ierr value to see if the subtoutine terminated with an error
 !! test if ierr is not equal to 0
   if (ierr.ne.0) then
 !! if true, write the subroutine failed, write the ierr value
     write(unit=funit,fmt=*) 'lkl_precon_davidson failed, ierr=', ierr
-!! set check = .false.
-    check = .false.
+    check = .true.
   else
 !! if false, write the subroutine runs
     write(unit=funit,fmt=*) 'lkl_precon_davidson runs'
@@ -539,8 +539,8 @@ program test_libkrylovinterface_real_sp
     write(unit=funit,fmt=*) 'residuals should be the inverse of', &
     &' the substraction of approx_spectra and precon_roots'
 !! set r_test2 and r_ref2 to real number 0  
-    r_test2= real(0,kind=lkl_single_k)
-    r_ref2= real(0,kind=lkl_single_k)
+    r_test2 = real(0,kind=lkl_single_k)
+    r_ref2 = real(0,kind=lkl_single_k)
 !! set check = .false.
     check = .false.
 !! using do loop to fill in elements from test output to residuals
@@ -571,11 +571,342 @@ program test_libkrylovinterface_real_sp
       print *, 'subroutine lkl_precon_davidson tested'
     end if
   end if
-!! deallocate precon_roots, residuals and full_solutions
+  
+!!! test lkl_precon_sleijpen
+!! fill in the approx_spectra with real(kind_float) elements
+!! approx_spectra is an array with 100 elements
+!! first element is real number 1
+!! every element after is increased by 0.1  
+  approx_spectra = real(0,kind=lkl_single_k)
+  approx_spectra(1) = real(1,kind=lkl_single_k)
+  do j1 = 2, n1
+    approx_spectra(j1) = approx_spectra(j1-1) + real(0.1,kind=lkl_single_k)
+  end do
+  full_solutions = real(0,kind=lkl_single_k)
+  do j1 = 1, n4
+    full_solutions(j1,j1) = real(1,kind=lkl_single_k)
+  end do
+!! assign input precon_roots as real number 0.5
+!! assign input residuals as real number 1
+  precon_roots = real(0.5,kind=lkl_single_k)
+  residuals = real(1,kind=lkl_single_k)
+!! write subroutine lkl_precon_davidson and operation on test input
+  write(unit=funit,fmt=*) 'test lkl_precon_sleijpen&
+  &, solve for preconditing Jacobi-Davidson'
+!! call lkl_precon_davidson on test output
+  call lkl_precon_sleijpen(data_pc_sleijpen,n1,n4,n3,approx_spectra,&
+  & precon_roots,full_solutions,residuals,ierr)
+!! check ierr value to see if the subtoutine terminated with an error
+!! test if ierr is not equal to 0
+  if (ierr.ne.0) then
+!! if true, write the subroutine failed, write the ierr value
+    write(unit=funit,fmt=*) 'lkl_precon_sleijpen failed, ierr=', ierr
+!! set check = .false.
+    check = .false.
+  else
+!! if false, write the subroutine runs
+    write(unit=funit,fmt=*) 'lkl_precon_sleijpen runs'
+!! write an explanation of the subroutine
+    write(unit=funit,fmt=*) 'residuals should be the inverse of&
+    & the substraction of approx_spectra and precon_roots'
+!! set r_test2 and r_ref2 to real number 0  
+    r_test2 = real(0,kind=lkl_single_k)
+    r_ref2 = real(0,kind=lkl_single_k)
+!! set check = .false.
+    check = .false.
+!! using do loop to fill in elements from test output to residuals
+!! assign inverse of the difference of approx_spectra and precon_roots
+    do j2 = 1, n4
+      do j1 = 1, n1
+        r_test2 = residuals(j1,j2)
+        if (j1.eq.j2) then
+          r_ref2 = real(0,kind=lkl_single_k)
+        else
+          r_ref2 = real(1,kind=lkl_single_k) / &
+  &     (approx_spectra(j1) - precon_roots(j2))
+        end if
+!! test if the absolute difference of r_test2 and r_ref2
+!! is greater than eps
+        if (abs(r_test2(1)-r_ref2(1)).gt.eps) then
+!! if true, write the position of the failed element
+           write(unit=funit,fmt=*) 'failed for element', j1, j2
+!! set check = .true.
+           check = .true.
+        end if
+      end do
+    end do
+!! check value of logical check
+    if (check) then
+!! if true, write the subroutine failed to the output and output file
+      write(unit=funit,fmt=*) 'subroutine lkl_precon_sleijpen failed'
+      print *, 'subroutine lkl_precon_sleijpen failed'   
+    else
+!! if false, write the subroutine tested to the output and output file
+      write(unit=funit,fmt=*) 'subroutine lkl_precon_sleijpen tested'
+      print *, 'subroutine lkl_precon_sleijpen tested'
+    end if
+  end if
+
+!!! test lkl_precon_all, none option
+  data_pc_all%precon_string = 'none'
+!! fill in the approx_spectra with real(kind_float) elements
+!! approx_spectra is an array with 100 elements
+!! first element is real number 1
+!! every element after is increased by 0.1
+  approx_spectra = real(0,kind=lkl_single_k)
+  approx_spectra(1) = real(1,kind=lkl_single_k)
+  do j1 = 2, n1
+    approx_spectra(j1) = approx_spectra(j1-1) + real(0.1,kind=lkl_single_k)
+  end do
+  full_solutions = real(0,kind=lkl_single_k)
+  do j1 = 1, n4
+    full_solutions(j1,j1) = real(1,kind=lkl_single_k)
+  end do
+!! assign input precon_roots as real number 0.5
+!! assign input residuals as real number 1
+  precon_roots = real(0.5,kind=lkl_single_k)
+  residuals = real(1,kind=lkl_single_k)
+!! write lkl_precon_none and operation on test input
+  write(unit=funit,fmt=*) 'test lkl_precon_all (none input)', &
+  & ', to solve for preconditiing and it remains the same as output'
+!! call lkl_precon_none on test input
+  call lkl_precon_all(data_pc_all,n1,n4,n3,approx_spectra,&
+  & precon_roots,full_solutions,residuals,ierr)
+!! check ierr value to see if the subroutine terminated with an error
+!! test if ierr is not equal to 0
+  if (ierr.ne.0) then
+!! if true, write the subroutine failed, write the ierr value
+    write(unit=funit,fmt=*) 'lkl_precon_all failed, ierr=', ierr
+!! set ierr to 0
+    ierr = 0
+  else
+!! if false, write the subroutine runs
+    write(unit=funit,fmt=*) 'lkl_precon_all runs'
+!! write an explanation of the subroutine
+    write(unit=funit,fmt=*) 'residuals should be an identity'
+!! set r_test2 and r_ref2 to real number 0
+    r_test2= real(0,kind=lkl_single_k)
+    r_ref2= real(0,kind=lkl_single_k)
+!! set check = .false.
+    check = .false.
+!! using do loop to fill in elements in from test output to residuals
+!! assign real number 1 to r_ref2
+    do j2 = 1, n4
+      do j1 = 1, n1
+        r_test2 = residuals(j1,j2)
+        r_ref2 = real(1,kind=lkl_single_k)
+!! test if the difference of r_test2 and r_ref2 is greater than 0
+         if (abs(r_test2(1)-r_ref2(1)).gt.eps) then
+!! if true, write the position of the failed element
+           write(unit=funit,fmt=*) 'failed for element', j1, j2
+!! set check = .true.
+           check = .true.
+         end if
+      end do
+    end do
+  end if
+
+
+
+!!! test lkl_precon_all, approx option
+  data_pc_all%precon_string = 'approx_spectra'
+!! fill in the approx_spectra with real(kind_float) elements
+!! approx_spectra is an array with 100 elements
+!! first element is real number 1
+!! every element after is increased by 0.1 
+  approx_spectra = real(0,kind=lkl_single_k)
+  approx_spectra(1) = real(1,kind=lkl_single_k)
+  do j1 = 2, n1
+    approx_spectra(j1) = approx_spectra(j1-1) & 
+    & + real(0.1,kind=lkl_single_k)
+  end do
+  full_solutions = real(0,kind=lkl_single_k)
+  do j1 = 1, n4
+    full_solutions(j1,j1) = real(1,kind=lkl_single_k)
+  end do
+!! assign input precon_roots as real number 0.5
+!! assign input residuals as real number 1
+  precon_roots = real(0.5,kind=lkl_single_k)
+  residuals = real(1,kind=lkl_single_k)
+!! write lkl_precon_approx and operation on test input
+  write(unit=funit,fmt=*) 'test lkl_precon_all (approx_spectra)', &
+  & ', to solve for preconditioning in inverse approximate spectra'
+!! call lkl_precon_approx on test input
+  call lkl_precon_all(data_pc_all,n1,n4,n3,approx_spectra,&
+  & precon_roots,full_solutions,residuals,ierr)
+!! check ierr value to see if the subroutine terminated with an error
+!! test if ierr is not equal to 0
+  if (ierr.ne.0) then
+!! if true, write the subroutine failed, write the ierr value
+    write(unit=funit,fmt=*) 'lkl_precon_all failed, ierr=', ierr
+!! set ierr to 0
+    ierr = 0
+  else
+!! if false, write the subroutine runs
+    write(unit=funit,fmt=*) 'lkl_precon_all runs'
+!! write an explanation of the subroutine
+    write(unit=funit,fmt=*) 'residuals should be the inverse of', &
+    &' approx_spectra'
+!! set r_test2 and r_ref2 to real number 0
+    r_test2= real(0,kind=lkl_single_k)
+    r_ref2= real(0,kind=lkl_single_k)
+!! using do loop to fill in elements from test output to residuals
+!! assign the inverse of approx_spectra to r_ref2
+     do j2 = 1, n4
+      do j1 = 1, n1
+        r_test2 = residuals(j1,j2)
+        r_ref2 = real(1,kind=lkl_single_k) / approx_spectra(j1)
+!! test if the absolute difference of r_test2 and r_ref2
+!! is greater than eps
+         if (abs(r_test2(1)-r_ref2(1)).gt.eps) then
+!! if true, write the position of the failed element
+           write(unit=funit,fmt=*) 'failed for element', j1, j2
+!! set check = .true.
+           check = .true.
+         end if
+      end do
+    end do
+  end if
+
+
+!!! test lkl_precon_all, davidson
+  data_pc_all%precon_string = 'davidson'
+!! fill in the approx_spectra with real(kind_float) elements
+!! approx_spectra is an array with 100 elements
+!! first element is real number 1
+!! every element after is increased by 0.1  
+  approx_spectra = real(0,kind=lkl_single_k)
+  approx_spectra(1) = real(1,kind=lkl_single_k)
+  do j1 = 2, n1
+    approx_spectra(j1) = approx_spectra(j1-1) &
+    & + real(0.1,kind=lkl_single_k)
+  end do
+  full_solutions = real(0,kind=lkl_single_k)
+  do j1 = 1, n4
+    full_solutions(j1,j1) = real(1,kind=lkl_single_k)
+  end do
+!! assign input precon_roots as real number 0.5
+!! assign input residuals as real number 1
+  precon_roots = real(0.5,kind=lkl_single_k)
+  residuals = real(1,kind=lkl_single_k)
+!! write subroutine lkl_precon_davidson and operation on test input
+  write(unit=funit,fmt=*) 'test lkl_precon_all (davidson)', &
+  &', solve for preconditing davison'
+!! call lkl_precon_davidson on test output
+  call lkl_precon_all(data_pc_all,n1,n4,n3,approx_spectra, &
+  & precon_roots,full_solutions,residuals,ierr)
+!! check ierr value to see if the subtoutine terminated with an error
+!! test if ierr is not equal to 0
+  if (ierr.ne.0) then
+!! if true, write the subroutine failed, write the ierr value
+    write(unit=funit,fmt=*) 'lkl_precon_all failed, ierr=', ierr
+  else
+!! if false, write the subroutine runs
+    write(unit=funit,fmt=*) 'lkl_precon_all runs'
+!! write an explanation of the subroutine
+    write(unit=funit,fmt=*) 'residuals should be the inverse of', &
+    &' the substraction of approx_spectra and precon_roots'
+!! set r_test2 and r_ref2 to real number 0  
+    r_test2= real(0,kind=lkl_single_k)
+    r_ref2= real(0,kind=lkl_single_k)
+!! using do loop to fill in elements from test output to residuals
+!! assign inverse of the difference of approx_spectra and precon_roots
+    do j2 = 1, n4
+      do j1 = 1, n1
+        r_test2 = residuals(j1,j2)
+        r_ref2 = real(1,kind=lkl_single_k) / &
+        & (approx_spectra(j1) - precon_roots(j2))
+!! test if the absolute difference of r_test2 and r_ref2
+!! is greater than eps
+        if (abs(r_test2(1)-r_ref2(1)).gt.eps) then
+!! if true, write the position of the failed element
+           write(unit=funit,fmt=*) 'failed for element', j1, j2
+!! set check = .true.
+           check = .true.
+        end if
+      end do
+    end do
+  end if
+  
+!!! test lkl_precon_all, sleijpen option
+  data_pc_all%precon_string = 'sleijpen'
+!! fill in the approx_spectra with real(kind_float) elements
+!! approx_spectra is an array with 100 elements
+!! first element is real number 1
+!! every element after is increased by 0.1  
+  approx_spectra = real(0,kind=lkl_single_k)
+  approx_spectra(1) = real(1,kind=lkl_single_k)
+  do j1 = 2, n1
+    approx_spectra(j1) = approx_spectra(j1-1) + real(0.1,kind=lkl_single_k)
+  end do
+  full_solutions = real(0,kind=lkl_single_k)
+  do j1 = 1, n4
+    full_solutions(j1,j1) = real(1,kind=lkl_single_k)
+  end do
+!! assign input precon_roots as real number 0.5
+!! assign input residuals as real number 1
+  precon_roots = real(0.5,kind=lkl_single_k)
+  residuals = real(1,kind=lkl_single_k)
+!! write subroutine lkl_precon_davidson and operation on test input
+  write(unit=funit,fmt=*) 'test lkl_precon_all (Sleijpen option)',&
+  &', solve for preconditing Jacobi-Davidson'
+!! call lkl_precon_davidson on test output
+  call lkl_precon_all(data_pc_all,n1,n4,n3,approx_spectra,&
+  & precon_roots,full_solutions,residuals,ierr)
+!! check ierr value to see if the subtoutine terminated with an error
+!! test if ierr is not equal to 0
+  if (ierr.ne.0) then
+!! if true, write the subroutine failed, write the ierr value
+    write(unit=funit,fmt=*) 'lkl_precon_all failed, ierr=', ierr
+  else
+!! if false, write the subroutine runs
+    write(unit=funit,fmt=*) 'lkl_precon_all runs'
+!! write an explanation of the subroutine
+    write(unit=funit,fmt=*) 'residuals should be the inverse of',&
+  &  ' the substraction of approx_spectra and precon_roots',&
+  &  ' with zero diagonals'
+!! set r_test2 and r_ref2 to real number 0  
+    r_test2 = real(0,kind=lkl_single_k)
+    r_ref2 = real(0,kind=lkl_single_k)
+!! using do loop to fill in elements from test output to residuals
+!! assign inverse of the difference of approx_spectra and precon_roots
+    do j2 = 1, n4
+      do j1 = 1, n1
+        r_test2 = residuals(j1,j2)
+        if (j1.eq.j2) then
+          r_ref2 = real(0,kind=lkl_single_k)
+        else
+          r_ref2 = real(1,kind=lkl_single_k) / &
+  &     (approx_spectra(j1) - precon_roots(j2))
+        end if
+!! test if the absolute difference of r_test2 and r_ref2
+!! is greater than eps
+        if (abs(r_test2(1)-r_ref2(1)).gt.eps) then
+!! if true, write the position of the failed element
+           write(unit=funit,fmt=*) 'failed for element', j1, j2
+!! set check = .true.
+           check = .true.
+        end if
+      end do
+    end do
+  end if
+
+!! check value of logical check
+  if (check) then
+!! if true, write the subroutine failed to output and output file
+    write(unit=funit,fmt=*) 'subroutine lkl_precon_all failed'
+    print *, 'subroutine lkl_precon_all failed'   
+  else
+!! if false, write the subroutine tested to output and output file
+    write(unit=funit,fmt=*) 'subroutine lkl_precon_all tested'
+    print *, 'subroutine lkl_precon_all tested'
+  end if
+
+
+!! dealocate precon_roots and residuals
   deallocate(precon_roots)   
   deallocate(residuals)
   deallocate(full_solutions)
- 
 
 
 
