@@ -1402,7 +1402,6 @@ contains
     end if
 
 !! Precondition with input function!
-!!NAMBI
     associate(interfacing_fs => all_solutions%element,&
   &           interfacing_rd => all_residuals%element)
       call krylov_precon%lkl_precon(nbasis,ntemp,nsubspace,&
@@ -1994,7 +1993,6 @@ contains
 
     if (irestart.le.2) then  !! need to generate new MVP
 ! call user defined matrix vector product for the first time
-!!NAMBI
       if (iverb.ge.2) then
         print *, ' Fresh Matrix Vector Products!'
       end if
@@ -2038,7 +2036,6 @@ contains
         if (iverb.ge.2) then
           print *, 'assuming w.rstrt is intact and did not update!'
         end if
-!!NAMBI
         associate(interfacing_bv => basis_vectors%element,&
   &               interfacing_mv => mvproduct%element)
           call krylov_mvp%lkl_mvp(nbasis,(nstart-k2),&
@@ -2501,7 +2498,6 @@ contains
         end if
       end if
 !! call user output function
-!!NAMBI
       associate(interfacing_lg => lagrangian%element,&
   &             interfacing_fs => full_solutions%element)
         call krylov_output_a%lkl_output_a(nbasis,nsubspace,nroots,&
@@ -3005,7 +3001,6 @@ contains
     end if
 
 !! Precondition with input function!
-!! NAMBI: TESTING
     associate(interfacing_fs => all_solutions%element,&
   &            interfacing_rd => all_residuals%element)
       call krylov_precon%lkl_precon(nbasis,ntemp,nsubspace,&
@@ -3128,6 +3123,7 @@ contains
 ! define type(base) and type(basereal) and associated operations
     use basetypes
     use blastypes
+    use libkrylovinterface !! Nambi?
 !--------------------------------------------------------------------
 ! Implicit None statement
 !--------------------------------------------------------------------
@@ -3137,7 +3133,6 @@ contains
 !--------------------------------------------------------------------
     class(libkrylov_vector_subroutine) ::    krylov_approx
     class(libkrylov_start_subroutine) ::     krylov_start
-!! NAMBI
     class(libkrylov_matrix_subroutine) ::    krylov_rhs
     class(libkrylov_problem_b_subroutine) :: krylov_problem_b
     class(libkrylov_guess_subroutine) ::     krylov_guess
@@ -3423,7 +3418,6 @@ contains
     overlap = real(0,kind=kind_float)
     diag_overlap = real(0,kind=kind_float)
     
-!! NAMBI: TESTING
     associate(interfacing_rhs => rhs%element)
       call krylov_rhs%matrix_fill(nbasis,nrhs,interfacing_rhs,ierr)
     end associate
@@ -4769,7 +4763,6 @@ contains
     end do
 
 !! Precondition with input function!
-!!NAMBI
     associate(interfacing_fs => full_solutions%element,&
   &            interfacing_rd => all_residuals%element)
     call krylov_precon%lkl_precon(nbasis,nroots,nsubspace,&
@@ -5271,7 +5264,6 @@ contains
     diag_overlap = real(0,kind=kind_float)
     
 
-!! NAMBI: TESTING
     associate(interfacing_rhs => rhs%element)
       call krylov_rhs%matrix_fill(nbasis,nrhs,interfacing_rhs,ierr)
     end associate
