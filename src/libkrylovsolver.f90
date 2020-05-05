@@ -413,6 +413,15 @@ contains
         end if
       end do
     end do
+!    print *, 'significant overlap'
+!    do k = 1, nsubspace
+!      do j = 1, nsubspace
+!        onorm = overlap(j,k)
+!        if (onorm.gt.(real(10.0,kind=kind_float)**(-8))) then
+!          print *, j,k,overlap(j,k)
+!        end if
+!      end do
+!    end do
 !! Check condition of overlap matrix by diagonalizing
     call gheev('v','l',nsubspace,ortho_overlap,nsubspace,&
     &     overlap_roots,ierr)
@@ -426,16 +435,16 @@ contains
     end if
 !! Print overlap matrix roots and check for small/negative values
     if (iverb.ge.3) then
-      print *, 'new roots of scaled overlap matrix'
+      print *, 'eigenvalues of new scaled overlap matrix'
     end if
     do j = 1, nsubspace
       if (iverb.ge.3) then
-        print *, 'scaled roots ',j,' ',overlap_roots(j)
+        print *, 'eigenvalue ',j,' ',overlap_roots(j)
       end if
       if (overlap_roots(j).le.eps) then
         if (iverb.ge.0) then
           print *, 'new scaled overlap matrix is linearly dependent!'
-          print *, 'root ',j,' is less than machine precision.'
+          print *, 'eigenvalue ',j,' is less than machine precision.'
         end if
         ierr = -30
       end if
@@ -484,7 +493,7 @@ contains
       print *, ' condition number: ',rcond
     end if
 !! check condition number
-    if (log10(rcond).lt.(logeps-1)) then
+    if (log10(rcond).lt.(logeps)) then
       if (iverb.ge.0) then
         print *, 'new scaled overlap is ill-conditioned'
       end if
@@ -2217,6 +2226,64 @@ contains
         print *, ' '
       end if
 
+!!! !! test normalizing all residuals
+!!!       do j = 1, nresiduals
+!!!         call gdot(nbasis,residuals(1:nbasis,j),1,&
+!!!   &           residuals(1:nbasis,j),1,&
+!!!   &           overlap(j+nsubspace,j+nsubspace),ierr)
+!!!         diag_overlap(j+nsubspace) = overlap(j+nsubspace,j+nsubspace)
+!!!         diag_overlap(j+nsubspace) = sqrt(diag_overlap(j+nsubspace))
+!!!         print *, 'normalizing residual',j
+!!!         residuals(1:nbasis,j) = residuals(1:nbasis,j)/&
+!!!   &         diag_overlap(j+nsubspace)
+!!!       end do
+
+!! orthogonalizing residuals
+      do j = 2, nresiduals
+        do k = 1, j-1
+          call gdot(nbasis,residuals(1:nbasis,k),1,&
+  &             residuals(1:nbasis,k),1,&
+  &             overlap(k+nsubspace,k+nsubspace),ierr)
+          call gdot(nbasis,residuals(1:nbasis,j),1,&
+  &             residuals(1:nbasis,k),1,&
+  &             overlap(k+nsubspace,j+nsubspace),ierr)
+          if (iverb.ge.4) then
+            print *, 'inner product of residual: ', j
+            print *, ' and residual: ',k
+            print *, overlap(k+nsubspace,j+nsubspace)
+          end if
+          residuals(1:nbasis,j) = &
+  &              residuals(1:nbasis,j) -&
+  &              (residuals(1:nbasis,k)*&
+  &              overlap(k+nsubspace,j+nsubspace)/&
+  &              overlap(k+nsubspace,k+nsubspace))
+        end do
+      end do
+      k = 1
+      do j = 1, nresiduals
+        call gdot(nbasis,residuals(1:nbasis,j),1,&
+  &             residuals(1:nbasis,j),1,&
+  &             overlap(j+nsubspace,j+nsubspace),ierr)
+        diag_overlap(j+nsubspace) = overlap(j+nsubspace,j+nsubspace)
+        diag_overlap(j+nsubspace) = sqrt(diag_overlap(j+nsubspace))
+        print *, 'new norms',j,diag_overlap(j+nsubspace)
+        if (diag_overlap(j+nsubspace).gt.eps) then
+          residuals(1:nbasis,k) = residuals(1:nbasis,j)
+          k = k + 1
+        end if
+      end do
+      nresiduals = k - 1
+!!!       do j = 1, nresiduals
+!!!         call gdot(nbasis,residuals(1:nbasis,j),1,&
+!!!   &             residuals(1:nbasis,j),1,&
+!!!   &             overlap(j+nsubspace,j+nsubspace),ierr)
+!!!         diag_overlap(j+nsubspace) = overlap(j+nsubspace,j+nsubspace)
+!!!         diag_overlap(j+nsubspace) = sqrt(diag_overlap(j+nsubspace))
+!!!         print *, 'normalizing residual',j
+!!!         residuals(1:nbasis,j) = residuals(1:nbasis,j)/&
+!!!   &         diag_overlap(j+nsubspace)
+!!!       end do
+
 ! call krylov extend subroutine, after saving prev_nsubspace
       prev_nsubspace = nsubspace
       nsubspace = nsubspace + nresiduals  
@@ -2249,88 +2316,124 @@ contains
           print *, 'attempting to stabilize'
         end if
         ierr = 0
-!        nsubspace = prev_nsubspace
-!        do j = 1, nresiduals
-!          do k = 1, nsubspace
-!            call gdot(nbasis,residuals(1:nbasis,j),1,&
-!  &             basis_vectors(1:nbasis,k),1,overlap(k,j+nsubspace),ierr)
-!            if (iverb.ge.4) then
-!              print *, 'inner product of residuals: ', j
-!              print *, ' and basis vector: ',k
-!              print *, overlap(k,j+nsubspace)
-!            end if
-!            residuals(1:nbasis,j) = &
-!  &              residuals(1:nbasis,j) -&
-!  &              (basis_vectors(1:nbasis,k)*&
-!  &              overlap(k,j+nsubspace)/&
-!  &              overlap(k,k))
-!          end do
-!        end do
-!        k = 1
-!        do j = 1, nresiduals
-!          call gdot(nbasis,residuals(1:nbasis,j),1,&
-!  &             residuals(1:nbasis,j),1,&
-!  &             overlap(j+nsubspace,j+nsubspace),ierr)
-!          diag_overlap(j+nsubspace) = overlap(j+nsubspace,j+nsubspace)
-!          diag_overlap(j+nsubspace) = sqrt(diag_overlap(j+nsubspace))
-!          print *, 'new norms',j,diag_overlap(j+nsubspace)
-!          if (diag_overlap(j+nsubspace).gt.eps) then
-!            residuals(1:nbasis,k) = residuals(1:nbasis,j)
-!            k = k + 1
-!          end if
-!        end do
-!        nresiduals = k - 1
-!        nsubspace = nresiduals + prev_nsubspace
-!        call krylov_extend(nbasis,nsubspace,&
-!  &       nresiduals,prev_nsubspace,&
-!  &       residuals(1:nbasis,1:nresiduals),&
-!  &       basis_vectors(1:nbasis,1:nsubspace),&
-!  &       overlap(1:nsubspace,1:nsubspace),&
-!  &       diag_overlap(1:nsubspace),iverb,ierr)
-!        if (ierr.ne.0) then
-!          if (iverb.ge.0) then
-!            print *, 'second krylov subspace expansion failed'
-!            print *, 'error variable = ',ierr
-!            print *, 'using previous subspace solutions for print'
-!          end if
-!          nsubspace = prev_nsubspace
-!          ierr = 0
-!          exit ! This exits subspace loop
-!        end if
-!! Putting X(full solutions) as new previous V(basis)
-        basis_vectors(1:nbasis,1:nroots) = &
-  &      full_solutions(1:nbasis,1:nroots)
-!! set nsubspace to new value
-        nsubspace = nroots+nresiduals
-        prev_nsubspace = nroots
-! alternative to discarding start vectors
-!! Putting vectors in the correct place
-!        basis_vectors(1:nbasis,(nroots+1):(nsubspace-nstart+nroots)) = &
-!  &      basis_vectors(1:nbasis,(nstart+1):nsubspace)
-!        mvproduct(1:nbasis,(nroots+1):(nsubspace-nstart+nroots)) = &
-!  &      mvproduct(1:nbasis,(nstart+1):nsubspace)
-!! reorganizing overlap
-!        overlap(1:nsubspace,(nroots+1):(nsubspace-nstart+nroots)) = &
-!  &      overlap(1:nsubspace,(nstart+1):nsubspace)
-!        overlap((nroots+1):(nsubspace-nstart+nroots),&
-!  &      1:(nsubspace-nstart+nroots)) = &
-!  &      overlap((nstart+1):nsubspace,1:(nsubspace-nstart+nroots))
-!! set nsubspace to new value
-!        nsubspace = nsubspace-nstart+nroots
-!! Set constants required for BLAS
-        one_kb = real(1,kind=kind_float)
-        zero_kb = real(0,kind=kind_float)
-!! determine old part of new overlap
-        call ggemm('c','n',nroots,nroots,nbasis,one_kb,&
-  &       basis_vectors(1:nbasis,1:nroots),nbasis,&
-  &       basis_vectors(1:nbasis,1:nroots),nbasis,&
-  &       zero_kb,&
-  &       overlap(1:nroots,1:nroots),&
-  &       nroots)
-        do j = 1, nroots
-          diag_overlap(j) = overlap(j,j)
+
+!! Drastic restart
+
+!!!! !! Putting X(full solutions) as new previous V(basis)
+!!!!         basis_vectors(1:nbasis,1:nroots) = &
+!!!!   &      full_solutions(1:nbasis,1:nroots)
+!!!! !! set nsubspace to new value
+!!!!         nsubspace = nroots+nresiduals
+!!!!         prev_nsubspace = nroots
+!!!! !! Set constants required for BLAS
+!!!!         one_kb = real(1,kind=kind_float)
+!!!!         zero_kb = real(0,kind=kind_float)
+!!!! !! determine old part of new overlap
+!!!!         call ggemm('c','n',nroots,nroots,nbasis,one_kb,&
+!!!!   &       basis_vectors(1:nbasis,1:nroots),nbasis,&
+!!!!   &       basis_vectors(1:nbasis,1:nroots),nbasis,&
+!!!!   &       zero_kb,&
+!!!!   &       overlap(1:nroots,1:nroots),&
+!!!!   &       nroots)
+!!!!         do j = 1, nroots
+!!!!           diag_overlap(j) = overlap(j,j)
+!!!!         end do
+!!!! !! re-extend
+!!!!         call krylov_extend(nbasis,nsubspace,&
+!!!!   &       nresiduals,prev_nsubspace,&
+!!!!   &       residuals(1:nbasis,1:nresiduals),&
+!!!!   &       basis_vectors(1:nbasis,1:nsubspace),&
+!!!!   &       overlap(1:nsubspace,1:nsubspace),&
+!!!!   &       diag_overlap(1:nsubspace),iverb,ierr)
+!!!!         if (ierr.ne.0) then
+!!!!           if (iverb.ge.0) then
+!!!!             print *, 'new krylov subspace expansion failed'
+!!!!             print *, 'error variable = ',ierr
+!!!!             print *, 'using previous subspace solutions for print'
+!!!!           end if
+!!!!           nsubspace = prev_nsubspace
+!!!!           ierr = 0
+!!!!           exit ! This exits subspace loop
+!!!!         end if
+!!!!         prev_nsubspace = nroots
+
+
+
+!!!! !! Normalize new residuals
+!!!!         nsubspace = prev_nsubspace
+!!!!         do j = 1, nresiduals
+!!!!           call gdot(nbasis,residuals(1:nbasis,j),1,&
+!!!!   &             residuals(1:nbasis,j),1,&
+!!!!   &             overlap(j+nsubspace,j+nsubspace),ierr)
+!!!!           diag_overlap(j+nsubspace) = overlap(j+nsubspace,j+nsubspace)
+!!!!           diag_overlap(j+nsubspace) = sqrt(diag_overlap(j+nsubspace))
+!!!!           print *, 'normalizing residual',j
+!!!!           residuals(1:nbasis,j) = residuals(1:nbasis,j)/&
+!!!!   &         diag_overlap(j+nsubspace)
+!!!!         end do
+!!!!         nsubspace = nresiduals + prev_nsubspace
+!!!!         call krylov_extend(nbasis,nsubspace,&
+!!!!   &       nresiduals,prev_nsubspace,&
+!!!!   &       residuals(1:nbasis,1:nresiduals),&
+!!!!   &       basis_vectors(1:nbasis,1:nsubspace),&
+!!!!   &       overlap(1:nsubspace,1:nsubspace),&
+!!!!   &       diag_overlap(1:nsubspace),iverb,ierr)
+!!!!         if (ierr.ne.0) then
+!!!!           if (iverb.ge.0) then
+!!!!             print *, 'second krylov subspace expansion failed'
+!!!!             print *, 'error variable = ',ierr
+!!!!             print *, 'using previous subspace solutions for print'
+!!!!           end if
+!!!!           nsubspace = prev_nsubspace
+!!!!           ierr = 0
+!!!!           exit ! This exits subspace loop
+!!!!         end if
+
+
+!! Modified gram-schimdt  
+        nsubspace = prev_nsubspace
+        do j = 1, nresiduals
+          do k = 1, nsubspace
+            call gdot(nbasis,residuals(1:nbasis,j),1,&
+  &             basis_vectors(1:nbasis,k),1,&
+  &             overlap(k,j+nsubspace),ierr)
+            if (iverb.ge.4) then
+              print *, 'inner product of residual: ', j
+              print *, ' and basis vector: ',k
+              print *, overlap(k+nsubspace,j+nsubspace)
+            end if
+            residuals(1:nbasis,j) = &
+  &              residuals(1:nbasis,j) -&
+  &              (basis_vectors(1:nbasis,k)*&
+  &              overlap(k,j+nsubspace)/&
+  &              overlap(k,k))
+          end do
         end do
-!! re-extend
+        k = 1
+        do j = 1, nresiduals
+          call gdot(nbasis,residuals(1:nbasis,j),1,&
+  &             residuals(1:nbasis,j),1,&
+  &             overlap(j+nsubspace,j+nsubspace),ierr)
+          diag_overlap(j+nsubspace) = overlap(j+nsubspace,j+nsubspace)
+          diag_overlap(j+nsubspace) = sqrt(diag_overlap(j+nsubspace))
+          print *, 'new norms',j,diag_overlap(j+nsubspace)
+          if (diag_overlap(j+nsubspace).gt.eps) then
+            residuals(1:nbasis,k) = residuals(1:nbasis,j)
+            k = k + 1
+          end if
+        end do
+        nresiduals = k - 1
+!!!         do j = 1, nresiduals
+!!!           call gdot(nbasis,residuals(1:nbasis,j),1,&
+!!!   &             residuals(1:nbasis,j),1,&
+!!!   &             overlap(j+nsubspace,j+nsubspace),ierr)
+!!!           diag_overlap(j+nsubspace) = overlap(j+nsubspace,j+nsubspace)
+!!!           diag_overlap(j+nsubspace) = sqrt(diag_overlap(j+nsubspace))
+!!!           print *, 'normalizing residual',j
+!!!           residuals(1:nbasis,j) = residuals(1:nbasis,j)/&
+!!!   &         diag_overlap(j+nsubspace)
+!!!         end do
+        nsubspace = nresiduals + prev_nsubspace
         call krylov_extend(nbasis,nsubspace,&
   &       nresiduals,prev_nsubspace,&
   &       residuals(1:nbasis,1:nresiduals),&
@@ -2339,7 +2442,7 @@ contains
   &       diag_overlap(1:nsubspace),iverb,ierr)
         if (ierr.ne.0) then
           if (iverb.ge.0) then
-            print *, 'new krylov subspace expansion failed'
+            print *, 'second krylov subspace expansion failed'
             print *, 'error variable = ',ierr
             print *, 'using previous subspace solutions for print'
           end if
@@ -2347,6 +2450,10 @@ contains
           ierr = 0
           exit ! This exits subspace loop
         end if
+
+
+
+
         call krylov_check(nsubspace,&
   &         overlap(1:nsubspace,1:nsubspace),&
   &         diag_overlap(1:nsubspace),iverb,ierr)
@@ -2356,9 +2463,6 @@ contains
             print *, 'please observe condition number'
             print *, 'continuing iterations'
           end if
-          prev_nsubspace = nroots
-! alternative for discarding some vectors
-!          prev_nsubspace = nsubspace - nresiduals
         else
           if (iverb.ge.0) then
             print *, 'rescued subspace still failed stability check'
@@ -2375,10 +2479,6 @@ contains
           call krylov_mvp%lkl_mvp(nbasis,nsubspace,&
   &         interfacing_bv(1:nbasis,1:nsubspace),&
   &         interfacing_mv(1:nbasis,1:nsubspace),ierr)
-! alternative for discarding some vectors
-!          call krylov_mvp%lkl_mvp(nbasis,nsubspace,&
-!  &         interfacing_bv(1:nbasis,prev_nsubspace+1:nsubspace),&
-!  &         interfacing_mv(1:nbasis,prev_nsubspace+1:nsubspace),ierr)
         end associate
         if (ierr.ne.0) then
           if (iverb.ge.0) then
