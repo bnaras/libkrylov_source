@@ -530,8 +530,6 @@ program test_libkrylovinterface_cmplx_dp
   if (ierr.ne.0) then
 !! if true, write the subroutine failed, write the ierr value
     write(unit=funit,fmt=*) 'lkl_precon_davidson failed, ierr=', ierr
-!! set check = .false.
-    check = .false.
   else
 !! if false, write the subroutine runs
     write(unit=funit,fmt=*) 'lkl_precon_davidson runs'
