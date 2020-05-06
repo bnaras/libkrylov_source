@@ -50,7 +50,7 @@ program problem_1
 ! character string for file name that contains the frequencies
   character(len=32) :: freqname_string = ''
 ! integers for the size of the problem
-  integer(kind_integer) :: n = 100
+  integer(kind_integer) :: n = 500
   integer(kind_integer) :: m = 1
   integer(kind_integer) :: l = 2
 !! dummy indexes
@@ -146,15 +146,15 @@ program problem_1
   end if
 
 !! normalizing obj2
-   do k = 1, n
-     call gdot(n,obj2(1:n,k),1,obj2(1:n,k), &
+  do k = 1, n
+    call gdot(n,obj2(1:n,k),1,obj2(1:n,k), &
   &       1,norm_sq_base,ierr)
-     if (ierr.ne.0) stop
-     norm_real = norm_sq_base
-     norm_real = sqrt(norm_real)
+    if (ierr.ne.0) stop
+    norm_real = norm_sq_base
+    norm_real = sqrt(norm_real)
 ! normalize
-     obj2(1:n,k) = obj2(1:n,k)/norm_real
-   end do
+    obj2(1:n,k) = obj2(1:n,k)/norm_real
+  end do
 
   !do k = 1, n
    ! print *, 'obj2', obj2(k,1:n)
@@ -170,13 +170,17 @@ program problem_1
 
   do k = 1, n
     do j = 1, n
-      rtest = obj1(j, k)
+      rtest = obj1(j,k)
       rtest = abs(rtest)
       if (j .eq. k) then
         rref = real(1,kind=kind_float)
-        if (abs(rtest-rref) .gt. eps) print *, 'problem', j,k 
+        if (abs(rtest-rref) .gt. eps) then
+          print *, 'diag problem', j, obj1(j,k)
+        end if
       else
-        if (abs(rtest) .gt. eps+eps) print *, 'problem', j,k 
+        if (abs(rtest) .gt. eps) then
+          print *, 'problem', j,k, obj1(j,k) 
+        end if
       end if
     end do
   end do 
