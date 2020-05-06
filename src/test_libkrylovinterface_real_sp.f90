@@ -524,14 +524,11 @@ program test_libkrylovinterface_real_sp
 !! call lkl_precon_davidson on test output
   call lkl_precon_davidson(data_pc_davidson,n1,n4,n3,approx_spectra, &
   & precon_roots,full_solutions,residuals,ierr)
-!! set check = .false.
-  check = .false.
 !! check ierr value to see if the subtoutine terminated with an error
 !! test if ierr is not equal to 0
   if (ierr.ne.0) then
 !! if true, write the subroutine failed, write the ierr value
     write(unit=funit,fmt=*) 'lkl_precon_davidson failed, ierr=', ierr
-    check = .true.
   else
 !! if false, write the subroutine runs
     write(unit=funit,fmt=*) 'lkl_precon_davidson runs'
@@ -601,8 +598,6 @@ program test_libkrylovinterface_real_sp
   if (ierr.ne.0) then
 !! if true, write the subroutine failed, write the ierr value
     write(unit=funit,fmt=*) 'lkl_precon_sleijpen failed, ierr=', ierr
-!! set check = .false.
-    check = .false.
   else
 !! if false, write the subroutine runs
     write(unit=funit,fmt=*) 'lkl_precon_sleijpen runs'
