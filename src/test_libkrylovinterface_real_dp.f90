@@ -16,7 +16,7 @@ program test_libkrylovinterface_real_dp
 !! these two modules are used to load our machine precision
   use basekinds
   use floatformat
-  use libkrylovinterface
+  use libkrylovinterface_real_dp
 !--------------------------------------------------------------------
 !
   implicit none

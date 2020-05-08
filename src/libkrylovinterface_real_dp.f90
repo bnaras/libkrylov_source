@@ -1,6 +1,6 @@
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
-module libkrylovinterface
+module libkrylovinterface_real_dp
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
 !
@@ -31,10 +31,10 @@ module libkrylovinterface
 
 !! double precision parameter
   integer, parameter :: &
-  & lkl_double_k = 8
+  & lkl_real_dp_k = 8
 
 !! 8 byte parameter for integers 
-  integer, parameter :: lkl_int_k = 8
+  integer, parameter :: lkl_int_rdp_k = 8
 
 !--------------------------------------------------------------------
 
@@ -45,10 +45,10 @@ module libkrylovinterface
 
 !! abstract type for a function that
 !! interacts with a real element in an array of the two indexes selected
-  type, abstract :: libkrylov_scalar_subroutine
+  type, abstract :: libkrylov_scalar_real_dp
   contains
     procedure(libkrylov_scalar_interface), deferred :: scalar_fill
-  end type libkrylov_scalar_subroutine
+  end type libkrylov_scalar_real_dp
   abstract interface
     subroutine libkrylov_scalar_interface(data,n1,n2,obj,ierr)
       import :: lkl_double_k, lkl_int_k,libkrylov_scalar_subroutine
@@ -1270,6 +1270,6 @@ contains
 
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
-end module libkrylovinterface
+end module libkrylovinterface_real_dp
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
