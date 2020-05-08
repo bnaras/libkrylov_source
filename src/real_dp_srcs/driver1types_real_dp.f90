@@ -32,6 +32,7 @@ module driver1types_real_dp
   use libkrylovinterface
 ! krylov subspace function signatures, specifically
 ! for a symmetric slyvester problem
+  use libkrylovinterface_real_dp
 !--------------------------------------------------------------------
 ! Implicit none
 !--------------------------------------------------------------------
