@@ -241,7 +241,7 @@ contains
     else if (nbasis.lt.200) then
       nroots = 5
       minstart = 0
-      maxstart = floor(0.5*nbasis,kind=kind_integer)
+      maxstart = nbasis
     else
       nroots = 5
       minstart = 0
