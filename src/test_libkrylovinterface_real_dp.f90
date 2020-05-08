@@ -377,7 +377,7 @@ program test_libkrylovinterface_real_dp
   residuals = real(1,kind=lkl_double_k)
 !! write lkl_precon_none and operation on test input
   write(unit=funit,fmt=*) 'test lkl_precon_none', &
-  & ', to solve for preconditiing and it remains the same as output'
+  & ', null preconditioning, input is the same as output'
 !! call lkl_precon_none on test input
   call lkl_precon_none(data_pc_none,n1,n4,n3,approx_spectra,&
   & precon_roots,full_solutions,residuals,ierr)
@@ -448,7 +448,7 @@ program test_libkrylovinterface_real_dp
   residuals = real(1,kind=lkl_double_k)
 !! write lkl_precon_approx and operation on test input
   write(unit=funit,fmt=*) 'test lkl_precon_approx', &
-  & ', to solve for preconditiing in inverse approximate spectra'
+  & ', computing preconditioning in inverse approximate spectra'
 !! call lkl_precon_approx on test input
   call lkl_precon_approx(data_pc_approx,n1,n4,n3,approx_spectra,&
   & precon_roots,full_solutions,residuals,ierr)
@@ -520,7 +520,7 @@ program test_libkrylovinterface_real_dp
   residuals = real(1,kind=lkl_double_k)
 !! write subroutine lkl_precon_davidson and operation on test input
   write(unit=funit,fmt=*) 'test lkl_precon_davidson', &
-  &', solve for preconditing davison'
+  &', computing Davison preconditioned residuals'
 !! call lkl_precon_davidson on test output
   call lkl_precon_davidson(data_pc_davidson,n1,n4,n3,approx_spectra, &
   & precon_roots,full_solutions,residuals,ierr)
@@ -589,7 +589,7 @@ program test_libkrylovinterface_real_dp
   residuals = real(1,kind=lkl_double_k)
 !! write subroutine lkl_precon_davidson and operation on test input
   write(unit=funit,fmt=*) 'test lkl_precon_sleijpen&
-  &, solve for preconditing Jacobi-Davidson'
+  &, computing Jacobi-Davidson preconditioned residuals'
 !! call lkl_precon_davidson on test output
   call lkl_precon_sleijpen(data_pc_sleijpen,n1,n4,n3,approx_spectra,&
   & precon_roots,full_solutions,residuals,ierr)
@@ -663,7 +663,7 @@ program test_libkrylovinterface_real_dp
   residuals = real(1,kind=lkl_double_k)
 !! write lkl_precon_none and operation on test input
   write(unit=funit,fmt=*) 'test lkl_precon_all (none input)', &
-  & ', to solve for preconditiing and it remains the same as output'
+  & ', nulll preconditiing, input is the same as output'
 !! call lkl_precon_none on test input
   call lkl_precon_all(data_pc_all,n1,n4,n3,approx_spectra,&
   & precon_roots,full_solutions,residuals,ierr)
@@ -725,7 +725,7 @@ program test_libkrylovinterface_real_dp
   residuals = real(1,kind=lkl_double_k)
 !! write lkl_precon_approx and operation on test input
   write(unit=funit,fmt=*) 'test lkl_precon_all (approx_spectra)', &
-  & ', to solve for preconditioning in inverse approximate spectra'
+  & ', computing preconditioning in inverse approximate spectra'
 !! call lkl_precon_approx on test input
   call lkl_precon_all(data_pc_all,n1,n4,n3,approx_spectra,&
   & precon_roots,full_solutions,residuals,ierr)
@@ -786,7 +786,7 @@ program test_libkrylovinterface_real_dp
   residuals = real(1,kind=lkl_double_k)
 !! write subroutine lkl_precon_davidson and operation on test input
   write(unit=funit,fmt=*) 'test lkl_precon_all (davidson)', &
-  &', solve for preconditing davison'
+  &', computing Davison preconditioned residuals'
 !! call lkl_precon_davidson on test output
   call lkl_precon_all(data_pc_all,n1,n4,n3,approx_spectra, &
   & precon_roots,full_solutions,residuals,ierr)
@@ -844,7 +844,7 @@ program test_libkrylovinterface_real_dp
   residuals = real(1,kind=lkl_double_k)
 !! write subroutine lkl_precon_davidson and operation on test input
   write(unit=funit,fmt=*) 'test lkl_precon_all (Sleijpen option)',&
-  &', solve for preconditing Jacobi-Davidson'
+  &', computing Jacobi-Davidson preconditioned residuals'
 !! call lkl_precon_davidson on test output
   call lkl_precon_all(data_pc_all,n1,n4,n3,approx_spectra,&
   & precon_roots,full_solutions,residuals,ierr)
