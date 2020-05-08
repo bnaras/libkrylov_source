@@ -87,7 +87,7 @@ program test_restart_b
 !! setting up the problem before calling solver
 
 !! ask for user input on preconditoner
-  print *, 'Please enter an option for the preconditioner'
+  print *, 'Please enter restart level'
   read (*,*) user_input
   print *, user_input,' entered'
 
