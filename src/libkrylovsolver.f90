@@ -233,8 +233,9 @@ contains
 ! Description:
 !--------------------------------------------------------------------
 !< This subroutine does the extend step of a krylov solve,
-!< expanding the subspace for the next iteration,
+!< extending the subspace for the next iteration,
 !< using preconditioned residuals.
+!< the overlap matrix and diagonal of said matrix are also extended.
 !--------------------------------------------------------------------
 !
 !--------------------------------------------------------------------
@@ -261,7 +262,7 @@ contains
     integer(kind_integer), intent(in) :: prev_nsubspace
     type(base), intent(in) :: residuals(nbasis,nresiduals)
 !--------------------------------------------------------------------
-! Variables Expanded
+! Variables Extended
 !--------------------------------------------------------------------
     type(base), intent(inout) :: basis_vectors(nbasis,nsubspace)
     type(base), intent(inout) :: overlap(nsubspace,nsubspace)
@@ -313,7 +314,7 @@ contains
 !! elementwise copying to get new-basis,old-basis block
     do k = (prev_nsubspace+1), nsubspace ! columns -> rows
       do j = 1, prev_nsubspace ! rows -> columns
-         overlap(k,j) = conjg(overlap(j,k))
+        overlap(k,j) = conjg(overlap(j,k))
       end do
     end do
 
@@ -342,6 +343,107 @@ contains
 !--------------------------------------------------------------------
 
 !--------------------------------------------------------------------
+  subroutine krylov_expand(nbasis,nsubspace,&
+  &     nresiduals,prev_nsubspace,approx_spectra,mvproduct,&
+  &     basis_vectors,rayleigh,iverb,ierr)
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Description:
+!--------------------------------------------------------------------
+!< This subroutine does the expand step of a krylov solve,
+!< expanding the rayleigh matrix with new matrix vector products.
+!< THIS WOULD BE A GOOD PLACE TO INCLUDE SYMMETRIZATION
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Modules and Global Variables
+!--------------------------------------------------------------------
+! for kind_integer and other precision related parameters
+    use basekinds
+! define real(kind_float) and associated operations
+    use floatformat
+! define type(base) and associated operations
+    use basetypes
+    use blastypes
+!--------------------------------------------------------------------
+! Implicit None statement
+!--------------------------------------------------------------------
+    implicit none
+!--------------------------------------------------------------------
+! Input Variables
+!--------------------------------------------------------------------
+! Comments in the solver subroutine below
+    integer(kind_integer), intent(in) :: nbasis
+    integer(kind_integer), intent(in) :: nsubspace ! new subspace!
+    integer(kind_integer), intent(in) :: nresiduals
+    integer(kind_integer), intent(in) :: prev_nsubspace
+    real(kind_float), intent(in) :: approx_spectra(nbasis)
+    type(base), intent(in) :: mvproduct(nbasis,nsubspace)
+    type(base), intent(in) :: basis_vectors(nbasis,nsubspace)
+!--------------------------------------------------------------------
+! Variables Expanded
+!--------------------------------------------------------------------
+    type(base), intent(inout) :: rayleigh(nsubspace,nsubspace)
+!--------------------------------------------------------------------
+! Error Variables
+!--------------------------------------------------------------------
+    integer(kind_integer), intent(inout) :: iverb
+    integer(kind_integer), intent(inout) :: ierr
+!--------------------------------------------------------------------
+! Local Variables
+!--------------------------------------------------------------------
+    type(base) :: one_kb
+    type(base) :: zero_kb
+!! integer for loops
+    integer(kind_integer) :: j, k = 0
+!--------------------------------------------------------------------
+
+!! Set constants required for BLAS
+    one_kb = real(1,kind=kind_float)
+    zero_kb = real(0,kind=kind_float)
+
+!! determine overlap
+!! Set constants required for BLAS
+    one_kb = real(1,kind=kind_float)
+    zero_kb = real(0,kind=kind_float)
+!! first ggemm to get basis,new-basis block 
+    call ggemm('c','n',nsubspace,nresiduals,nbasis,one_kb,&
+  &   basis_vectors(1:nbasis,1:nsubspace),nbasis,&
+  &   mvproduct(1:nbasis,(prev_nsubspace+1):(nsubspace)),nbasis,&
+  &   zero_kb,&
+  &   rayleigh(1:nsubspace,&
+  &    (prev_nsubspace+1):(nsubspace)),&
+  &   nsubspace)
+!! Set constants required for BLAS
+    one_kb = real(1,kind=kind_float)
+    zero_kb = real(0,kind=kind_float)
+!! second ggemm to get new-basis,old-basis block
+    call ggemm('c','n',nresiduals,prev_nsubspace,nbasis,&
+  &   one_kb,basis_vectors(1:nbasis,(prev_nsubspace+1):(nsubspace)),&
+  &   nbasis,mvproduct(1:nbasis,1:prev_nsubspace),&
+  &   nbasis,zero_kb,&
+  &   rayleigh((prev_nsubspace+1):(nsubspace),1:prev_nsubspace),&
+  &   nresiduals)
+!! elementwise copying to symmetrize
+    do k = (prev_nsubspace+1), nsubspace 
+      do j = 1, (k-1) 
+        rayleigh(j,k) = &
+  &       (rayleigh(j,k) + conjg(rayleigh(k,j)))&
+          /(real(2,kind=kind_float))
+        rayleigh(k,j) = conjg(rayleigh(j,k))
+      end do
+      rayleigh(k,k) = &
+  &       (rayleigh(k,k) + conjg(rayleigh(k,k)))&
+          /(real(2,kind=kind_float))
+    end do
+
+
+!--------------------------------------------------------------------
+  end subroutine krylov_expand
+!--------------------------------------------------------------------
+
+!--------------------------------------------------------------------
   subroutine krylov_cholesky(nsubspace,overlap,diag_overlap,&
   &   cholesky,iverb,ierr)
 !--------------------------------------------------------------------
@@ -349,9 +451,8 @@ contains
 !--------------------------------------------------------------------
 ! Description:
 !--------------------------------------------------------------------
-!< This subroutine does the extend step of a krylov solve,
-!< expanding the subspace for the next iteration,
-!< using preconditioned residuals.
+!< This subroutine does the cholesky decompostion
+!< after scaling the overlap matrix
 !--------------------------------------------------------------------
 !
 !--------------------------------------------------------------------
@@ -476,9 +577,9 @@ contains
 !--------------------------------------------------------------------
 ! Description:
 !--------------------------------------------------------------------
-!< This subroutine does the extend step of a krylov solve,
-!< expanding the subspace for the next iteration,
-!< using preconditioned residuals.
+!< This subroutine checks the stability of the subspace
+!< by finding eigenvalues of the scaled overlap matrix
+!< and doing a cholesky decomposition
 !--------------------------------------------------------------------
 !
 !--------------------------------------------------------------------
@@ -1439,16 +1540,21 @@ contains
   &   all_residuals,nbasis)
 !! calculate scaled eigenvectors on the subspace
     do j = 1, nroots
-      xo(1:nsubspace,j) = solutions(1:nsubspace,j)*roots(j)
+      vxo(1:nbasis,j) = full_solutions(1:nbasis,j)*roots(j)
     end do
-!! Set constants required for BLAS
-    one_kb = real(1,kind=kind_float)
-    zero_kb = real(0,kind=kind_float)
-!! calculate scaled eigenvectors on the full space
-    call ggemm('n','n',nbasis,nroots,nsubspace,&
-  &   one_kb,basis_vectors,nbasis,&
-  &   xo,nsubspace,zero_kb,&
-  &   vxo,nbasis)
+!! preserving
+!!!! !! calculate scaled eigenvectors on the subspace
+!!!!     do j = 1, nroots
+!!!!       xo(1:nsubspace,j) = solutions(1:nsubspace,j)*roots(j)
+!!!!     end do
+!!!! !! Set constants required for BLAS
+!!!!     one_kb = real(1,kind=kind_float)
+!!!!     zero_kb = real(0,kind=kind_float)
+!!!! !! calculate scaled eigenvectors on the full space
+!!!!     call ggemm('n','n',nbasis,nroots,nsubspace,&
+!!!!   &   one_kb,basis_vectors,nbasis,&
+!!!!   &   xo,nsubspace,zero_kb,&
+!!!!   &   vxo,nbasis)
 !! make residuals = avx-vxo
     all_residuals = all_residuals - vxo
 
