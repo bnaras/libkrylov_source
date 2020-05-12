@@ -224,6 +224,90 @@ contains
 !--------------------------------------------------------------------
 
 !--------------------------------------------------------------------
+  subroutine krylov_rayleigh(nbasis,nsubspace,&
+  &     approx_spectra,mvproduct,&
+  &     basis_vectors,rayleigh,iverb,ierr)
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Description:
+!--------------------------------------------------------------------
+!< This subroutine does the first construction of the 
+!< rayleigh matrix.
+!< THIS WOULD BE A GOOD PLACE TO INCLUDE SYMMETRIZATION
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Modules and Global Variables
+!--------------------------------------------------------------------
+! for kind_integer and other precision related parameters
+    use basekinds
+! define real(kind_float) and associated operations
+    use floatformat
+! define type(base) and associated operations
+    use basetypes
+    use blastypes
+!--------------------------------------------------------------------
+! Implicit None statement
+!--------------------------------------------------------------------
+    implicit none
+!--------------------------------------------------------------------
+! Input Variables
+!--------------------------------------------------------------------
+! Comments in the solver subroutine below
+    integer(kind_integer), intent(in) :: nbasis
+    integer(kind_integer), intent(in) :: nsubspace ! first subspace!
+    real(kind_float), intent(in) :: approx_spectra(nbasis)
+    type(base), intent(in) :: mvproduct(nbasis,nsubspace)
+    type(base), intent(in) :: basis_vectors(nbasis,nsubspace)
+!--------------------------------------------------------------------
+! Output Variables
+!--------------------------------------------------------------------
+    type(base), intent(inout) :: rayleigh(nsubspace,nsubspace)
+!--------------------------------------------------------------------
+! Error Variables
+!--------------------------------------------------------------------
+    integer(kind_integer), intent(inout) :: iverb
+    integer(kind_integer), intent(inout) :: ierr
+!--------------------------------------------------------------------
+! Local Variables
+!--------------------------------------------------------------------
+    type(base) :: one_kb
+    type(base) :: zero_kb
+!! integer for loops
+    integer(kind_integer) :: j, k = 0
+!--------------------------------------------------------------------
+
+
+!! determine rayleigh
+!! Set constants required for BLAS
+    one_kb = real(1,kind=kind_float)
+    zero_kb = real(0,kind=kind_float)
+!! first ggemm to get basis,new-basis block 
+    call ggemm('c','n',nsubspace,nsubspace,nbasis,one_kb,&
+  &   basis_vectors(1:nbasis,1:nsubspace),nbasis,&
+  &   mvproduct(1:nbasis,1:nsubspace),nbasis,&
+  &   zero_kb,&
+  &   rayleigh(1:nsubspace,1:nsubspace),&
+  &   nsubspace)
+!! elementwise copying to symmetrize
+    do k = 1, nsubspace 
+      do j = 1, (k-1) 
+        rayleigh(j,k) = &
+  &       (rayleigh(j,k) + conjg(rayleigh(k,j)))&
+          /(real(2,kind=kind_float))
+        rayleigh(k,j) = conjg(rayleigh(j,k))
+      end do
+      rayleigh(k,k) = &
+  &       (rayleigh(k,k) + conjg(rayleigh(k,k)))&
+          /(real(2,kind=kind_float))
+    end do
+
+!--------------------------------------------------------------------
+  end subroutine krylov_rayleigh
+!--------------------------------------------------------------------
+
+!--------------------------------------------------------------------
   subroutine krylov_extend(nbasis,nsubspace,&
   &     nresiduals,prev_nsubspace,residuals,&
   &     basis_vectors,overlap,diag_overlap,iverb,ierr)
@@ -280,10 +364,6 @@ contains
 !! integer for loops
     integer(kind_integer) :: j, k = 0
 !--------------------------------------------------------------------
-
-!! Set constants required for BLAS
-    one_kb = real(1,kind=kind_float)
-    zero_kb = real(0,kind=kind_float)
 
 !! add preconditioned residuals to basis vector
     basis_vectors(1:nbasis,(prev_nsubspace+1):nsubspace) =&
@@ -399,11 +479,8 @@ contains
     integer(kind_integer) :: j, k = 0
 !--------------------------------------------------------------------
 
-!! Set constants required for BLAS
-    one_kb = real(1,kind=kind_float)
-    zero_kb = real(0,kind=kind_float)
 
-!! determine overlap
+!! determine new parts of rayleigh
 !! Set constants required for BLAS
     one_kb = real(1,kind=kind_float)
     zero_kb = real(0,kind=kind_float)
@@ -441,6 +518,160 @@ contains
 
 !--------------------------------------------------------------------
   end subroutine krylov_expand
+!--------------------------------------------------------------------
+
+!--------------------------------------------------------------------
+  subroutine krylov_project(nbasis,nsubspace,nroots,&
+  &     diag_overlap,&
+  &     basis_vectors,&
+  &     cholesky,&
+  &     residuals,&
+  &     iverb,ierr)
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Description:
+!--------------------------------------------------------------------
+!< This subroutine projects residuals out of the subspace.
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Modules and Global Variables
+!--------------------------------------------------------------------
+! for kind_integer and other precision related parameters
+    use basekinds
+! define real(kind_float) and associated operations
+    use floatformat
+! define type(base) and associated operations
+    use basetypes
+    use blastypes
+!--------------------------------------------------------------------
+! Implicit None statement
+!--------------------------------------------------------------------
+    implicit none
+!--------------------------------------------------------------------
+! Input Variables
+!--------------------------------------------------------------------
+! Comments in the solver subroutine below
+    integer(kind_integer), intent(in) :: nbasis
+    integer(kind_integer), intent(in) :: nsubspace
+    integer(kind_integer), intent(in) :: nroots
+    real(kind_float), intent(in) :: diag_overlap(nsubspace)
+    type(base), intent(in) :: basis_vectors(nbasis,nsubspace)
+    type(base), intent(in) :: cholesky(nsubspace,nsubspace)
+!--------------------------------------------------------------------
+! Output Variables
+!--------------------------------------------------------------------
+    type(base), intent(inout) :: residuals(nbasis,nroots)
+!--------------------------------------------------------------------
+! Error Variables
+!--------------------------------------------------------------------
+    integer(kind_integer), intent(inout) :: iverb
+    integer(kind_integer), intent(inout) :: ierr
+!--------------------------------------------------------------------
+! Local Variables
+!--------------------------------------------------------------------
+    type(base) :: one_kb
+    type(base) :: minus_one_kb
+    type(base) :: zero_kb
+    real(kind_float), allocatable :: d_o_sqrt(:)
+    type(base), allocatable :: projector(:,:)
+    type(base), allocatable :: scaled_basis(:,:)
+    type(base), allocatable :: dllv(:,:)
+    type(base), allocatable :: residuals_sv(:,:)
+!! integer for loops
+    integer(kind_integer) :: j, k = 0
+!--------------------------------------------------------------------
+
+!! stop this madness if nbasis > 10001
+    if (nbasis.ge.10001) then
+      if (iverb.ge.0) then
+        print *, 'projecting vectors in the full space'
+        print *, ' requires construction of '
+        print *, nbasis,' by',nbasis
+        print *, '  matrix, which is too large!'
+        print *, '    projection failed'
+      end if
+      ierr = -1
+      return
+    end if
+
+    allocate(d_o_sqrt(nsubspace))
+    allocate(scaled_basis(nsubspace,nbasis))
+    allocate(dllv(nsubspace,nbasis))
+    allocate(projector(nbasis,nbasis))
+    allocate(residuals_sv(nbasis,nroots))
+
+!! create d_o_sqrt
+    d_o_sqrt = sqrt(diag_overlap)
+
+!! create scaled basis vectors
+    do k = 1, nsubspace
+      scaled_basis(k,1:nbasis) = &
+  &     basis_vectors(1:nbasis,k)/d_o_sqrt(k)
+    end do
+
+    dllv = scaled_basis
+
+    call gpotrs('l',nsubspace,nbasis,cholesky,nsubspace, &
+  &       dllv,nsubspace,ierr)
+    if (ierr.ne.0) then
+      if (iverb.ge.0) then
+        print *, '*potrs linear algebra error!', ierr
+        print *, 'cholesky decomposition matrix could be unstable'
+      end if
+      ierr = -30
+      return ! return to solver loop
+    end if
+
+!! build projector
+    projector = real(0,kind=kind_float)
+    do j = 1, nbasis
+      projector(j,j) = real(1,kind=kind_float)
+    end do 
+!! Set constants required for BLAS
+    one_kb = real(1,kind=kind_float)  
+    minus_one_kb = real(-1,kind=kind_float)
+!! calculation of projector
+    call ggemm('c','n',nbasis,nbasis,nsubspace,minus_one_kb,&
+  &      scaled_basis,nsubspace,&
+  &      dllv,nsubspace,&
+  &      one_kb,&
+  &      projector,&
+  &      nbasis)
+!! elementwise copying to symmetrize
+    do k = 1, nbasis 
+      do j = 1, (k-1) 
+        projector(j,k) = &
+  &       (projector(j,k) + conjg(projector(k,j)))&
+          /(real(2,kind=kind_float))
+        projector(k,j) = conjg(projector(j,k))
+      end do
+      projector(k,k) = &
+  &       (projector(k,k) + conjg(projector(k,k)))&
+          /(real(2,kind=kind_float))
+    end do
+!! save residuals due to ggemm structure
+    residuals_sv = residuals
+!! Set constants required for BLAS
+    one_kb = real(1,kind=kind_float)
+    zero_kb = real(0,kind=kind_float)
+!! Projecting residuals
+    call ggemm('n','n',nbasis,nroots,nbasis,one_kb,&
+  &      projector(1:nbasis,1:nbasis),nbasis,&
+  &      residuals_sv(1:nbasis,1:nroots),nbasis,&
+  &      zero_kb,&
+  &      residuals(1:nbasis,1:nroots),&
+  &      nbasis)
+
+    deallocate(d_o_sqrt)
+    deallocate(scaled_basis)
+    deallocate(dllv)
+    deallocate(projector)
+    deallocate(residuals_sv)
+
+!--------------------------------------------------------------------
+  end subroutine krylov_project
 !--------------------------------------------------------------------
 
 !--------------------------------------------------------------------
@@ -1438,6 +1669,208 @@ contains
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
 
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+  subroutine krylov_a_ritz2(nbasis,nsubspace,nroots,&
+  &     rayleigh,&
+  &     cholesky,&
+  &     overlap,diag_overlap,&
+  &     roots,lagrangian,solutions,iverb,ierr)
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Description:
+!--------------------------------------------------------------------
+!< This subroutine does the ritz step of a krylov solve,
+!< producing guess/approximate solutions of the eigenvalue problem
+!< in the subspace basis
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Modules and Global Variables
+!--------------------------------------------------------------------
+! for kind_integer and other precision related parameters
+    use basekinds
+! define real(kind_float) and associated operations
+    use floatformat
+! define type(base) and associated operations
+    use basetypes
+    use blastypes
+!--------------------------------------------------------------------
+! Implicit None statement
+!--------------------------------------------------------------------
+    implicit none
+!--------------------------------------------------------------------
+! Input Variables
+!--------------------------------------------------------------------
+! Comments in the solver subroutine below
+    integer(kind_integer), intent(in) :: nbasis
+    integer(kind_integer), intent(in) :: nsubspace
+    integer(kind_integer), intent(in) :: nroots
+    type(base), intent(in) :: rayleigh(nsubspace,nsubspace)
+    type(base), intent(in) :: cholesky(nsubspace,nsubspace)
+    type(base), intent(in) :: overlap(nsubspace,nsubspace)
+    real(kind_float), intent(in) :: diag_overlap(nsubspace)
+!--------------------------------------------------------------------
+! Output Variables
+!--------------------------------------------------------------------
+    real(kind_float), intent(inout) :: roots(nroots)
+    type(base), intent(inout) :: lagrangian(nroots)
+    type(base), intent(inout) :: solutions(nsubspace,nroots)
+!--------------------------------------------------------------------
+! Error Variables
+!--------------------------------------------------------------------
+    integer(kind_integer), intent(inout) :: iverb   
+    integer(kind_integer), intent(inout) :: ierr   
+!--------------------------------------------------------------------
+! Local Variables
+!--------------------------------------------------------------------
+    type(base) :: one_kb
+    type(base) :: zero_kb
+    type(base), allocatable :: subspace(:,:)
+    type(base), allocatable :: vavx(:,:)
+    type(base), allocatable :: vvx(:,:)
+    type(base) :: expectation
+    type(base) :: norm
+    real(kind_float), allocatable :: all_roots(:)
+    real(kind_float), allocatable :: d_o_sqrt(:)
+!! integer for loops
+    integer(kind_integer) :: j,k = 0
+!--------------------------------------------------------------------
+
+!! Set constants required for BLAS
+    one_kb = real(1,kind=kind_float)
+    zero_kb = real(0,kind=kind_float)
+
+!! Allocate local arrays
+    allocate(subspace(nsubspace,nsubspace))
+    allocate(all_roots(nsubspace))
+    allocate(d_o_sqrt(nsubspace))
+    allocate(vavx(nsubspace,nroots))
+    allocate(vvx(nsubspace,nroots))
+
+!! construct d_o_sqrt
+    d_o_sqrt = sqrt(diag_overlap)
+
+!! scale subspace(rayleigh) with norms
+    do k = 1, nsubspace
+      do j = 1, (k-1)
+        subspace(j,k) = rayleigh(j,k)/(d_o_sqrt(j)*d_o_sqrt(k))
+      end do
+      do j = (k+1), nsubspace
+        subspace(j,k) = rayleigh(j,k)/(d_o_sqrt(j)*d_o_sqrt(k))
+      end do
+      subspace(k,k) = rayleigh(k,k)/diag_overlap(k)
+    end do
+
+!! Set constants required for BLAS
+    one_kb = real(1,kind=kind_float)
+    zero_kb = real(0,kind=kind_float)
+!! scale subspace(rayleigh) with cholesky
+    call gtrsm('r','l','c','n',nsubspace,nsubspace,one_kb,&
+  &   cholesky,nsubspace,subspace,nsubspace)
+    one_kb = real(1,kind=kind_float)
+    zero_kb = real(0,kind=kind_float)
+    call gtrsm('l','l','n','n',nsubspace,nsubspace,one_kb,&
+  &   cholesky,nsubspace,subspace,nsubspace)
+
+!! solve subspace onto all_roots
+    call gheev('v','l',nsubspace,subspace,nsubspace,&
+  &   all_roots,ierr)
+    if (ierr.ne.0) then
+      if (iverb.ge.0) then
+        print *, '*heev/*syev linear algebra error!', ierr
+        print *, 'exit ritz step'
+      end if
+      ierr = -40
+      return ! return to solver loop
+    end if 
+
+!! select roots desired
+    roots = all_roots(1:nroots)
+!! Printing out roots for debugging.
+    if (iverb.ge.3) then
+      print *, 'all solutions on subspace'
+        do j = 1, nsubspace
+          print *, 'root ', j,' ', all_roots(j)
+        end do 
+    end if
+    
+!! select solutions
+    solutions = subspace(1:nsubspace,1:nroots)
+
+!! reverse cholesky on solutions
+!! UNKNOWN BUG, ONE CHANGES VALUE, FIX SOON
+    one_kb = real(1,kind=kind_float)
+    call gtrsm('l','l','c','n',nsubspace,nroots,one_kb,&
+  &   cholesky,nsubspace,solutions,nsubspace)
+
+!! reverse scaling to get solutions
+    do j = 1, nroots
+      do k = 1, nsubspace
+        solutions(k,j) = solutions(k,j)/d_o_sqrt(k)
+      end do
+    end do
+
+!! compute lagrangian
+    one_kb = real(1,kind=kind_float)
+    zero_kb = real(0,kind=kind_float)
+!! compute vavx 
+    call ggemm('n','n',nsubspace,nroots,nsubspace,&
+  &   one_kb,rayleigh,nsubspace,&
+  &   solutions,nsubspace,zero_kb,&
+  &   vavx,nsubspace)
+    one_kb = real(1,kind=kind_float)
+    zero_kb = real(0,kind=kind_float)
+!! compute vvx 
+    call ggemm('n','n',nsubspace,nroots,nsubspace,&
+  &   one_kb,overlap,nsubspace,&
+  &   solutions,nsubspace,zero_kb,&
+  &   vvx,nsubspace)
+    if (iverb.ge.2) then
+      print *, 'lagrangians of desired solutions:' 
+    end if
+    do j = 1, nroots
+      call gdot(nsubspace,solutions(1:nsubspace,j),1,&
+  &     vavx(1:nsubspace,j),1,expectation,ierr)
+      if (ierr.ne.0) then
+        if (iverb.ge.0) then
+          print *, '*dot(c) linear algebra error!', ierr
+          print *, 'exit ritz step'
+        end if
+        ierr = -40
+        return ! return to solver loop
+      end if
+      call gdot(nsubspace,solutions(1:nsubspace,j),1,&
+  &     vvx(1:nsubspace,j),1,norm,ierr)
+      if (ierr.ne.0) then
+        if (iverb.ge.0) then
+          print *, '*dot(c) linear algebra error!', ierr
+          print *, 'exit ritz step'
+        end if
+        ierr = -40
+        return ! return to solver loop
+      end if
+      one_kb = real(1,kind=kind_float)
+      lagrangian(j) = expectation-((norm-one_kb)*roots(j))
+      if (iverb.ge.2) then
+        print *, 'L of ',j,': ',lagrangian(j)
+      end if
+    end do
+
+! Deallocate local arrays
+    deallocate(vavx)
+    deallocate(vvx)
+    deallocate(subspace)
+    deallocate(all_roots)
+    deallocate(d_o_sqrt)
+
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+  end subroutine krylov_a_ritz2
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
 
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
@@ -1857,16 +2290,20 @@ contains
     type(base), allocatable :: basis_vectors(:,:)
     type(base), allocatable :: overlap(:,:)
     real(kind_float), allocatable :: diag_overlap(:)
+    type(base), allocatable :: cholesky(:,:)
 !< basis_vectors = transformation matrix/projector onto subspace /guess vectors = V 
-!< overlap = overlap matrix, (V**dagger)(V)
-!< diag_overlap = diagonal of overlap matrix, (V**dagger)(V)
+!< overlap = overlap matrix, (V**dagger)(V)=S
+!< diag_overlap = d=diagonal of overlap matrix, (V**dagger)(V)=S
+!< cholesky = (L)(L**dagger) decomposition of (d)**(-1/2)(S)(d)**(-1/2)
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     integer(kind_integer) :: iter
 !< variable for do loop over iterations of krylov subspace
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !! filled in at matrix vector products
     type(base), allocatable :: mvproduct(:,:)
+    type(base), allocatable :: rayleigh(:,:)
 !< AV = matrix vector products = mvproduct
+!< V**dagger AV = rayleigh
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !! filled in at krylov_a_ritz
     real(kind_float), allocatable :: roots(:) 
@@ -2051,6 +2488,8 @@ contains
     allocate(lagrangian(nroots))
     allocate(solutions(maxsubspace,nroots)) !maximum
     allocate(overlap(maxsubspace,maxsubspace)) !maximum
+    allocate(cholesky(maxsubspace,maxsubspace)) !maximum
+    allocate(rayleigh(maxsubspace,maxsubspace)) !maximum
     allocate(roots(nroots))
     allocate(diag_overlap(maxsubspace)) !maximum
     allocate(full_solutions(nbasis,nroots))
@@ -2221,6 +2660,17 @@ contains
     do j = 1 , nstart
       diag_overlap(j) = overlap(j,j)
     end do
+    call krylov_cholesky(nsubspace,overlap(1:nsubspace,1:nsubspace),&
+  &    diag_overlap(1:nsubspace),& 
+  &    cholesky(1:nsubspace,1:nsubspace),iverb,ierr)
+    if (ierr.ne.0) then
+      if (iverb.ge.0) then
+        print *, 'initial overlap matrix failed cholesky decomposition' 
+        print *, 'error variable = ',ierr
+      end if
+      ierr = -45
+      return ! abort solver, return to call 
+    end if
 
 !! if restart from mvp is allowed, look for restart w files
 !! invert irestart to generate new basis vectors
@@ -2307,6 +2757,19 @@ contains
       end if
     end if
 
+    call krylov_rayleigh(nbasis,nsubspace,&
+  &     approx_spectra,mvproduct(1:nbasis,1:nsubspace),&
+  &     basis_vectors(1:nbasis,1:nsubspace),&
+  &     rayleigh(1:nsubspace,1:nsubspace),iverb,ierr)
+    if (ierr.ne.0) then
+      if (iverb.ge.0) then
+        print *, 'initial construction of rayleigh matrix failed' 
+        print *, 'error variable = ',ierr
+      end if
+      ierr = -45
+      return ! abort solver, return to call 
+    end if
+
 ! reset irestart to normal operation
     irestart = abs(irestart)
 
@@ -2346,11 +2809,16 @@ contains
       end if
 
 ! call krylov ritz subroutine
-      call krylov_a_ritz(nbasis,nsubspace,nroots,&
-  &     basis_vectors(1:nbasis,1:nsubspace),&
-  &     mvproduct(1:nbasis,1:nsubspace),&
+      call krylov_a_ritz2(nbasis,nsubspace,nroots,&
+  &     rayleigh(1:nsubspace,1:nsubspace),&
+  &     cholesky(1:nsubspace,1:nsubspace),&
   &     overlap(1:nsubspace,1:nsubspace),diag_overlap(1:nsubspace),&
   &     roots,lagrangian,solutions(1:nsubspace,1:nroots),iverb,ierr)
+!      call krylov_a_ritz(nbasis,nsubspace,nroots,&
+!  &     basis_vectors(1:nbasis,1:nsubspace),&
+!  &     mvproduct(1:nbasis,1:nsubspace),&
+!  &     overlap(1:nsubspace,1:nsubspace),diag_overlap(1:nsubspace),&
+!  &     roots,lagrangian,solutions(1:nsubspace,1:nroots),iverb,ierr)
       if (ierr.eq.-35) then ! error variable for ill-conditioned overlap
         nsubspace = prev_nsubspace
         if (iverb.ge.0) then
@@ -2496,54 +2964,34 @@ contains
             print *, ' and residual: ',k
             print *, overlap(k+nsubspace,j+nsubspace)
           end if
-          residuals(1:nbasis,j) = &
-  &              residuals(1:nbasis,j) -&
-  &              (residuals(1:nbasis,k)*&
-  &              overlap(k+nsubspace,j+nsubspace)/&
-  &              overlap(k+nsubspace,k+nsubspace))
+!!!           residuals(1:nbasis,j) = &
+!!!   &              residuals(1:nbasis,j) -&
+!!!   &              (residuals(1:nbasis,k)*&
+!!!   &              overlap(k+nsubspace,j+nsubspace)/&
+!!!   &              overlap(k+nsubspace,k+nsubspace))
         end do
       end do
 
-!! test normalizing all residuals
-      print *, 'post orthogonalization norms'
-      do j = 1, nresiduals
-        call gdot(nbasis,residuals(1:nbasis,j),1,&
-  &             residuals(1:nbasis,j),1,&
-  &             overlap(j+nsubspace,j+nsubspace),ierr)
-        diag_overlap(j+nsubspace) = overlap(j+nsubspace,j+nsubspace)
-        diag_overlap(j+nsubspace) = sqrt(diag_overlap(j+nsubspace))
-        print *, 'o norms',j,diag_overlap(j+nsubspace)
-      end do
+!!! !! test orthonalization all residuals
+!!!       print *, 'post orthogonalization norms'
+!!!       do j = 1, nresiduals
+!!!         call gdot(nbasis,residuals(1:nbasis,j),1,&
+!!!   &             residuals(1:nbasis,j),1,&
+!!!   &             overlap(j+nsubspace,j+nsubspace),ierr)
+!!!         diag_overlap(j+nsubspace) = overlap(j+nsubspace,j+nsubspace)
+!!!         diag_overlap(j+nsubspace) = sqrt(diag_overlap(j+nsubspace))
+!!!         print *, 'o norms',j,diag_overlap(j+nsubspace)
+!!!       end do
 
 !! project residuals out of subspace
-      projector = real(0,kind=kind_float)
-      do j = 1, nbasis
-        projector(j,j) = real(1,kind=kind_float)
-      end do 
-!! Set constants required for BLAS
-      one_kb = real(1,kind=kind_float)
-      minus_one_kb = real(-1,kind=kind_float)
-!! calculation of projector
-      call ggemm('n','c',nbasis,nbasis,nsubspace,minus_one_kb,&
-  &      basis_vectors(1:nbasis,1:nsubspace),nbasis,&
-  &      basis_vectors(1:nbasis,1:nsubspace),nbasis,&
-  &      one_kb,&
-  &      projector(1:nbasis,1:nbasis),&
-  &      nbasis)
-!! save residuals due to ggemm structure
-      sv_residuals = residuals
-!! Set constants required for BLAS
-      one_kb = real(1,kind=kind_float)
-      zero_kb = real(0,kind=kind_float)
-!! Projecting residuals
-      call ggemm('n','n',nbasis,nroots,nbasis,one_kb,&
-  &      projector(1:nbasis,1:nbasis),nbasis,&
-  &      sv_residuals(1:nbasis,1:nroots),nbasis,&
-  &      zero_kb,&
-  &      residuals(1:nbasis,1:nroots),&
-  &      nbasis)
+      call krylov_project(nbasis,nsubspace,nroots,&
+  &     diag_overlap(1:nsubspace),&
+  &     basis_vectors(1:nbasis,1:nsubspace),&
+  &     cholesky(1:nsubspace,1:nsubspace),&
+  &     residuals(1:nbasis,1:nroots),&
+  &     iverb,ierr)
 
-!! test normalizing all residuals
+!! test results of projection all residuals
       print *, 'post projection norms'
       k = 1
       do j = 1, nresiduals
@@ -2581,12 +3029,25 @@ contains
         exit ! This exits subspace loop
       end if
 
+      if (iverb.ge.4) then
+        do j = 1, nresiduals
+          do k = 1, nsubspace
+            print *, 'inner product of residual: ', j
+            print *, ' and basis vector: ',k
+            print *, overlap(k,j+nsubspace)
+          end do
+        end do
+      end if
+
 ! call for diagonalization of copy of overlap matrix as a check,
 ! if it passes proceed to expand subspace properly
-      call krylov_check(nsubspace,&
-  &       overlap(1:nsubspace,1:nsubspace),&
-  &       diag_overlap(1:nsubspace),iverb,ierr)
-      ierr = -30
+!      call krylov_check(nsubspace,&
+!  &       overlap(1:nsubspace,1:nsubspace),&
+!  &       diag_overlap(1:nsubspace),iverb,ierr)
+      call krylov_cholesky(nsubspace,&
+  &      overlap(1:nsubspace,1:nsubspace),&
+  &      diag_overlap(1:nsubspace),& 
+  &      cholesky(1:nsubspace,1:nsubspace),iverb,ierr)
       if (ierr.eq.-30) then !krylov check failed, attempt rescue
         if (iverb.ge.0) then
           print *, 'new krylov subspace unstable'
@@ -2637,24 +3098,24 @@ contains
 
 
 !! Modified gram-schimdt  
-        nsubspace = prev_nsubspace
-        do j = 1, nresiduals
-          do k = 1, nsubspace
-            call gdot(nbasis,residuals(1:nbasis,j),1,&
-  &             basis_vectors(1:nbasis,k),1,&
-  &             overlap(k,j+nsubspace),ierr)
-            if (iverb.ge.4) then
-              print *, 'inner product of residual: ', j
-              print *, ' and basis vector: ',k
-              print *, overlap(k+nsubspace,j+nsubspace)
-            end if
+!        nsubspace = prev_nsubspace
+!        do j = 1, nresiduals
+!          do k = 1, nsubspace
+!            call gdot(nbasis,residuals(1:nbasis,j),1,&
+!  &             basis_vectors(1:nbasis,k),1,&
+!  &             overlap(k,j+nsubspace),ierr)
+!            if (iverb.ge.4) then
+!              print *, 'inner product of residual: ', j
+!              print *, ' and basis vector: ',k
+!              print *, overlap(k,j+nsubspace)
+!            end if
 !            residuals(1:nbasis,j) = &
 !  &              residuals(1:nbasis,j) -&
 !  &              (basis_vectors(1:nbasis,k)*&
 !  &              overlap(k,j+nsubspace)/&
 !  &              overlap(k,k))
-          end do
-        end do
+!          end do
+!        end do
 !        k = 1
 !        do j = 1, nresiduals
 !          call gdot(nbasis,residuals(1:nbasis,j),1,&
@@ -2679,7 +3140,7 @@ contains
 !!!           residuals(1:nbasis,j) = residuals(1:nbasis,j)/&
 !!!   &         diag_overlap(j+nsubspace)
 !!!         end do
-        nsubspace = nresiduals + prev_nsubspace
+!        nsubspace = nresiduals + prev_nsubspace
         call krylov_extend(nbasis,nsubspace,&
   &       nresiduals,prev_nsubspace,&
   &       residuals(1:nbasis,1:nresiduals),&
@@ -2697,12 +3158,13 @@ contains
           exit ! This exits subspace loop
         end if
 
-
-
-
-        call krylov_check(nsubspace,&
-  &         overlap(1:nsubspace,1:nsubspace),&
-  &         diag_overlap(1:nsubspace),iverb,ierr)
+        call krylov_cholesky(nsubspace,&
+  &       overlap(1:nsubspace,1:nsubspace),&
+  &       diag_overlap(1:nsubspace),& 
+  &       cholesky(1:nsubspace,1:nsubspace),iverb,ierr)
+!        call krylov_check(nsubspace,&
+!  &         overlap(1:nsubspace,1:nsubspace),&
+!  &         diag_overlap(1:nsubspace),iverb,ierr)
         if (ierr.eq.0) then !! if rescue worked
           if (iverb.ge.0) then
             print *, 'stabilization may have worked'
@@ -2786,6 +3248,23 @@ contains
             ierr = 0
           end if
         end if
+      end if
+
+! expand rayleigh matrix
+      call krylov_expand(nbasis,nsubspace,&
+  &     nresiduals,prev_nsubspace,&
+  &     approx_spectra,mvproduct(1:nbasis,1:nsubspace),&
+  &     basis_vectors(1:nbasis,1:nsubspace),&
+  &     rayleigh(1:nsubspace,1:nsubspace),iverb,ierr)
+      if (ierr.ne.0) then
+        if (iverb.ge.0) then
+          print *, 'expanding rayleigh matrix failed'
+          print *, 'error variable = ',ierr
+          print *, 'using previous subspace solutions for print'
+        end if
+        ierr = 0
+        nsubspace = prev_nsubspace
+        exit ! This exits subspace loop
       end if
 
 
@@ -2880,6 +3359,8 @@ contains
     deallocate(solutions)
     deallocate(full_solutions)
     deallocate(overlap)
+    deallocate(cholesky)
+    deallocate(rayleigh)
     deallocate(roots)
     deallocate(diag_overlap)
     deallocate(residuals)
