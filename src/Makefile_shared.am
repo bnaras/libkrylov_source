@@ -198,7 +198,8 @@ test_ritz_real_dp_LDADD = libkrylov_real_dp.la
 # test of implemented subroutines in interface
 real_dp_krylovintrfcdir = $(PWD)/real_dp_test
 real_dp_krylovintrfc_PROGRAMS = test_libkrylovinterface_real_dp
-test_libkrylovinterface_real_dp_SOURCES = test_libkrylovinterface_real_dp.f90
+test_libkrylovinterface_real_dp_SOURCES = interface2_real_dp.f90 \
+test_libkrylovinterface.f90
 test_libkrylovinterface_real_dp_LDADD = libkrylov_real_dp.la
 # test of solver subroutine norms
 real_dp_normsdir = $(PWD)/real_dp_test
