@@ -50,6 +50,7 @@ program test_ritz
   type(base) :: z_array4(n,q)
   type(base) :: z_array5(q,m)
   type(base) :: z_array6(q,m)
+  type(base) :: z_array7(q,q)
   real(kind_float) :: r_vector1(q)
   real(kind_float) :: r_vector2(m)
   type(base) :: z_vector1(m)
@@ -381,6 +382,95 @@ program test_ritz
   end if
   print *, ''
 
+!!! tests of krylov_cholesky
+  check = .false.
+!!! negative tests of krylov_cholesky
+!! Using do loop to fill in the test input matrix z_array3
+!! with 1 on diagonal
+  z_array3 = real(0,kind=kind_float)
+  do j1 = 1, q
+    z_array3(j1,j1) = real(1,kind=kind_float)
+  end do
+  r_vector1 = real(0,kind=kind_float)
+  do j1 = 1, q
+    r_vector1(j1) = real(1,kind=kind_float)
+  end do
+!! write statement on test
+  print *, 'negative test krylov_cholesky',&
+  &', which prints to standard output'
+  print *, 'input z_array3 is identity which is positive definite'
+  print *, 'input r_vector1 is all 1'
+!! call subroutine
+  call krylov_cholesky(q,z_array3,r_vector1,z_array7,iverb,ierr)
+!! check ierr value to see whether routine terminated with an error
+!! test if ierr is not equal to 0
+  if (ierr.ne.0) then
+!! if true, write routine failed, write the ierr value
+    print *, 'krylov_cholesky failed, ierr=',ierr
+    check = .true.
+!! set ierr to 0
+    ierr = 0
+  else
+!! if false, write gheev runs
+    print *, 'krylov_cholesky runs'
+  end if
+!! write info about output
+  print *, 'z_array3 should be identity, unchanged'
+!! write test to check each element
+  print *, 'testing each element of z_array3'
+!! set logical check = .false.
+  check = .false.
+!! using do loops to take the absolute difference
+!! between the elements in test array 
+!! and the elements in reference value
+  do j2 = 1, q 
+    do j1 = 1, q
+      r_test = z_array3(j1,j2)
+      if (j1.eq.j2) then
+        r_ref = real(1,kind=kind_float)
+      else
+        r_ref = real(0,kind=kind_float)
+      end if
+!! test if difference if greater than machine precision
+!! (defined by the constant eps)
+      if (abs(r_test-r_ref).gt.eps) then
+!! if true, write failed for elements
+!! and the position of the element that failed
+        print *, 'failed for elements', j1, j2 
+!! set logical check = .true.
+        check = .true.
+      end if
+    end do
+  end do
+!! write info about output
+  print *, 'r_vector1 should be all 1'
+!! write test to check each element
+  print *, 'testing each element of r_vector1'
+!! using do loops to take the absolute difference
+!! between the elements in test array 
+!! and the elements in reference value
+  r_test = real(1,kind=kind_float)
+  do j1 = 1, q 
+!! test if difference if greater than machine precision
+!! (defined by the constant eps)
+    if (abs(r_test-r_vector1(j1)).gt.eps) then
+!! if true, write failed for elements
+!! and the position of the element that failed
+      print *, 'failed for element', j1 
+!! set logical check = .true.
+      check = .true.
+    end if
+  end do
+  if (check) then
+!! write subroutine failed to output file
+    print *, 'subroutine krylov_cholesky failed'
+    write(unit=funit,fmt=*) 'subroutine krylov_cholesky failed'
+  else
+!! write subroutine succeeded to output file
+    print *, 'tested subroutine krylov_cholesky'
+    write(unit=funit,fmt=*) 'tested subroutine krylov_cholesky'
+  end if
+  print *, ''
 
 !!! tests of krylov_check
   check = .false.
