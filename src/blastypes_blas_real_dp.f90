@@ -331,7 +331,6 @@ contains
 !< of type(base)
 !< where obj1 is cholesky decomposed
 !< done by forward (and backward) substitution
-!< note dim(ipiv) = min(m,n)
 !--------------------------------------------------------------------
 !
 !--------------------------------------------------------------------
