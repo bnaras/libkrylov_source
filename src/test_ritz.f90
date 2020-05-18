@@ -740,7 +740,7 @@ program test_ritz
   & ' with sqrt(integer values)'
   print *, 'input z_array8(rayleigh) is diagonal of integer values'
 !! call normalize subroutine
-  call krylov_a_ritz2(n,q,m,z_array8,z_array7,z_array3,&
+  call krylov_a_ritz(n,q,m,z_array8,z_array7,z_array3,&
   & r_vector1,r_vector2,z_vector1,z_array5,iverb,ierr)
 !! check ierr value to see whether routine terminated with an error
 !! test if ierr is not equal to 0
@@ -848,8 +848,11 @@ program test_ritz
   &' matrix of integer values'
   print *, 'input z_array3(overlap) is identity'
   print *, 'input r_vector1(diag_overlap) is all 1'
+  print *, 'input z_array7(cholesky) is diagonal',&
+  & ' with sqrt(integer values)'
+  print *, 'input z_array8(rayleigh) is diagonal of integer values'
 !! call normalize subroutine
-  call krylov_b_ritz(n,q,m,z_array2,z_array4,z_array6,z_array3,&
+  call krylov_b_ritz(n,q,m,z_array8,z_array7,z_array6,z_array3,&
   & r_vector1,z_vector1,z_array5,iverb,ierr)
 !! check ierr value to see whether routine terminated with an error
 !! test if ierr is not equal to 0
@@ -924,9 +927,9 @@ program test_ritz
   check = .false.
 !! setting unique input
   x1 = real(-5,kind=kind_float)
-  z_array4 = real(0,kind=kind_float)
+  z_array8 = real(0,kind=kind_float)
   do j1 = 1, q
-    z_array4(j1,j1) = real(j1+x1(1),kind=kind_float)
+    z_array8(j1,j1) = real(j1+x1(1),kind=kind_float)
   end do
 !! zeroing output
   z_vector1 = real(0,kind=kind_float)
@@ -942,8 +945,11 @@ program test_ritz
   print *, 'input z_array3(overlap) is identity'
   print *, 'input r_vector1(diag_overlap) is all 1'
   print *, 'input x1(omega) is -5'
+  print *, 'input z_array7(cholesky) is diagonal',&
+  & ' with sqrt(integer values)'
+  print *, 'input z_array8(rayleigh) is diagonal of integer values'
 !! call normalize subroutine
-  call krylov_c_ritz(n,q,1,m,m,z_array2,z_array4,z_array6,z_array3,&
+  call krylov_c_ritz(n,q,1,m,m,z_array8,z_array7,z_array6,z_array3,&
   & r_vector1,x1,z_vector1,z_array5,iverb,ierr)
 !! check ierr value to see whether routine terminated with an error
 !! test if ierr is not equal to 0
