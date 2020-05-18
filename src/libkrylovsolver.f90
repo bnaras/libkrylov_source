@@ -6062,10 +6062,12 @@ contains
     allocate(mvproduct(nbasis,maxsubspace)) !maximum
     allocate(rhs(nbasis,nrhs))
     allocate(proj_rhs(maxsubspace,nrhs)) !maximum
+    allocate(rayleigh(maxsubspace,maxsubspace)) !maximum
     allocate(lagrangian(nroots))
     allocate(solutions(maxsubspace,nroots)) !maximum
     allocate(full_solutions(nbasis,nroots))
     allocate(overlap(maxsubspace,maxsubspace)) !maximum
+    allocate(cholesky(maxsubspace,maxsubspace)) !maximum
     allocate(omega(nomega)) 
     allocate(diag_overlap(maxsubspace)) !maximum
     allocate(residuals(nbasis,nroots)) !maximum
@@ -6254,6 +6256,17 @@ contains
     do j = 1 , nstart
       diag_overlap(j) = overlap(j,j)
     end do
+    call krylov_cholesky(nsubspace,overlap(1:nsubspace,1:nsubspace),&
+  &    diag_overlap(1:nsubspace),& 
+  &    cholesky(1:nsubspace,1:nsubspace),iverb,ierr)
+    if (ierr.ne.0) then
+      if (iverb.ge.0) then
+        print *, 'initial overlap matrix failed cholesky decomposition' 
+        print *, 'error variable = ',ierr
+      end if
+      ierr = -45
+      return ! abort solver, return to call 
+    end if
 
 !! if restart from mvp is allowed, look for restart w files
 !! invert irestart to generate new basis vectors
@@ -6338,6 +6351,19 @@ contains
   &       mvproduct(1:nbasis,1:nsubspace),iverb,ierr)
         ierr = 0
       end if
+    end if
+
+    call krylov_rayleigh(nbasis,nsubspace,&
+  &     approx_spectra,mvproduct(1:nbasis,1:nsubspace),&
+  &     basis_vectors(1:nbasis,1:nsubspace),&
+  &     rayleigh(1:nsubspace,1:nsubspace),iverb,ierr)
+    if (ierr.ne.0) then
+      if (iverb.ge.0) then
+        print *, 'initial construction of rayleigh matrix failed' 
+        print *, 'error variable = ',ierr
+      end if
+      ierr = -45
+      return ! abort solver, return to call 
     end if
 
 !! if restart for rhs is allowed, look for restart r files
@@ -6603,21 +6629,19 @@ contains
         exit ! This exits subspace loop
       end if
 
-! call for diagonalization of copy of overlap matrix as a check
-      if (iverb.ge.3) then
-        call krylov_check(nsubspace,&
-  &       overlap(1:nsubspace,1:nsubspace),&
-  &       diag_overlap(1:nsubspace),iverb,ierr)
-        if (ierr.ne.0) then
-          if (iverb.ge.0) then
-            print *, 'new krylov subspace failed stability check'
-            print *, 'error variable = ',ierr
-            print *, 'using previous subspace solutions for print'
-          end if
-          nsubspace = prev_nsubspace
-          ierr = 0
-          exit ! This exits subspace loop
+! cholesky decomposition of matrix
+      call krylov_cholesky(nsubspace,overlap(1:nsubspace,1:nsubspace),&
+  &     diag_overlap(1:nsubspace),& 
+  &     cholesky(1:nsubspace,1:nsubspace),iverb,ierr)
+      if (ierr.ne.0) then
+        if (iverb.ge.0) then
+          print *, 'new krylov subspace failed stability check'
+          print *, 'error variable = ',ierr
+          print *, 'using previous subspace solutions for print'
         end if
+        nsubspace = prev_nsubspace
+        ierr = 0
+        exit ! This exits subspace loop
       end if
 
 ! print restart basis-vectors if required
@@ -6686,6 +6710,23 @@ contains
             ierr = 0
           end if
         end if
+      end if
+
+! expand rayleigh matrix
+      call krylov_expand(nbasis,nsubspace,&
+  &     nresiduals,prev_nsubspace,&
+  &     approx_spectra,mvproduct(1:nbasis,1:nsubspace),&
+  &     basis_vectors(1:nbasis,1:nsubspace),&
+  &     rayleigh(1:nsubspace,1:nsubspace),iverb,ierr)
+      if (ierr.ne.0) then
+        if (iverb.ge.0) then
+          print *, 'expanding rayleigh matrix failed'
+          print *, 'error variable = ',ierr
+          print *, 'using previous subspace solutions for print'
+        end if
+        ierr = 0
+        nsubspace = prev_nsubspace
+        exit ! This exits subspace loop
       end if
 
     end do ! krylov subspace loop ends
@@ -6783,10 +6824,12 @@ contains
     deallocate(approx_spectra)
     deallocate(rhs)
     deallocate(proj_rhs)
+    deallocate(rayleigh)
     deallocate(lagrangian)
     deallocate(solutions)
     deallocate(full_solutions)
     deallocate(overlap)
+    deallocate(cholesky)
     deallocate(omega)
     deallocate(diag_overlap)
     deallocate(residuals)
