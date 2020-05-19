@@ -790,6 +790,77 @@ contains
 !--------------------------------------------------------------------
 
 !--------------------------------------------------------------------
+  subroutine ggeqrf(m,n,obj1,ld1,tau,ierr)
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+!< Description:
+!< wrapper for
+!< BLAS solve type(base) linear problem 
+!< calculates optimized lwork
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Modules
+!--------------------------------------------------------------------
+    use basekinds
+    use floatformat
+    use basetypes
+!--------------------------------------------------------------------
+!
+    implicit none
+!
+!--------------------------------------------------------------------
+! Input Parameters
+!--------------------------------------------------------------------
+!! matrix problem in, QR factorization out
+    type(base), intent(inout) :: obj1(:,:)
+!! number of rows in obj1
+    integer(kind_integer), intent(in) :: m
+!! number of columns in obj1
+    integer(kind_integer), intent(in) :: n
+!! first dimension of obj1
+    integer(kind_integer), intent(in) :: ld1
+!--------------------------------------------------------------------
+! Output Parameters
+!--------------------------------------------------------------------
+!! rhs in, solutions out. note dim(tau) is min(n,m) 
+    type(base), intent(inout) :: tau(:)
+!--------------------------------------------------------------------
+! Error Parameter
+!--------------------------------------------------------------------
+    integer(kind_integer), intent(inout) :: ierr
+!--------------------------------------------------------------------
+!  Local Variables
+!--------------------------------------------------------------------
+!!  integer variable to store optimal WORK size
+    integer(kind_integer) :: lwork_val = 1
+!!  array for optimal lwork (work in first call of LAPACK)
+    real(kind_float) :: lworker
+!!  array for lwork
+    real(kind_float), allocatable :: lwork(:)
+!--------------------------------------------------------------------
+
+!! first call to LAPACK for optimal lwork
+    call dgeqrf(m,n,obj1(:,:)%element,ld1,tau(:)%element,&
+  &     lworker,-1,ierr)
+
+    if (ierr.ne.0) return
+
+    lwork_val = int(lworker,kind=kind_integer)
+!! allocate lwork
+    allocate(lwork(lwork_val))
+
+    call dgeqrf(m,n,obj1(:,:)%element,ld1,tau(:)%element,&
+  &     lwork,lwork_val,ierr) 
+
+    deallocate(lwork)
+
+!--------------------------------------------------------------------
+  end subroutine ggeqrf
+!--------------------------------------------------------------------
+
+!--------------------------------------------------------------------
 !--------------------------------------------------------------------
 end module blastypes
 !--------------------------------------------------------------------
