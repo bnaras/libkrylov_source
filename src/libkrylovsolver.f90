@@ -1669,6 +1669,7 @@ contains
     type(base), allocatable :: vxo(:,:)
     type(base), allocatable :: euc_sq(:)
     real(kind_float) :: res_temp
+    type(base) :: test_val
 !! integer for loops
     integer(kind_integer) :: j,k,l = 0
 !--------------------------------------------------------------------
@@ -1710,6 +1711,19 @@ contains
 !!!!   &   vxo,nbasis)
 !! make residuals = avx-vxo
     all_residuals = all_residuals - vxo
+
+    print *, 'nroots', nroots
+    print *, 'nsubspace', nsubspace
+
+    do j = 1, nroots
+      do k = 1, nsubspace
+        call gdot(nbasis,basis_vectors(1:nbasis,k),1,&
+  &       all_residuals(1:nbasis,j),1,test_val,ierr)
+        print *, 'inner product of raw residual: ', j
+        print *, ' and basis vector: ',k
+        print *, test_val
+      end do
+    end do
 
 !! get inner product of residual with itself
     do j = 1, nroots
@@ -2679,11 +2693,11 @@ contains
             print *, ' and residual: ',k
             print *, overlap(k+nsubspace,j+nsubspace)
           end if
-!!!           residuals(1:nbasis,j) = &
-!!!   &              residuals(1:nbasis,j) -&
-!!!   &              (residuals(1:nbasis,k)*&
-!!!   &              overlap(k+nsubspace,j+nsubspace)/&
-!!!   &              overlap(k+nsubspace,k+nsubspace))
+          residuals(1:nbasis,j) = &
+  &              residuals(1:nbasis,j) -&
+  &              (residuals(1:nbasis,k)*&
+  &              overlap(k+nsubspace,j+nsubspace)/&
+  &              overlap(k+nsubspace,k+nsubspace))
         end do
       end do
 
