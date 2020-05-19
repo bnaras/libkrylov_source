@@ -9,10 +9,9 @@ program problem_1
 !--------------------------------------------------------------------
 ! Description:
 !--------------------------------------------------------------------
-!< This program generates the problem matrix for driver_1a to be 
+!< This program generates the problem matrix for driver_1 to be 
 !< tested on. Compiling with the different floatformat_*.f90
 !< and basetypes_*.f90 gives the different matrix types
-!< uses fortran intrinsic function for random_number
 !--------------------------------------------------------------------
 !
 !--------------------------------------------------------------------
@@ -49,6 +48,8 @@ program problem_1
   character(len=32) :: lagr_string = ''
 ! character string for file name that contains the frequencies
   character(len=32) :: freqname_string = ''
+! string indicating which eigenvalue
+  character(len=32) :: eigenvalue_string = ''
 ! integers for the size of the problem
   integer(kind_integer) :: n = 500
   integer(kind_integer) :: m = 1
@@ -94,33 +95,38 @@ program problem_1
   print *, 'all allocations successful'
 
 !! creating the (I + B) matrix into obj1
-  obj1 = real(0,kind=kind_float)
   do k = 1, n
-    do j = 1, n
-      if ( j .eq. k ) then
-        obj1(j, k) = real(1,kind=kind_float)
-      else if (j .lt. k) then
-        obj1(j, k) = sin(real(j+ k,kind=kind_float))
-      else if (j .gt. k) then
-        obj1(j, k) = -(sin(real(j + k,kind=kind_float)))
-      end if
+    obj1(k, k) = real(1,kind=kind_float)
+  end do
+
+  do k = 1, n
+    do j = (k+1), n
+      obj1(j,k) = -(sin(real(j + k,kind=kind_float)))
+    end do
+  end do
+  
+  do k = 1, n
+    do j = 1, (k-1)
+      obj1(j,k) = sin(real(j + k,kind=kind_float))
     end do
   end do
 
 !! creating the (I - B) matrix into obj2
-  obj2 = real(0,kind=kind_float)
   do k = 1, n
-    do j = 1, n
-      if ( j .eq. k ) then
-        obj2(j, k) = real(1,kind=kind_float)
-      else if (j .gt. k) then
-        obj2(j, k) = sin(real(j + k,kind=kind_float))
-      else if (j .lt. k) then
-        obj2(j, k) = -(sin(real(j + k,kind=kind_float)))
-      end if
-    end do
+    obj2(k, k) = real(1,kind=kind_float)
   end do
 
+  do k = 1, n
+    do j = (k+1), n
+      obj2(j,k) = sin(real(j + k,kind=kind_float))
+    end do
+  end do
+  
+  do k = 1, n
+    do j = 1, (k-1)
+      obj2(j,k) = -(sin(real(j + k,kind=kind_float)))
+    end do
+  end do
 
 !! call ggetrf to invert obj1
   call ggetrf(n,n,obj1,n,ipiv,ierr)
@@ -153,12 +159,9 @@ program problem_1
     norm_real = norm_sq_base
     norm_real = sqrt(norm_real)
 ! normalize
-    obj2(1:n,k) = obj2(1:n,k)/norm_real
+!    obj2(1:n,k) = obj2(1:n,k)/norm_real
   end do
 
-  !do k = 1, n
-   ! print *, 'obj2', obj2(k,1:n)
-  !end do
 
 !! obj2 contains the eigenvectors, U matrix
 
@@ -185,17 +188,36 @@ program problem_1
     end do
   end do 
 
-
-  !do k = 1, n
-   ! print *, 'overlap', obj1(k,1:n)
-  !end do
-
   print *, 'transformation matrix okay'
 
 !! generate eigenvalues
-  do k = 1, n
-    diag(k) = real(k+k,kind=kind_float)
-  end do
+!  do k = 1, n
+!    diag(k) = real(k+k,kind=kind_float)
+!  end do
+
+
+!! ask for user input on preconditoner
+  print *, 'Please enter an option for type of eigenvalue'
+  print *, '"positive" for positive eigenvalues' 
+  print *, '"negative" for negative eigenvalues' 
+  print *, '"variable" for both positive and negative eigenvalues' 
+  read (*,*) eigenvalue_string
+  print *, eigenvalue_string,' eigenvalues entered'
+
+
+  if (eigenvalue_string.eq.'positive') then
+    do k = 1, n
+      diag(k) = abs(cos(real(k+k,kind=kind_float)))
+    end do
+  else if (eigenvalue_string.eq.'negative') then
+    do k = 1, n
+      diag(k) = -abs(cos(real(k+k,kind=kind_float)))
+    end do
+  else if (eigenvalue_string.eq.'variable') then
+    do k = 1, n
+      diag(k) = cos(real(k+k,kind=kind_float))
+    end do
+  end if
 
 !! set a1_string based on basetypes
   p1_string = trim(base_print_string)//'_1a'
@@ -226,10 +248,6 @@ program problem_1
 !! compute Ut*[D*U]
   call ggemm('c','n',n,n,n,one_kb,obj2,n,obj1,n,&
   &  zero_kb,krylov_a,n)
-
-  !do k = 1, n
-   ! print *, 'matrix A ', krylov_a(k,1:n)
-  !end do
 
   print *, 'matrix A generated'
 
