@@ -320,7 +320,7 @@ contains
 !--------------------------------------------------------------------
 
 !--------------------------------------------------------------------
-  subroutine gpotrs(trans1,n,m,obj1,ld1, &
+  subroutine gpotrs(trans1,m,n,obj1,ld1, &
   &   obj2,ld2,ierr)
 !--------------------------------------------------------------------
 !
@@ -350,9 +350,9 @@ contains
 !! eigenvectors or matrix to be transformed
     type(base), intent(inout) :: obj2(:,:)
 !! number of rows in obj1
-    integer(kind_integer), intent(in) :: n
-!! number of columns in obj2
     integer(kind_integer), intent(in) :: m
+!! number of columns in obj2
+    integer(kind_integer), intent(in) :: n
 !! first dimension of obj1
     integer(kind_integer), intent(in) :: ld1
 !! first dimension of obj2
@@ -375,7 +375,7 @@ contains
 !--------------------------------------------------------------------
 
 !--------------------------------------------------------------------
-  subroutine ggetrs(trans0,m,n,obj1,ld1,ipiv, &
+  subroutine ggetrs(trans1,m,n,obj1,ld1,ipiv, &
   &   obj2,ld2,ierr)
 !--------------------------------------------------------------------
 !
