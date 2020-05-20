@@ -150,7 +150,7 @@ contains
 ! Input/Output Parameters
 !--------------------------------------------------------------------
 !!    columns of vectors, on output
-    integer(kind_integer), intent(in) :: n3
+    integer(kind_integer), intent(inout) :: n3
 !!  vectors
     type(base), intent(inout) :: vectors(n1,n2)
 !--------------------------------------------------------------------
@@ -163,6 +163,7 @@ contains
 !--------------------------------------------------------------------
     type(base), allocatable :: tau(:)
     type(base), allocatable :: magnitude(:)
+    real(kind_float) :: test_val
     integer(kind_integer) :: j,k,l
 !--------------------------------------------------------------------
 
@@ -185,7 +186,8 @@ contains
     magnitude = real(0,kind=kind_float)
     do l = 1, n2
       do j = l, n2
-        if (vectors(l,j).gt.eps) then
+        test_val = vectors(l,j)
+        if (test_val.gt.eps) then
           magnitude(l) = magnitude(l) + vectors(l,j)
         end if
       end do
@@ -205,7 +207,8 @@ contains
 !! remove zero magnitude vectors, determine n3
     n3 = 0
     do l = 1, n2
-      if (magnitude(l).gt.eps) then
+      test_val = magnitude(l)
+      if (test_val.gt.eps) then
         n3 = n3 + 1
         vectors(1:n1,n3) = vectors(1:n1,l)*magnitude(l)
       end if   
