@@ -53,9 +53,7 @@ contains
 !--------------------------------------------------------------------
 
 !--------------------------------------------------------------------
-!--------------------------------------------------------------------
   subroutine krylov_normalize(n1,n2,vectors,ierr)
-!--------------------------------------------------------------------
 !--------------------------------------------------------------------
 !
 !--------------------------------------------------------------------
@@ -103,18 +101,121 @@ contains
     integer(kind_integer) :: j
 !--------------------------------------------------------------------
 
-   do j = 1, n2
-     call gdot(n1,vectors(1:n1,j),1,vectors(1:n1,j), &
+    do j = 1, n2
+      call gdot(n1,vectors(1:n1,j),1,vectors(1:n1,j), &
   &       1,norm_sq_base,ierr)
-     if (ierr.ne.0) return
-     norm_real = norm_sq_base
-     norm_real = sqrt(norm_real)
+      if (ierr.ne.0) return
+      norm_real = norm_sq_base
+      norm_real = sqrt(norm_real)
 ! normalize
-     vectors(1:n1,j) = vectors(1:n1,j)/norm_real
-   end do
+      vectors(1:n1,j) = vectors(1:n1,j)/norm_real
+    end do
 
 !--------------------------------------------------------------------
   end subroutine krylov_normalize
+!--------------------------------------------------------------------
+
+!--------------------------------------------------------------------
+  subroutine krylov_orthogonalize(n1,n2,vectors,n3,iverb,ierr)
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Description:
+!--------------------------------------------------------------------
+!! subroutine for orthogonalizing vectors
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Modules and Global Variables
+!--------------------------------------------------------------------
+! for kind_integer and other precision related parameters
+    use basekinds
+! define real(kind_float) and associated operations
+    use floatformat
+! define type(base) and associated operations
+    use basetypes
+    use blastypes
+!--------------------------------------------------------------------
+!
+    implicit none
+!
+!--------------------------------------------------------------------
+! Input Parameters
+!--------------------------------------------------------------------
+!!    rows of vectors, nbasis
+    integer(kind_integer), intent(in) :: n1
+!!    columns of vectors, must be less than n1 on input
+    integer(kind_integer), intent(in) :: n2
+!--------------------------------------------------------------------
+! Input/Output Parameters
+!--------------------------------------------------------------------
+!!    columns of vectors, on output
+    integer(kind_integer), intent(in) :: n3
+!!  vectors
+    type(base), intent(inout) :: vectors(n1,n2)
+!--------------------------------------------------------------------
+! Error Parameter
+!--------------------------------------------------------------------
+    integer(kind_integer), intent(inout) :: iverb
+    integer(kind_integer), intent(inout) :: ierr
+!--------------------------------------------------------------------
+!  Local Variables
+!--------------------------------------------------------------------
+    type(base), allocatable :: tau(:)
+    type(base), allocatable :: magnitude(:)
+    integer(kind_integer) :: j,k,l
+!--------------------------------------------------------------------
+
+!! allocate tau
+    allocate(tau(n2))
+    allocate(magnitude(n2))
+
+!! do QR decomposition
+    call ggeqrf(n1,n2,vectors,n1,tau,ierr)
+    if (ierr.ne.0) then
+      if (iverb.ge.0) then
+        print *, '*geqrf linear algebra error!', ierr
+        print *, 'vectors cannot be QR decomposed'
+      end if
+      ierr = -30
+      return ! return to solver loop
+    end if
+
+!! save sum of R, leaving out small values
+    magnitude = real(0,kind=kind_float)
+    do l = 1, n2
+      do j = l, n2
+        if (vectors(l,j).gt.eps) then
+          magnitude(l) = magnitude(l) + vectors(l,j)
+        end if
+      end do
+    end do
+
+!! generate q
+    call gungqr(n1,n2,n2,vectors,n1,tau,ierr)
+    if (ierr.ne.0) then
+      if (iverb.ge.0) then
+        print *, '*ungqr/*orgqr linear algebra error!', ierr
+        print *, 'Q of QR cannot be obtained'
+      end if
+      ierr = -30
+      return ! return to solver loop
+    end if
+
+!! remove zero magnitude vectors, determine n3
+    n3 = 0
+    do l = 1, n2
+      if (magnitude(l).gt.eps) then
+        n3 = n3 + 1
+        vectors(1:n1,n3) = vectors(1:n1,l)*magnitude(l)
+      end if   
+    end do
+
+    deallocate(tau)
+    deallocate(magnitude)
+
+!--------------------------------------------------------------------
+  end subroutine krylov_orthogonalize
 !--------------------------------------------------------------------
 
 !--------------------------------------------------------------------
