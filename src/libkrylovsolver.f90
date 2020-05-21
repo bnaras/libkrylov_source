@@ -161,18 +161,31 @@ contains
 !--------------------------------------------------------------------
 !  Local Variables
 !--------------------------------------------------------------------
+    type(base) :: one_kb
+    type(base) :: zero_kb
+    type(base), allocatable :: q(:,:)
     type(base), allocatable :: tau(:)
-    type(base), allocatable :: magnitude(:)
+    type(base), allocatable :: r(:,:)
+    real(kind_float), allocatable :: s(:)
+    type(base), allocatable :: u(:,:)
+    type(base), allocatable :: vt(:,:)
     real(kind_float) :: test_val
     integer(kind_integer) :: j,k,l
 !--------------------------------------------------------------------
 
 !! allocate tau
     allocate(tau(n2))
-    allocate(magnitude(n2))
+    allocate(q(n1,n2))
+    allocate(r(n2,n2))
+    allocate(u(n2,n2))
+    allocate(vt(n2,n2))
+    allocate(s(n2))
+
+!! assign original vectors to q
+    q = vectors
 
 !! do QR decomposition
-    call ggeqrf(n1,n2,vectors,n1,tau,ierr)
+    call ggeqrf(n1,n2,q,n1,tau,ierr)
     if (ierr.ne.0) then
       if (iverb.ge.0) then
         print *, '*geqrf linear algebra error!', ierr
@@ -182,20 +195,41 @@ contains
       return ! return to solver loop
     end if
 
-!! THIS DOES NOT WORK
-!! save sum of R, leaving out small values
-    magnitude = real(0,kind=kind_float)
-    do l = 1, n2
-      do j = l, n2
-        test_val = vectors(l,j)
-        if (test_val.gt.eps) then
-          magnitude(l) = magnitude(l) + vectors(l,j)
-        end if
+!! save R from decomposition, do SVD
+    r = real(0,kind=kind_float)
+    do k = 1, n2
+      do j = 1, k
+        r(j,k) = q(j,k)
       end do
     end do
 
+    call ggesvd('s','s',n2,n2,r,n2,s,u,n2,vt,n2,ierr)
+    if (ierr.ne.0) then
+      if (iverb.ge.0) then
+        print *, '*gesvd linear algebra error!', ierr
+        print *, 'R from QR cannot be SVD decomposed'
+      end if
+      ierr = -30
+      return ! return to solver loop
+    end if
+
+!! use Singular values to determine number of independent vectors
+    n3 = n2
+    do k = n2, 1, -1 
+      if (s(k).gt.eps) exit
+      n3 = n3 - 1
+    end do
+
+    if (iverb.ge.4) then
+      print *, 'SVD of vectors (with QR decomposition)'
+      print *, ' gives the following Singular values'
+      do k = 1, n2
+        print *, k,' singular value:',s(k)
+      end do
+    end if
+
 !! generate q
-    call gungqr(n1,n2,n2,vectors,n1,tau,ierr)
+    call gungqr(n1,n2,n2,q,n1,tau,ierr)
     if (ierr.ne.0) then
       if (iverb.ge.0) then
         print *, '*ungqr/*orgqr linear algebra error!', ierr
@@ -205,18 +239,29 @@ contains
       return ! return to solver loop
     end if
 
-!! remove zero magnitude vectors, determine n3
-    n3 = 0
-    do l = 1, n2
-      test_val = magnitude(l)
-      if (test_val.gt.eps) then
-        n3 = n3 + 1
-        vectors(1:n1,n3) = vectors(1:n1,l)*magnitude(l)
-      end if   
+!! determine vectors with norm 1
+!! Set constants required for BLAS
+    one_kb = real(1,kind=kind_float)
+    zero_kb = real(0,kind=kind_float)
+
+    call ggemm('n','n',n1,n3,n2,one_kb,&
+  &       q,n1,&
+  &       u(1:n2,1:n3),n2,&
+  &       zero_kb,&
+  &       vectors(1:n1,1:n3),&
+  &       n1)
+
+!! multiply best approximation of appropriate norms (s)
+    do k = 1, n3
+      vectors(1:n1,k) = vectors(1:n1,k)*s(k)
     end do
 
     deallocate(tau)
-    deallocate(magnitude)
+    deallocate(q)
+    deallocate(r)
+    deallocate(u)
+    deallocate(vt)
+    deallocate(s)
 
 !--------------------------------------------------------------------
   end subroutine krylov_orthogonalize

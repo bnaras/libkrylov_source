@@ -1021,6 +1021,96 @@ contains
 !--------------------------------------------------------------------
 
 !--------------------------------------------------------------------
+  subroutine ggesvd(jobu,jobvt,m,n,obj1,ld1,s,&
+  &         obj2,ld2,obj3,ld3,ierr)
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+!< Description:
+!< wrapper for
+!< BLAS solve for Q of QR decomposition
+!< calculates optimized lwork
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Modules
+!--------------------------------------------------------------------
+    use basekinds
+    use floatformat
+    use basetypes
+!--------------------------------------------------------------------
+!
+    implicit none
+!
+!--------------------------------------------------------------------
+! Input Parameters
+!--------------------------------------------------------------------
+!! number of rows in obj1
+    integer(kind_integer), intent(in) :: m
+!! number of columns in obj1
+    integer(kind_integer), intent(in) :: n
+!! first dimension of obj1
+    integer(kind_integer), intent(in) :: ld1
+!! first dimension of obj2
+    integer(kind_integer), intent(in) :: ld2
+!! first dimension of obj3
+    integer(kind_integer), intent(in) :: ld3
+!! determine where U is on output
+    character(len=1), intent(in) :: jobu
+!! determine where V transpose is on output
+    character(len=1), intent(in) :: jobvt
+!--------------------------------------------------------------------
+! Input/Output Parameters
+!--------------------------------------------------------------------
+!! Input matrix here, desired output here
+    type(base), intent(inout) :: obj1(:,:)
+!--------------------------------------------------------------------
+! Output Parameters
+!--------------------------------------------------------------------
+!! Output singular values, sorted largest to small
+!! Dimension min(m,n)
+    real(kind_float), intent(inout) :: s(:)
+!! matrix U
+    type(base), intent(inout) :: obj2(:,:)
+!! matrix VT
+    type(base), intent(inout) :: obj3(:,:)
+!--------------------------------------------------------------------
+! Error Parameter
+!--------------------------------------------------------------------
+    integer(kind_integer), intent(inout) :: ierr
+!--------------------------------------------------------------------
+!  Local Variables
+!--------------------------------------------------------------------
+!!  integer variable to store optimal WORK size
+    integer(kind_integer) :: lwork_val = 1
+!!  array for optimal lwork (work in first call of LAPACK)
+    real(kind_float) :: lworker
+!!  array for lwork
+    real(kind_float), allocatable :: lwork(:)
+!--------------------------------------------------------------------
+
+!! first call to LAPACK for optimal lwork
+    call dgesvd(jobu,jobvt,m,n,obj1(:,:)%element,ld1,s(:),&
+  &     obj2(:,:)%element,ld2,obj3(:,:)%element,ld3,&
+  &     lworker,-1,ierr)
+
+    if (ierr.ne.0) return
+
+    lwork_val = int(lworker,kind=kind_integer)
+!! allocate lwork
+    allocate(lwork(lwork_val))
+
+    call dgesvd(jobu,jobvt,m,n,obj1(:,:)%element,ld1,s(:),&
+  &     obj2(:,:)%element,ld2,obj3(:,:)%element,ld3,&
+  &     lwork,lwork_val,ierr) 
+
+    deallocate(lwork)
+
+!--------------------------------------------------------------------
+  end subroutine ggesvd
+!--------------------------------------------------------------------
+
+!--------------------------------------------------------------------
 !--------------------------------------------------------------------
 end module blastypes
 !--------------------------------------------------------------------
