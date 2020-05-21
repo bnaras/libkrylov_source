@@ -182,6 +182,7 @@ contains
       return ! return to solver loop
     end if
 
+!! THIS DOES NOT WORK
 !! save sum of R, leaving out small values
     magnitude = real(0,kind=kind_float)
     do l = 1, n2
@@ -1816,18 +1817,22 @@ contains
 !! make residuals = avx-vxo
     all_residuals = all_residuals - vxo
 
-    print *, 'nroots', nroots
-    print *, 'nsubspace', nsubspace
-
-    do j = 1, nroots
-      do k = 1, nsubspace
-        call gdot(nbasis,basis_vectors(1:nbasis,k),1,&
-  &       all_residuals(1:nbasis,j),1,test_val,ierr)
-        print *, 'inner product of raw residual: ', j
-        print *, ' and basis vector: ',k
-        print *, test_val
+    if (iverb .ge. 5) then
+      print *, 'number of roots solved for', nroots
+      print *, 'size of subspace', nsubspace
+      print *, 'printing overlap between raw residuals '
+      print *, ' and present subspace'
+  
+      do j = 1, nroots
+        do k = 1, nsubspace
+          call gdot(nbasis,basis_vectors(1:nbasis,k),1,&
+    &       all_residuals(1:nbasis,j),1,test_val,ierr)
+          print *, 'inner product of raw residual: ', j
+          print *, ' and basis vector: ',k
+          print *, test_val
+        end do
       end do
-    end do
+    end if
 
 !! get inner product of residual with itself
     do j = 1, nroots
@@ -2609,6 +2614,7 @@ contains
     if (iverb.ge.1) then
       print *, ''
       print *, 'convergence criteria: 10^(-',threshold,')'
+      print *, 'number of desired solutions:  ',nroots
       print *, 'initial subspace:  ',nstart
       print *, 'full vector space: ',nbasis
       print *, 'maximum number of iterations: ',maxiter
@@ -2783,27 +2789,42 @@ contains
 !  &         diag_overlap(j+nsubspace)
 !      end do
 
-!! orthogonalizing residuals
-      do j = 2, nresiduals
-        do k = 1, j-1
-          call gdot(nbasis,residuals(1:nbasis,k),1,&
-  &             residuals(1:nbasis,k),1,&
-  &             overlap(k+nsubspace,k+nsubspace),ierr)
-          call gdot(nbasis,residuals(1:nbasis,j),1,&
-  &             residuals(1:nbasis,k),1,&
-  &             overlap(k+nsubspace,j+nsubspace),ierr)
-          if (iverb.ge.4) then
-            print *, 'inner product of residual: ', j
-            print *, ' and residual: ',k
-            print *, overlap(k+nsubspace,j+nsubspace)
-          end if
-          residuals(1:nbasis,j) = &
-  &              residuals(1:nbasis,j) -&
-  &              (residuals(1:nbasis,k)*&
-  &              overlap(k+nsubspace,j+nsubspace)/&
-  &              overlap(k+nsubspace,k+nsubspace))
-        end do
-      end do
+!!! !! orthogonalizing residuals - MGS
+!!!       do j = 2, nresiduals
+!!!         do k = 1, j-1
+!!!           call gdot(nbasis,residuals(1:nbasis,k),1,&
+!!!   &             residuals(1:nbasis,k),1,&
+!!!   &             overlap(k+nsubspace,k+nsubspace),ierr)
+!!!           call gdot(nbasis,residuals(1:nbasis,j),1,&
+!!!   &             residuals(1:nbasis,k),1,&
+!!!   &             overlap(k+nsubspace,j+nsubspace),ierr)
+!!!           if (iverb.ge.4) then
+!!!             print *, 'inner product of residual: ', j
+!!!             print *, ' and residual: ',k
+!!!             print *, overlap(k+nsubspace,j+nsubspace)
+!!!           end if
+!!!           residuals(1:nbasis,j) = &
+!!!   &              residuals(1:nbasis,j) -&
+!!!   &              (residuals(1:nbasis,k)*&
+!!!   &              overlap(k+nsubspace,j+nsubspace)/&
+!!!   &              overlap(k+nsubspace,k+nsubspace))
+!!!         end do
+!!!       end do
+
+!! orthogonalization via QR, have k hold nresiduals as input
+      k = nresiduals
+      call krylov_orthogonalize(nbasis,k,residuals(1:nbasis,1:k),&
+  &       nresiduals,iverb,ierr)
+      if (ierr.ne.0) then
+        if (iverb.ge.0) then
+          print *, 'optimizing new basis vectors failed'
+          print *, 'error variable = ',ierr
+          print *, 'using previous subspace solutions for print'
+        end if
+        nsubspace = prev_nsubspace
+        ierr = 0
+        exit ! This exits subspace loop
+      end if
 
 !!! !! test orthonalization all residuals
 !!!       print *, 'post orthogonalization norms'
