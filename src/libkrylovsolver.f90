@@ -226,6 +226,7 @@ contains
       do k = 1, n2
         print *, k,' singular value:',s(k)
       end do
+      print *, 'number of unique vectors:',n3
     end if
 
 !! generate q
@@ -2871,24 +2872,13 @@ contains
         exit ! This exits subspace loop
       end if
 
-!!! !! test orthonalization all residuals
-!!!       print *, 'post orthogonalization norms'
-!!!       do j = 1, nresiduals
-!!!         call gdot(nbasis,residuals(1:nbasis,j),1,&
-!!!   &             residuals(1:nbasis,j),1,&
-!!!   &             overlap(j+nsubspace,j+nsubspace),ierr)
-!!!         diag_overlap(j+nsubspace) = overlap(j+nsubspace,j+nsubspace)
-!!!         diag_overlap(j+nsubspace) = sqrt(diag_overlap(j+nsubspace))
-!!!         print *, 'o norms',j,diag_overlap(j+nsubspace)
-!!!       end do
-
-!! project residuals out of subspace
-      call krylov_project(nbasis,nsubspace,nroots,&
-  &     diag_overlap(1:nsubspace),&
-  &     basis_vectors(1:nbasis,1:nsubspace),&
-  &     cholesky(1:nsubspace,1:nsubspace),&
-  &     residuals(1:nbasis,1:nroots),&
-  &     iverb,ierr)
+!!! !! project residuals out of subspace
+!!!       call krylov_project(nbasis,nsubspace,nroots,&
+!!!   &     diag_overlap(1:nsubspace),&
+!!!   &     basis_vectors(1:nbasis,1:nsubspace),&
+!!!   &     cholesky(1:nsubspace,1:nsubspace),&
+!!!   &     residuals(1:nbasis,1:nroots),&
+!!!   &     iverb,ierr)
 
 !! test results of projection all residuals
       print *, 'post projection norms'
