@@ -198,22 +198,32 @@ program problem_1
 
 !! ask for user input on preconditoner
   print *, 'Please enter an option for type of eigenvalue'
-  print *, '"positive" for positive eigenvalues' 
-  print *, '"negative" for negative eigenvalues' 
-  print *, '"variable" for both positive and negative eigenvalues' 
+  print *, '"positive_cosine" for positive cosine eigenvalues' 
+  print *, '"positive_even" for positive even eigenvalues' 
+  print *, '"negative_cosine" for negative cosine eigenvalues' 
+  print *, '"negative_even" for negative even eigenvalues' 
+  print *, '"variable_cosine" for both positive and negative cosine eigenvalues' 
   read (*,*) eigenvalue_string
   print *, eigenvalue_string,' eigenvalues entered'
 
 
-  if (eigenvalue_string.eq.'positive') then
+  if (eigenvalue_string.eq.'positive_cosine') then
     do k = 1, n
       diag(k) = abs(cos(real(k+k,kind=kind_float)))
     end do
-  else if (eigenvalue_string.eq.'negative') then
+  else if (eigenvalue_string.eq.'positive_even') then
+    do k = 1, n
+      diag(k) = real(k+k,kind=kind_float)
+    end do
+  else if (eigenvalue_string.eq.'negative_cosine') then
     do k = 1, n
       diag(k) = -abs(cos(real(k+k,kind=kind_float)))
     end do
-  else if (eigenvalue_string.eq.'variable') then
+  else if (eigenvalue_string.eq.'negative_even') then
+    do k = 1, n
+      diag(k) = -(real(k+k,kind=kind_float))
+    end do
+  else if (eigenvalue_string.eq.'variable_cosine') then
     do k = 1, n
       diag(k) = cos(real(k+k,kind=kind_float))
     end do
