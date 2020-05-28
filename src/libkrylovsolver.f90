@@ -116,6 +116,125 @@ contains
 !--------------------------------------------------------------------
 
 !--------------------------------------------------------------------
+  subroutine krylov_orthogonalize_mgs(n1,n2,vectors,n3,iverb,ierr)
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Description:
+!--------------------------------------------------------------------
+!! subroutine for orthogonalizing vectors
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Modules and Global Variables
+!--------------------------------------------------------------------
+! for kind_integer and other precision related parameters
+    use basekinds
+! define real(kind_float) and associated operations
+    use floatformat
+! define type(base) and associated operations
+    use basetypes
+    use blastypes
+!--------------------------------------------------------------------
+!
+    implicit none
+!
+!--------------------------------------------------------------------
+! Input Parameters
+!--------------------------------------------------------------------
+!!    rows of vectors, nbasis
+    integer(kind_integer), intent(in) :: n1
+!!    columns of vectors, must be less than n1 on input
+    integer(kind_integer), intent(in) :: n2
+!--------------------------------------------------------------------
+! Input/Output Parameters
+!--------------------------------------------------------------------
+!!    columns of vectors, on output
+    integer(kind_integer), intent(inout) :: n3
+!!  vectors
+    type(base), intent(inout) :: vectors(n1,n2)
+!--------------------------------------------------------------------
+! Error Parameter
+!--------------------------------------------------------------------
+    integer(kind_integer), intent(inout) :: iverb
+    integer(kind_integer), intent(inout) :: ierr
+!--------------------------------------------------------------------
+!  Local Variables
+!--------------------------------------------------------------------
+    type(base) :: knorm
+    real(kind_float), allocatable :: norm(:)
+    type(base) :: overlap
+    type(base) :: coefficient
+    real(kind_float) :: rnorm
+    integer(kind_integer) :: j,k,l
+!--------------------------------------------------------------------
+
+!! allocate tau
+    allocate(norm(n2))
+
+!! orthogonalizing residuals - MGS
+    do j = 2, n2
+      do k = 1, j-1
+        call gdot(n1,vectors(1:n1,k),1,&
+  &           vectors(1:n1,k),1,&
+  &           knorm,ierr)
+        call gdot(n1,vectors(1:n1,j),1,&
+  &           vectors(1:n1,k),1,&
+  &           overlap,ierr)
+        coefficient = overlap/knorm
+        rnorm = knorm
+        rnorm = sqrt(rnorm)
+        if (iverb.ge.4) then
+          print *, 'Modified Gram-Schmidt coefficient'
+          print *, ' for subtracting vector: ', k
+          print *, '  from  vector: ', j
+          print *, coefficient
+        end if
+        if (rnorm.lt.eps) then
+          print *, 'vector',k,' is too small'
+        else   
+          vectors(1:n1,j) = &
+  &            vectors(1:n1,j) -&
+  &            (vectors(1:n1,k)*&
+  &            coefficient)
+        end if
+      end do
+    end do
+
+    do k = 1, n2 
+      call gdot(n1,vectors(1:n1,k),1,&
+  &           vectors(1:n1,k),1,&
+  &           knorm,ierr)
+      norm(k) = knorm
+    end do
+    norm = sqrt(norm)
+
+!! use values to determine number of independent vectors
+    n3 = 0
+    do k = 1, n2 
+      if (log10(norm(k)).gt.(logeps+3)) then
+        n3 = n3 + 1
+        vectors(1:n1,n3) = vectors(1:n1,k) 
+      end if
+    end do
+
+    if (iverb.ge.4) then
+      print *, 'MGS orthogonalization of vectors'
+      print *, ' gives the following norms squared'
+      do k = 1, n2
+        print *, k,' value:',norm(k)
+      end do
+      print *, 'number of unique vectors:',n3
+    end if
+
+
+    deallocate(norm)
+
+!--------------------------------------------------------------------
+  end subroutine krylov_orthogonalize_mgs
+!--------------------------------------------------------------------
+
+!--------------------------------------------------------------------
   subroutine krylov_orthogonalize(n1,n2,vectors,n3,iverb,ierr)
 !--------------------------------------------------------------------
 !
@@ -216,7 +335,7 @@ contains
 !! use Singular values to determine number of independent vectors
     n3 = n2
     do k = n2, 1, -1 
-      if (s(k).gt.eps) exit
+      if (log10(s(k)).gt.(logeps+5)) exit
       n3 = n3 - 1
     end do
 
@@ -562,7 +681,7 @@ contains
       end if
     end do
 
-    if (iverb.ge.2) then
+    if (iverb.ge.6) then
       print *, 'Diagonals of the new overlap matrix:'
       do j = 1 , nsubspace
         print *, 'S of ',j,': ',diag_overlap(j)
@@ -952,174 +1071,174 @@ contains
   end subroutine krylov_cholesky
 !--------------------------------------------------------------------
 
-!--------------------------------------------------------------------
-  subroutine krylov_check(nsubspace,overlap,diag_overlap,iverb,ierr)
-!--------------------------------------------------------------------
-!
-!--------------------------------------------------------------------
-! Description:
-!--------------------------------------------------------------------
-!< This subroutine checks the stability of the subspace
-!< by finding eigenvalues of the scaled overlap matrix
-!< and doing a cholesky decomposition
-!--------------------------------------------------------------------
-!
-!--------------------------------------------------------------------
-! Modules and Global Variables
-!--------------------------------------------------------------------
-! for kind_integer and other precision related parameters
-    use basekinds
-! define real(kind_float) and associated operations
-    use floatformat
-! define type(base) and associated operations
-    use basetypes
-    use blastypes
-!--------------------------------------------------------------------
-! Implicit None statement
-!--------------------------------------------------------------------
-    implicit none
-!--------------------------------------------------------------------
-! Input Variables
-!--------------------------------------------------------------------
-! Comments in the solver subroutine below
-    integer(kind_integer), intent(in) :: nsubspace ! new subspace!
-    type(base), intent(in) :: overlap(nsubspace,nsubspace)
-    real(kind_float), intent(in) :: diag_overlap(nsubspace)
-!--------------------------------------------------------------------
-! Error Variables
-!--------------------------------------------------------------------
-    integer(kind_integer), intent(inout) :: iverb
-    integer(kind_integer), intent(inout) :: ierr
-!--------------------------------------------------------------------
-! Local Variables
-!--------------------------------------------------------------------
-!! integer for loops
-    integer(kind_integer) :: j, k = 0
-!! decomposition new of overlap
-    type(base), allocatable :: ortho_overlap(:,:)
-    type(base), allocatable :: cholesky(:,:)
-!! sqrt of diagonal
-    real(kind_float), allocatable :: d_o_sqrt(:)
-!! roots of overlap matrix
-    real(kind_float), allocatable :: overlap_roots(:)
-    real(kind_float) :: onorm
-    real(kind_float) :: rcond
-!--------------------------------------------------------------------
-
-    allocate(ortho_overlap(nsubspace,nsubspace))
-    allocate(cholesky(nsubspace,nsubspace))
-    allocate(d_o_sqrt(nsubspace))
-    allocate(overlap_roots(nsubspace))
-
-!! assign d_o_sqrt
-    d_o_sqrt = sqrt(diag_overlap)
-!! assign scaled overlap to ortho_overlap for solving
-    do k = 1, nsubspace
-      do j = 1, nsubspace
-        if (j.eq.k) then
-          ortho_overlap(j,j) = overlap(j,j)/diag_overlap(j)
-          cholesky(j,j) = overlap(j,j)/diag_overlap(j)
-        else
-          ortho_overlap(j,k) = overlap(j,k)/(d_o_sqrt(j)*d_o_sqrt(k))
-          cholesky(j,k) = overlap(j,k)/(d_o_sqrt(j)*d_o_sqrt(k))
-        end if
-      end do
-    end do
-!    print *, 'significant overlap'
-!    do k = 1, nsubspace
-!      do j = 1, nsubspace
-!        onorm = overlap(j,k)
-!        if (onorm.gt.(real(10.0,kind=kind_float)**(-8))) then
-!          print *, j,k,overlap(j,k)
-!        end if
-!      end do
-!    end do
-!! Check condition of overlap matrix by diagonalizing
-    call gheev('v','l',nsubspace,ortho_overlap,nsubspace,&
-    &     overlap_roots,ierr)
-    if (ierr.ne.0) then
-      if (iverb.ge.0) then
-        print *, 'new overlap matrix cannot be solved after scaling.'
-        print *, '*heev ierr value = ', ierr
-      end if
-      ierr = -25
-      return ! return to solver loop
-    end if
-!! Print overlap matrix roots and check for small/negative values
-    if (iverb.ge.3) then
-      print *, 'eigenvalues of new scaled overlap matrix'
-    end if
-    do j = 1, nsubspace
-      if (iverb.ge.3) then
-        print *, 'eigenvalue ',j,' ',overlap_roots(j)
-      end if
-      if (overlap_roots(j).le.eps) then
-        if (iverb.ge.0) then
-          print *, 'new scaled overlap matrix is linearly dependent!'
-          print *, 'eigenvalue ',j,' is less than machine precision.'
-        end if
-        ierr = -30
-      end if
-    end do
-
-!! cholesky decomposition
-!! lower triangular is more precise due to above multiplication
-    call gpotrf('l',nsubspace,cholesky,nsubspace,ierr)
-    if (ierr.ne.0) then
-      if (iverb.ge.0) then
-        print *, '*potrf linear algebra error!', ierr
-        print *, 'new scaled overlap matrix could be unstable'
-      end if
-      ierr = -30
-      return ! return to solver loop
-    end if 
-!!! May be the cholesky matrix can be printed. 
-
-!! Condition number calculation and check
-!! one norm calculation on onorm
-    call glanhe('1','l',nsubspace,cholesky,nsubspace,onorm,ierr)
-    if (ierr.ne.0) then
-      if (iverb.ge.0) then
-        print *, '*lanhe/*lansy linear algebra error!', ierr
-        print *, 'this error should be impossible with BLAS'
-        print *, 'new scaled overlap matrix is unstable'
-      end if
-      ierr = -25
-      return ! return to solver loop
-    end if 
-    if (iverb.ge.2) then
-      print *, 'one norm of new scaled overlap matrix: ',onorm
-    end if
-!! reciprocal of condition number on rcond
-    call gpocon('l',nsubspace,cholesky,nsubspace,onorm,rcond,ierr)
-    if (ierr.ne.0) then
-      if (iverb.ge.0) then
-        print *, '*pocon linear algebra error!', ierr
-        print *, 'new scaled overlap matrix could be unstable'
-      end if
-      ierr = -30
-      return ! return to solver loop
-    end if 
-    if (iverb.ge.2) then
-      print *, 'Reciprocal of scaled overlap matrix'
-      print *, ' condition number: ',rcond
-    end if
-!! check condition number
-!    if (log10(rcond).lt.(logeps)) then
-!      if (iverb.ge.0) then
-!        print *, 'new scaled overlap is ill-conditioned'
-!      end if
-!      ierr = -30
-!      return ! return to solver loop
-!    end if
-
-    deallocate(ortho_overlap)
-    deallocate(d_o_sqrt)
-    deallocate(overlap_roots)
-
-!--------------------------------------------------------------------
-  end subroutine krylov_check
-!--------------------------------------------------------------------
+!!!!! !--------------------------------------------------------------------
+!!!!!   subroutine krylov_check(nsubspace,overlap,diag_overlap,iverb,ierr)
+!!!!! !--------------------------------------------------------------------
+!!!!! !
+!!!!! !--------------------------------------------------------------------
+!!!!! ! Description:
+!!!!! !--------------------------------------------------------------------
+!!!!! !< This subroutine checks the stability of the subspace
+!!!!! !< by finding eigenvalues of the scaled overlap matrix
+!!!!! !< and doing a cholesky decomposition
+!!!!! !--------------------------------------------------------------------
+!!!!! !
+!!!!! !--------------------------------------------------------------------
+!!!!! ! Modules and Global Variables
+!!!!! !--------------------------------------------------------------------
+!!!!! ! for kind_integer and other precision related parameters
+!!!!!     use basekinds
+!!!!! ! define real(kind_float) and associated operations
+!!!!!     use floatformat
+!!!!! ! define type(base) and associated operations
+!!!!!     use basetypes
+!!!!!     use blastypes
+!!!!! !--------------------------------------------------------------------
+!!!!! ! Implicit None statement
+!!!!! !--------------------------------------------------------------------
+!!!!!     implicit none
+!!!!! !--------------------------------------------------------------------
+!!!!! ! Input Variables
+!!!!! !--------------------------------------------------------------------
+!!!!! ! Comments in the solver subroutine below
+!!!!!     integer(kind_integer), intent(in) :: nsubspace ! new subspace!
+!!!!!     type(base), intent(in) :: overlap(nsubspace,nsubspace)
+!!!!!     real(kind_float), intent(in) :: diag_overlap(nsubspace)
+!!!!! !--------------------------------------------------------------------
+!!!!! ! Error Variables
+!!!!! !--------------------------------------------------------------------
+!!!!!     integer(kind_integer), intent(inout) :: iverb
+!!!!!     integer(kind_integer), intent(inout) :: ierr
+!!!!! !--------------------------------------------------------------------
+!!!!! ! Local Variables
+!!!!! !--------------------------------------------------------------------
+!!!!! !! integer for loops
+!!!!!     integer(kind_integer) :: j, k = 0
+!!!!! !! decomposition new of overlap
+!!!!!     type(base), allocatable :: ortho_overlap(:,:)
+!!!!!     type(base), allocatable :: cholesky(:,:)
+!!!!! !! sqrt of diagonal
+!!!!!     real(kind_float), allocatable :: d_o_sqrt(:)
+!!!!! !! roots of overlap matrix
+!!!!!     real(kind_float), allocatable :: overlap_roots(:)
+!!!!!     real(kind_float) :: onorm
+!!!!!     real(kind_float) :: rcond
+!!!!! !--------------------------------------------------------------------
+!!!!! 
+!!!!!     allocate(ortho_overlap(nsubspace,nsubspace))
+!!!!!     allocate(cholesky(nsubspace,nsubspace))
+!!!!!     allocate(d_o_sqrt(nsubspace))
+!!!!!     allocate(overlap_roots(nsubspace))
+!!!!! 
+!!!!! !! assign d_o_sqrt
+!!!!!     d_o_sqrt = sqrt(diag_overlap)
+!!!!! !! assign scaled overlap to ortho_overlap for solving
+!!!!!     do k = 1, nsubspace
+!!!!!       do j = 1, nsubspace
+!!!!!         if (j.eq.k) then
+!!!!!           ortho_overlap(j,j) = overlap(j,j)/diag_overlap(j)
+!!!!!           cholesky(j,j) = overlap(j,j)/diag_overlap(j)
+!!!!!         else
+!!!!!           ortho_overlap(j,k) = overlap(j,k)/(d_o_sqrt(j)*d_o_sqrt(k))
+!!!!!           cholesky(j,k) = overlap(j,k)/(d_o_sqrt(j)*d_o_sqrt(k))
+!!!!!         end if
+!!!!!       end do
+!!!!!     end do
+!!!!! !    print *, 'significant overlap'
+!!!!! !    do k = 1, nsubspace
+!!!!! !      do j = 1, nsubspace
+!!!!! !        onorm = overlap(j,k)
+!!!!! !        if (onorm.gt.(real(10.0,kind=kind_float)**(-8))) then
+!!!!! !          print *, j,k,overlap(j,k)
+!!!!! !        end if
+!!!!! !      end do
+!!!!! !    end do
+!!!!! !! Check condition of overlap matrix by diagonalizing
+!!!!!     call gheev('v','l',nsubspace,ortho_overlap,nsubspace,&
+!!!!!     &     overlap_roots,ierr)
+!!!!!     if (ierr.ne.0) then
+!!!!!       if (iverb.ge.0) then
+!!!!!         print *, 'new overlap matrix cannot be solved after scaling.'
+!!!!!         print *, '*heev ierr value = ', ierr
+!!!!!       end if
+!!!!!       ierr = -25
+!!!!!       return ! return to solver loop
+!!!!!     end if
+!!!!! !! Print overlap matrix roots and check for small/negative values
+!!!!!     if (iverb.ge.3) then
+!!!!!       print *, 'eigenvalues of new scaled overlap matrix'
+!!!!!     end if
+!!!!!     do j = 1, nsubspace
+!!!!!       if (iverb.ge.3) then
+!!!!!         print *, 'eigenvalue ',j,' ',overlap_roots(j)
+!!!!!       end if
+!!!!!       if (overlap_roots(j).le.eps) then
+!!!!!         if (iverb.ge.0) then
+!!!!!           print *, 'new scaled overlap matrix is linearly dependent!'
+!!!!!           print *, 'eigenvalue ',j,' is less than machine precision.'
+!!!!!         end if
+!!!!!         ierr = -30
+!!!!!       end if
+!!!!!     end do
+!!!!! 
+!!!!! !! cholesky decomposition
+!!!!! !! lower triangular is more precise due to above multiplication
+!!!!!     call gpotrf('l',nsubspace,cholesky,nsubspace,ierr)
+!!!!!     if (ierr.ne.0) then
+!!!!!       if (iverb.ge.0) then
+!!!!!         print *, '*potrf linear algebra error!', ierr
+!!!!!         print *, 'new scaled overlap matrix could be unstable'
+!!!!!       end if
+!!!!!       ierr = -30
+!!!!!       return ! return to solver loop
+!!!!!     end if 
+!!!!! !!! May be the cholesky matrix can be printed. 
+!!!!! 
+!!!!! !! Condition number calculation and check
+!!!!! !! one norm calculation on onorm
+!!!!!     call glanhe('1','l',nsubspace,cholesky,nsubspace,onorm,ierr)
+!!!!!     if (ierr.ne.0) then
+!!!!!       if (iverb.ge.0) then
+!!!!!         print *, '*lanhe/*lansy linear algebra error!', ierr
+!!!!!         print *, 'this error should be impossible with BLAS'
+!!!!!         print *, 'new scaled overlap matrix is unstable'
+!!!!!       end if
+!!!!!       ierr = -25
+!!!!!       return ! return to solver loop
+!!!!!     end if 
+!!!!!     if (iverb.ge.2) then
+!!!!!       print *, 'one norm of new scaled overlap matrix: ',onorm
+!!!!!     end if
+!!!!! !! reciprocal of condition number on rcond
+!!!!!     call gpocon('l',nsubspace,cholesky,nsubspace,onorm,rcond,ierr)
+!!!!!     if (ierr.ne.0) then
+!!!!!       if (iverb.ge.0) then
+!!!!!         print *, '*pocon linear algebra error!', ierr
+!!!!!         print *, 'new scaled overlap matrix could be unstable'
+!!!!!       end if
+!!!!!       ierr = -30
+!!!!!       return ! return to solver loop
+!!!!!     end if 
+!!!!!     if (iverb.ge.2) then
+!!!!!       print *, 'Reciprocal of scaled overlap matrix'
+!!!!!       print *, ' condition number: ',rcond
+!!!!!     end if
+!!!!! !! check condition number
+!!!!! !    if (log10(rcond).lt.(logeps)) then
+!!!!! !      if (iverb.ge.0) then
+!!!!! !        print *, 'new scaled overlap is ill-conditioned'
+!!!!! !      end if
+!!!!! !      ierr = -30
+!!!!! !      return ! return to solver loop
+!!!!! !    end if
+!!!!! 
+!!!!!     deallocate(ortho_overlap)
+!!!!!     deallocate(d_o_sqrt)
+!!!!!     deallocate(overlap_roots)
+!!!!! 
+!!!!! !--------------------------------------------------------------------
+!!!!!   end subroutine krylov_check
+!!!!! !--------------------------------------------------------------------
 
 !--------------------------------------------------------------------
   subroutine array_read_rstrt_size(fname,val1,val2,iverb,ierr)
@@ -1863,7 +1982,7 @@ contains
 !! make residuals = avx-vxo
     all_residuals = all_residuals - vxo
 
-    if (iverb .ge. 5) then
+    if (iverb .ge. 6) then
       print *, 'number of roots solved for', nroots
       print *, 'size of subspace', nsubspace
       print *, 'printing overlap between raw residuals '
@@ -2205,11 +2324,13 @@ contains
     type(base), allocatable :: full_solutions(:,:)
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !! filled in at krylov_a_norms
+    real(kind_float) :: dominance
     type(base), allocatable :: residuals(:,:)
     real(kind_float), allocatable :: euc_norm(:)
     real(kind_float) :: fro_norm
     real(kind_float) :: largest_euc_norm
     integer(kind_integer) :: nresiduals = 0
+!< dominance = inverse of nbasis in real variable, for Davidson warning
 !< residuals = preconditioned residuals of the approximate solutions 
 !< on the full space = \tilde{R}
 !< euc_norm = residual euclid norms of eigenvectors
@@ -2667,6 +2788,8 @@ contains
       print *, ''
     end if
 
+    dominance = real(1,kind=kind_float)/nbasis
+
 ! SOLVER LOOP
     jter = 0
     do iter = 1, maxiter
@@ -2699,11 +2822,6 @@ contains
   &     cholesky(1:nsubspace,1:nsubspace),&
   &     overlap(1:nsubspace,1:nsubspace),diag_overlap(1:nsubspace),&
   &     roots,lagrangian,solutions(1:nsubspace,1:nroots),iverb,ierr)
-!      call krylov_a_ritz(nbasis,nsubspace,nroots,&
-!  &     basis_vectors(1:nbasis,1:nsubspace),&
-!  &     mvproduct(1:nbasis,1:nsubspace),&
-!  &     overlap(1:nsubspace,1:nsubspace),diag_overlap(1:nsubspace),&
-!  &     roots,lagrangian,solutions(1:nsubspace,1:nroots),iverb,ierr)
       if (ierr.eq.-35) then ! error variable for ill-conditioned overlap
         nsubspace = prev_nsubspace
         if (iverb.ge.0) then
@@ -2736,6 +2854,24 @@ contains
   &      zero_kb,&
   &      full_solutions(1:nbasis,1:nroots),&
   &      nbasis)
+
+!! compare threshold again difference in approx_spectra and roots,
+      if (iverb.ge.3) then
+        print *, '' 
+        print *, 'determining stability of' 
+        print *, ' Davidson-based preconditioning'
+        do k = 1, nroots
+          do j = 1, nbasis
+            if (abs(approx_spectra(j)-roots(k)).lt.dominance) then
+              print *, 'potential problem:'
+              print *, 'diagonal element', j,' ',approx_spectra(j)
+              print *, 'root', k,' ',roots(k)
+            end if
+          end do
+        end do
+        print *, 'end stability check' 
+        print *, '' 
+      end if
 
 ! call krylov norms subroutine
       call krylov_a_norms(nbasis,nsubspace,nroots,&
@@ -2786,9 +2922,9 @@ contains
       end if
 
 ! convergence checks failed when this line is reached
-    if (iverb.ge.2) then
-      print *, 'More iterations required for desired convergence!'
-    end if
+      if (iverb.ge.2) then
+        print *, 'More iterations required for desired convergence!'
+      end if
 
 ! check that more iterations are allowed before extending subspace
       if (iter.eq.maxiter) then
@@ -2918,7 +3054,7 @@ contains
         exit ! This exits subspace loop
       end if
 
-      if (iverb.ge.4) then
+      if (iverb.ge.6) then
         do j = 1, nresiduals
           do k = 1, nsubspace
             print *, 'inner product of residual: ', j
@@ -2930,9 +3066,6 @@ contains
 
 ! call for diagonalization of copy of overlap matrix as a check,
 ! if it passes proceed to expand subspace properly
-!      call krylov_check(nsubspace,&
-!  &       overlap(1:nsubspace,1:nsubspace),&
-!  &       diag_overlap(1:nsubspace),iverb,ierr)
       call krylov_cholesky(nsubspace,&
   &      overlap(1:nsubspace,1:nsubspace),&
   &      diag_overlap(1:nsubspace),& 
@@ -2941,94 +3074,84 @@ contains
         if (iverb.ge.0) then
           print *, 'new krylov subspace unstable'
           print *, 'error variable = ',ierr
-          print *, 'skipping attempts to stabilize'
-          print *, 'new krylov subspace failed stability check'
-          print *, 'using previous subspace solutions for print'
+          print *, 'attempting to stabilize'
         end if
+!!!!  Drastic restart implementation.
         ierr = 0
-        nsubspace = prev_nsubspace
-        exit ! this exits subspace loop
-
-!!!! !!!!  Drastic restart implementation, not used for now.
-
-!!!!         ierr = 0
-!!!! !! Putting X(full solutions) as new previous V(basis)
-!!!!         basis_vectors(1:nbasis,1:nroots) = &
-!!!!   &      full_solutions(1:nbasis,1:nroots)
-!!!! !! set nsubspace to new value
-!!!!         nsubspace = nroots+nresiduals
-!!!!         prev_nsubspace = nroots
-!!!! !! Set constants required for BLAS
-!!!!         one_kb = real(1,kind=kind_float)
-!!!!         zero_kb = real(0,kind=kind_float)
-!!!! !! determine old part of new overlap
-!!!!         call ggemm('c','n',nroots,nroots,nbasis,one_kb,&
-!!!!   &       basis_vectors(1:nbasis,1:nroots),nbasis,&
-!!!!   &       basis_vectors(1:nbasis,1:nroots),nbasis,&
-!!!!   &       zero_kb,&
-!!!!   &       overlap(1:nroots,1:nroots),&
-!!!!   &       nroots)
-!!!!         do j = 1, nroots
-!!!!           diag_overlap(j) = overlap(j,j)
-!!!!         end do
-!!!! !! re-extend
-!!!!         call krylov_extend(nbasis,nsubspace,&
-!!!!   &       nresiduals,prev_nsubspace,&
-!!!!   &       residuals(1:nbasis,1:nresiduals),&
-!!!!   &       basis_vectors(1:nbasis,1:nsubspace),&
-!!!!   &       overlap(1:nsubspace,1:nsubspace),&
-!!!!   &       diag_overlap(1:nsubspace),iverb,ierr)
-!!!!         if (ierr.ne.0) then
-!!!!           if (iverb.ge.0) then
-!!!!             print *, 'new krylov subspace expansion failed'
-!!!!             print *, 'error variable = ',ierr
-!!!!             print *, 'using previous subspace solutions for print'
-!!!!           end if
-!!!!           nsubspace = prev_nsubspace
-!!!!           ierr = 0
-!!!!           exit ! This exits subspace loop
-!!!!         end if
-!!!!         prev_nsubspace = nroots
-!!!!         call krylov_cholesky(nsubspace,&
-!!!!   &       overlap(1:nsubspace,1:nsubspace),&
-!!!!   &       diag_overlap(1:nsubspace),& 
-!!!!   &       cholesky(1:nsubspace,1:nsubspace),iverb,ierr)
-!!!! !        call krylov_check(nsubspace,&
-!!!! !  &         overlap(1:nsubspace,1:nsubspace),&
-!!!! !  &         diag_overlap(1:nsubspace),iverb,ierr)
-!!!!         if (ierr.eq.0) then !! if rescue worked
-!!!!           if (iverb.ge.0) then
-!!!!             print *, 'stabilization may have worked'
-!!!!             print *, 'please observe condition number'
-!!!!             print *, 'continuing iterations'
-!!!!           end if
-!!!!         else
-!!!!           if (iverb.ge.0) then
-!!!!             print *, 'rescued subspace still failed stability check'
-!!!!             print *, 'error variable = ',ierr
-!!!!             print *, 'using previous subspace solutions for print'
-!!!!           end if
-!!!!           ierr = 0
-!!!!           nsubspace = prev_nsubspace
-!!!!           exit ! This exits subspace loop
-!!!!         end if
-!!!! ! call user defined matrix vector product
-!!!!         associate(interfacing_bv => basis_vectors%element,&
-!!!!   &             interfacing_mv => mvproduct%element)
-!!!!           call krylov_mvp%lkl_mvp(nbasis,prev_nsubspace,&
-!!!!   &         interfacing_bv(1:nbasis,1:prev_nsubspace),&
-!!!!   &         interfacing_mv(1:nbasis,1:prev_nsubspace),ierr)
-!!!!         end associate
-!!!!         if (ierr.ne.0) then
-!!!!           if (iverb.ge.0) then
-!!!!             print *, 'class(libkrylov_mvp_subroutine) function failed'
-!!!!             print *, 'error variable = ',ierr
-!!!!             print *, 'using previous subspace solutions for print'
-!!!!           end if
-!!!!           ierr = 0
-!!!!           nsubspace = prev_nsubspace
-!!!!           exit ! This exits subspace loop
-!!!!         end if
+!! Putting X(full solutions) as new previous V(basis)
+        basis_vectors(1:nbasis,1:nroots) = &
+  &      full_solutions(1:nbasis,1:nroots)
+!! set nsubspace to new value
+        nsubspace = nroots+nresiduals
+        prev_nsubspace = nroots
+!! Set constants required for BLAS
+        one_kb = real(1,kind=kind_float)
+        zero_kb = real(0,kind=kind_float)
+!! determine old part of new overlap
+        call ggemm('c','n',nroots,nroots,nbasis,one_kb,&
+  &       basis_vectors(1:nbasis,1:nroots),nbasis,&
+  &       basis_vectors(1:nbasis,1:nroots),nbasis,&
+  &       zero_kb,&
+  &       overlap(1:nroots,1:nroots),&
+  &       nroots)
+        do j = 1, nroots
+          diag_overlap(j) = overlap(j,j)
+        end do
+!! re-extend
+        call krylov_extend(nbasis,nsubspace,&
+  &       nresiduals,prev_nsubspace,&
+  &       residuals(1:nbasis,1:nresiduals),&
+  &       basis_vectors(1:nbasis,1:nsubspace),&
+  &       overlap(1:nsubspace,1:nsubspace),&
+  &       diag_overlap(1:nsubspace),iverb,ierr)
+        if (ierr.ne.0) then
+          if (iverb.ge.0) then
+            print *, 'new krylov subspace expansion failed'
+            print *, 'error variable = ',ierr
+            print *, 'using previous subspace solutions for print'
+          end if
+          nsubspace = nroots
+          ierr = 0
+          exit ! This exits subspace loop
+        end if
+        prev_nsubspace = nroots
+        call krylov_cholesky(nsubspace,&
+  &       overlap(1:nsubspace,1:nsubspace),&
+  &       diag_overlap(1:nsubspace),& 
+  &       cholesky(1:nsubspace,1:nsubspace),iverb,ierr)
+        if (ierr.eq.0) then !! if rescue worked
+          if (iverb.ge.0) then
+            print *, 'stabilization may have worked'
+            print *, 'please observe condition number'
+            print *, 'continuing iterations'
+          end if
+        else
+          if (iverb.ge.0) then
+            print *, 'rescued subspace still failed stability check'
+            print *, 'error variable = ',ierr
+            print *, 'using previous subspace solutions for print'
+          end if
+          ierr = 0
+          nsubspace = prev_nsubspace
+          exit ! This exits subspace loop
+        end if
+! call user defined matrix vector product
+        associate(interfacing_bv => basis_vectors%element,&
+  &             interfacing_mv => mvproduct%element)
+          call krylov_mvp%lkl_mvp(nbasis,prev_nsubspace,&
+  &         interfacing_bv(1:nbasis,1:prev_nsubspace),&
+  &         interfacing_mv(1:nbasis,1:prev_nsubspace),ierr)
+        end associate
+        if (ierr.ne.0) then
+          if (iverb.ge.0) then
+            print *, 'class(libkrylov_mvp_subroutine) function failed'
+            print *, 'error variable = ',ierr
+            print *, 'using previous subspace solutions for print'
+          end if
+          ierr = 0
+          nsubspace = prev_nsubspace
+          exit ! This exits subspace loop
+        end if
 
       else if (ierr.ne.0) then !krylov_check failed irrecoverably
         if (iverb.ge.0) then
