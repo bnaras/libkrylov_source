@@ -234,53 +234,53 @@ module libkrylovinterface_real_dp
   end type lkl_s_elec_gas_rdp
 
 !! defining input function for initial basis vectors
-  type, extends(libkrylov_guess_real_dp) :: lkl_g_unit_vec
+  type, extends(libkrylov_guess_real_dp) :: lkl_g_unit_vec_rdp
 ! external data required for the function
 !! IDEALLY, NO EXTERNAL DATA
   contains
-    procedure :: lkl_guess => lkl_guess_unit_vec
-  end type lkl_g_unit_vec
+    procedure :: lkl_guess => lkl_guess_unit_vec_rdp
+  end type lkl_g_unit_vec_rdp
 
 !! defining input function with all options
-  type, extends(libkrylov_precon_real_dp) :: lkl_pc_all
+  type, extends(libkrylov_precon_real_dp) :: lkl_pc_all_rdp
 ! external data required for the function
 !! string indicating which preconditioner
     character(len=32) :: precon_string = 'davidson'
   contains
-    procedure :: lkl_precon => lkl_precon_all
-  end type lkl_pc_all
+    procedure :: lkl_precon => lkl_precon_all_rdp
+  end type lkl_pc_all_rdp
 
 !! defining input function for null preconditioning
-  type, extends(libkrylov_precon_real_dp) :: lkl_pc_none
+  type, extends(libkrylov_precon_real_dp) :: lkl_pc_none_rdp
 ! external data required for the function
 !! IDEALLY, NO EXTERNAL DATA
   contains
-    procedure :: lkl_precon => lkl_precon_none
-  end type lkl_pc_none
+    procedure :: lkl_precon => lkl_precon_none_rdp
+  end type lkl_pc_none_rdp
 
 !! defining input function for null preconditioning
-  type, extends(libkrylov_precon_real_dp) :: lkl_pc_approx
+  type, extends(libkrylov_precon_real_dp) :: lkl_pc_approx_rdp
 ! external data required for the function
 !! IDEALLY, NO EXTERNAL DATA
   contains
-    procedure :: lkl_precon => lkl_precon_approx
-  end type lkl_pc_approx
+    procedure :: lkl_precon => lkl_precon_approx_rdp
+  end type lkl_pc_approx_rdp
 
 !! defining input function for null preconditioning
-  type, extends(libkrylov_precon_real_dp) :: lkl_pc_davidson
+  type, extends(libkrylov_precon_real_dp) :: lkl_pc_davidson_rdp
 ! external data required for the function
 !! IDEALLY, NO EXTERNAL DATA
   contains
-    procedure :: lkl_precon => lkl_precon_davidson
-  end type lkl_pc_davidson
+    procedure :: lkl_precon => lkl_precon_davidson_rdp
+  end type lkl_pc_davidson_rdp
 
 !! defining input function for null preconditioning
-  type, extends(libkrylov_precon_real_dp) :: lkl_pc_sleijpen
+  type, extends(libkrylov_precon_real_dp) :: lkl_pc_sleijpen_rdp
 ! external data required for the function
 !! IDEALLY, NO EXTERNAL DATA
   contains
-    procedure :: lkl_precon => lkl_precon_sleijpen
-  end type lkl_pc_sleijpen
+    procedure :: lkl_precon => lkl_precon_sleijpen_rdp
+  end type lkl_pc_sleijpen_rdp
 
 !--------------------------------------------------------------------
 
@@ -736,7 +736,7 @@ contains
 
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
-  subroutine lkl_guess_unit_vec(data,n1,n2,n3,approx_spectra,&
+  subroutine lkl_guess_unit_vec_rdp(data,n1,n2,n3,approx_spectra,&
    &   basis_vectors,ierr)
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
@@ -760,7 +760,7 @@ contains
 !--------------------------------------------------------------------
 ! External data (IDEALLY EMPTY)
 !--------------------------------------------------------------------
-    class(lkl_g_unit_vec) :: data
+    class(lkl_g_unit_vec_rdp) :: data
 !--------------------------------------------------------------------
 ! Input Parameters
 !--------------------------------------------------------------------
@@ -874,7 +874,7 @@ contains
     deallocate(test_orthogonal)
 
 !--------------------------------------------------------------------
-  end subroutine lkl_guess_unit_vec
+  end subroutine lkl_guess_unit_vec_rdp
 !--------------------------------------------------------------------
 
 
@@ -887,7 +887,7 @@ contains
 !--------------------------------------------------------------------
 
 !--------------------------------------------------------------------
-  subroutine lkl_precon_none(data,n1,n2,n3,approx_spectra,&
+  subroutine lkl_precon_none_rdp(data,n1,n2,n3,approx_spectra,&
    &   precon_roots,full_solutions,residuals,ierr)
 !--------------------------------------------------------------------
 !
@@ -909,7 +909,7 @@ contains
 !--------------------------------------------------------------------
 ! External data (IDEALLY EMPTY)
 !--------------------------------------------------------------------
-    class(lkl_pc_none) :: data
+    class(lkl_pc_none_rdp) :: data
 !--------------------------------------------------------------------
 ! Input Parameters
 !--------------------------------------------------------------------
@@ -940,12 +940,12 @@ contains
 !--------------------------------------------------------------------
 ! THIS ROUTINE DOES NOTHING. REQUIRED FOR INTERFACING
 !--------------------------------------------------------------------
-  end subroutine lkl_precon_none
+  end subroutine lkl_precon_none_rdp
 !--------------------------------------------------------------------
 
 
 !--------------------------------------------------------------------
-  subroutine lkl_precon_approx(data,n1,n2,n3,approx_spectra,&
+  subroutine lkl_precon_approx_rdp(data,n1,n2,n3,approx_spectra,&
    &   precon_roots,full_solutions,residuals,ierr)
 !--------------------------------------------------------------------
 !
@@ -967,7 +967,7 @@ contains
 !--------------------------------------------------------------------
 ! External data (IDEALLY EMPTY)
 !--------------------------------------------------------------------
-    class(lkl_pc_approx) :: data
+    class(lkl_pc_approx_rdp) :: data
 !--------------------------------------------------------------------
 ! Input Parameters
 !--------------------------------------------------------------------
@@ -1005,12 +1005,12 @@ contains
     end do
 
 !--------------------------------------------------------------------
-  end subroutine lkl_precon_approx
+  end subroutine lkl_precon_approx_rdp
 !--------------------------------------------------------------------
 
 
 !--------------------------------------------------------------------
-  subroutine lkl_precon_davidson(data,n1,n2,n3,approx_spectra,&
+  subroutine lkl_precon_davidson_rdp(data,n1,n2,n3,approx_spectra,&
    &   precon_roots,full_solutions,residuals,ierr)
 !--------------------------------------------------------------------
 !
@@ -1032,7 +1032,7 @@ contains
 !--------------------------------------------------------------------
 ! External data (IDEALLY EMPTY)
 !--------------------------------------------------------------------
-    class(lkl_pc_davidson) :: data
+    class(lkl_pc_davidson_rdp) :: data
 !--------------------------------------------------------------------
 ! Input Parameters
 !--------------------------------------------------------------------
@@ -1071,11 +1071,11 @@ contains
     end do
 
 !--------------------------------------------------------------------
-  end subroutine lkl_precon_davidson
+  end subroutine lkl_precon_davidson_rdp
 !--------------------------------------------------------------------
 
 !--------------------------------------------------------------------
-  subroutine lkl_precon_sleijpen(data,n1,n2,n3,approx_spectra,&
+  subroutine lkl_precon_sleijpen_rdp(data,n1,n2,n3,approx_spectra,&
    &   precon_roots,full_solutions,residuals,ierr)
 !--------------------------------------------------------------------
 !
@@ -1097,7 +1097,7 @@ contains
 !--------------------------------------------------------------------
 ! External data (IDEALLY EMPTY)
 !--------------------------------------------------------------------
-    class(lkl_pc_sleijpen) :: data
+    class(lkl_pc_sleijpen_rdp) :: data
 !--------------------------------------------------------------------
 ! Input Parameters
 !--------------------------------------------------------------------
@@ -1155,11 +1155,11 @@ contains
     deallocate(mx)
 
 !--------------------------------------------------------------------
-  end subroutine lkl_precon_sleijpen
+  end subroutine lkl_precon_sleijpen_rdp
 !--------------------------------------------------------------------
 
 !--------------------------------------------------------------------
-  subroutine lkl_precon_all(data,n1,n2,n3,approx_spectra,&
+  subroutine lkl_precon_all_rdp(data,n1,n2,n3,approx_spectra,&
    &   precon_roots,full_solutions,residuals,ierr)
 !--------------------------------------------------------------------
 !
@@ -1181,7 +1181,7 @@ contains
 !--------------------------------------------------------------------
 ! External data (IDEALLY EMPTY)
 !--------------------------------------------------------------------
-    class(lkl_pc_all) :: data
+    class(lkl_pc_all_rdp) :: data
 !--------------------------------------------------------------------
 ! Input Parameters
 !--------------------------------------------------------------------
@@ -1263,7 +1263,7 @@ contains
     end if
 
 !--------------------------------------------------------------------
-  end subroutine lkl_precon_all
+  end subroutine lkl_precon_all_rdp
 !--------------------------------------------------------------------
 
 !--------------------------------------------------------------------

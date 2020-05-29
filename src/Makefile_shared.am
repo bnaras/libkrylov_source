@@ -204,7 +204,7 @@ test_libkrylovinterface_real_dp_LDADD = libkrylov_real_dp.la
 # test of solver subroutine norms
 real_dp_normsdir = $(PWD)/real_dp_test
 real_dp_norms_PROGRAMS = test_norms_real_dp
-test_norms_real_dp_SOURCES = real_dp_srcs/test_norms_real_dp.f90
+test_norms_real_dp_SOURCES = test_norms.f90
 test_norms_real_dp_LDADD = libkrylov_real_dp.la
 # check of quality for restart files
 real_dp_restartdir = $(PWD)/real_dp_lib
