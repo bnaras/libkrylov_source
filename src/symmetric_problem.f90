@@ -227,6 +227,9 @@ program problem_1
     do k = 1, n
       diag(k) = cos(real(k+k,kind=kind_float))
     end do
+  else
+    print *, 'invalid option'
+    stop
   end if
 
 !! set a1_string based on basetypes
