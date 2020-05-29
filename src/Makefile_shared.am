@@ -219,26 +219,27 @@ problem1a_vm_real_dp_LDADD = libkrylov_real_dp.la
 # driver1a - program for calling solver on a problem on file
 real_dp_driver1adir = $(PWD)/real_dp_test
 real_dp_driver1a_PROGRAMS = driver1a_real_dp
-driver1a_real_dp_SOURCES = real_dp_srcs/driver1types_real_dp.f90\
-real_dp_srcs/driver_1a_real_dp.f90
+driver1a_real_dp_SOURCES = driver1types.f90\
+driver_1a.f90
 driver1a_real_dp_LDADD = libkrylov_real_dp.la
 # driver1b - program for calling b_solver on a problem on file
 real_dp_driver1bdir = $(PWD)/real_dp_test
 real_dp_driver1b_PROGRAMS = driver1b_real_dp
-driver1b_real_dp_SOURCES = real_dp_srcs/driver1types_real_dp.f90\
-real_dp_srcs/driver_1b_real_dp.f90
+driver1b_real_dp_SOURCES = driver1types.f90\
+driver_1b.f90
 driver1b_real_dp_LDADD = libkrylov_real_dp.la
 # driver1c - program for calling c_solver on a problem on file
 real_dp_driver1cdir = $(PWD)/real_dp_test
 real_dp_driver1c_PROGRAMS = driver1c_real_dp
-driver1c_real_dp_SOURCES = real_dp_srcs/driver1types_real_dp.f90\
-real_dp_srcs/driver_1c_real_dp.f90
+driver1c_real_dp_SOURCES = driver1types.f90\
+driver_1c.f90
 driver1c_real_dp_LDADD = libkrylov_real_dp.la
 # test restart a - program for calling a_solver on a problem on file
 real_dp_test_restart_adir = $(PWD)/real_dp_test
 real_dp_test_restart_a_PROGRAMS = test_restart_a_real_dp
-test_restart_a_real_dp_SOURCES = real_dp_srcs/test_restart_a_real_dp.f90\
-real_dp_srcs/driver1types_real_dp.f90
+test_restart_a_real_dp_SOURCES = \
+real_dp_srcs/driver1types_real_dp.f90\
+real_dp_srcs/test_restart_a_real_dp.f90
 test_restart_a_real_dp_LDADD = libkrylov_real_dp.la
 # test restart b - program for calling b_solver on a problem on file
 real_dp_test_restart_bdir = $(PWD)/real_dp_test
