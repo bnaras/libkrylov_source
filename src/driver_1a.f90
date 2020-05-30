@@ -58,6 +58,10 @@ program krylovdriver_1a
 !--------------------------------------------------------------------
 ! Local Variables for Subroutines and reading problem
 !--------------------------------------------------------------------
+! command line arguments
+  integer(kind_integer) :: counter
+! character string for preconditioner string
+  character(len=32) :: input,input2 = ''
 ! character string for preconditioner string
   character(len=32) :: preconditioner = ''
 ! contains the matrix problem, read in from file
@@ -73,12 +77,53 @@ program krylovdriver_1a
 ! which becomes nbasis via krylov_problem%n_size
   integer(kind_integer) :: n1 = 0
   integer(kind_integer) :: n2 = 0
-  integer(kind_integer) :: j = 0
+  integer(kind_integer) :: j,k = 0
 !--------------------------------------------------------------------
 ! Error Parameter
 !--------------------------------------------------------------------
   integer(kind_integer) :: ierr = 0
 !--------------------------------------------------------------------
+
+!! set default options
+  krylov_pc_all%precon_string = 'davidson'
+  krylov_problem%irestart = 0
+!! checking command line options:
+  counter = command_argument_count()
+!! loop over command line
+  k = 1
+  if (counter.gt.0) then
+    do 
+      call get_command_argument(k,value=input,status=ierr)
+      if (ierr.ne.0) stop
+      if ((input.eq.'-help').or.(input.eq.'--help')) then
+        print *, 'solver for problem_a on file:'
+        print *, ''
+        print *, 'options:'
+        print *, '--help        display this message'
+        print *, '-precon       select preconditioner'
+        print *, '               available options:'
+        print *, '                none'
+        print *, '                approx_spectra'
+        print *, '                davidson'
+        print *, '                sleijpen'
+        print *, '-irestart     select restart level'
+        stop
+      else if (input.eq.'-precon') then
+        k = k + 1
+        call get_command_argument(k,value=input2,status=ierr)
+        if (ierr.ne.0) stop
+        krylov_pc_all%precon_string = input2
+      else if (input.eq.'-irestart') then
+        k = k + 1
+        call get_command_argument(k,value=input2,status=ierr)
+        if (ierr.ne.0) stop
+        read(input2,*,iostat=ierr) krylov_problem%irestart
+        if (ierr.ne.0) stop
+      end if
+      k = k + 1
+      if (k.gt.counter) exit
+    end do
+  end if 
 
 !! setting up the problem before calling solver
 
@@ -89,8 +134,6 @@ program krylovdriver_1a
 
   krylov_pc_all%precon_string = preconditioner
 
-!! set irestart
-  krylov_problem%irestart = 0
 
 !! set a1_string based on basetypes
   a1_string = trim(base_print_string)//'_1a'
