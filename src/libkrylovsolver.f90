@@ -553,7 +553,7 @@ contains
 !! Set constants required for BLAS
     one_kb = real(1,kind=kind_float)
     zero_kb = real(0,kind=kind_float)
-!! first ggemm to get basis,new-basis block 
+!! first ggemm to get rayleigh
     call ggemm('c','n',nsubspace,nsubspace,nbasis,one_kb,&
   &   basis_vectors(1:nbasis,1:nsubspace),nbasis,&
   &   mvproduct(1:nbasis,1:nsubspace),nbasis,&
