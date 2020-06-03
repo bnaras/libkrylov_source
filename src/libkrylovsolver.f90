@@ -2938,7 +2938,7 @@ contains
       if (nresiduals.eq.0) then
         if (iverb.ge.0) then
           print *, 'No preconditioned residuals above machine precision!'
-          print *, 'failed to find vectors to expand subspace!'
+          print *, 'failed to find vectors outside subspace!'
         end if
         exit ! This exits subspace loop
       end if
@@ -3008,6 +3008,15 @@ contains
         exit ! This exits subspace loop
       end if
 
+! Check that there are residuals to extend the subspace with
+      if (nresiduals.eq.0) then
+        if (iverb.ge.0) then
+          print *, 'No orthogonalized residuals above machine precision!'
+          print *, 'failed to find vectors to expand subspace!'
+        end if
+        exit ! This exits subspace loop
+      end if
+
 !!! !! project residuals out of subspace
 !!!       call krylov_project(nbasis,nsubspace,nroots,&
 !!!   &     diag_overlap(1:nsubspace),&
@@ -3015,23 +3024,6 @@ contains
 !!!   &     cholesky(1:nsubspace,1:nsubspace),&
 !!!   &     residuals(1:nbasis,1:nroots),&
 !!!   &     iverb,ierr)
-
-!! test results of projection all residuals
-      print *, 'post projection norms'
-      k = 1
-      do j = 1, nresiduals
-        call gdot(nbasis,residuals(1:nbasis,j),1,&
-  &             residuals(1:nbasis,j),1,&
-  &             overlap(j+nsubspace,j+nsubspace),ierr)
-        diag_overlap(j+nsubspace) = overlap(j+nsubspace,j+nsubspace)
-        diag_overlap(j+nsubspace) = sqrt(diag_overlap(j+nsubspace))
-        print *, 'p norms',j,diag_overlap(j+nsubspace)
-        if (diag_overlap(j+nsubspace).gt.eps) then
-          residuals(1:nbasis,k) = residuals(1:nbasis,j)
-          k = k + 1
-        end if
-      end do
-      nresiduals = k - 1
 
 
 ! call krylov extend subroutine, after saving prev_nsubspace
@@ -3121,7 +3113,7 @@ contains
   &       cholesky(1:nsubspace,1:nsubspace),iverb,ierr)
         if (ierr.eq.0) then !! if rescue worked
           if (iverb.ge.0) then
-            print *, 'stabilization may have worked'
+            print *, 'WARNING: internal restart'
             print *, 'please observe condition number'
             print *, 'continuing iterations'
           end if
@@ -3135,6 +3127,9 @@ contains
           nsubspace = prev_nsubspace
           exit ! This exits subspace loop
         end if
+!! reaching this point of the code means rescue worked
+!! generate old part of rayleigh matrix before exiting to standard
+!! procedure
 ! call user defined matrix vector product
         associate(interfacing_bv => basis_vectors%element,&
   &             interfacing_mv => mvproduct%element)
@@ -3151,6 +3146,18 @@ contains
           ierr = 0
           nsubspace = prev_nsubspace
           exit ! This exits subspace loop
+        end if
+        call krylov_rayleigh(nbasis,prev_nsubspace,&
+  &         approx_spectra,mvproduct(1:nbasis,1:prev_nsubspace),&
+  &         basis_vectors(1:nbasis,1:prev_nsubspace),&
+  &         rayleigh(1:prev_nsubspace,1:prev_nsubspace),iverb,ierr)
+        if (ierr.ne.0) then
+          if (iverb.ge.0) then
+            print *, 'initial (re)construction of rayleigh matrix failed' 
+            print *, 'error variable = ',ierr
+          end if
+          ierr = -45
+          return ! abort solver, return to call 
         end if
 
       else if (ierr.ne.0) then !krylov_check failed irrecoverably
