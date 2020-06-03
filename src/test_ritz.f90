@@ -50,6 +50,8 @@ program test_ritz
   type(base) :: z_array4(n,q)
   type(base) :: z_array5(q,m)
   type(base) :: z_array6(q,m)
+  type(base) :: z_array7(q,q)
+  type(base) :: z_array8(q,q)
   real(kind_float) :: r_vector1(q)
   real(kind_float) :: r_vector2(m)
   type(base) :: z_vector1(m)
@@ -381,10 +383,9 @@ program test_ritz
   end if
   print *, ''
 
-
-!!! tests of krylov_check
+!!! tests of krylov_cholesky
   check = .false.
-!!! negative tests of krylov_check
+!!! negative tests of krylov_cholesky
 !! Using do loop to fill in the test input matrix z_array3
 !! with 1 on diagonal
   z_array3 = real(0,kind=kind_float)
@@ -396,23 +397,23 @@ program test_ritz
     r_vector1(j1) = real(1,kind=kind_float)
   end do
 !! write statement on test
-  print *, 'negative test krylov_check',&
+  print *, 'negative test krylov_cholesky',&
   &', which prints to standard output'
   print *, 'input z_array3 is identity which is positive definite'
   print *, 'input r_vector1 is all 1'
 !! call subroutine
-  call krylov_check(q,z_array3,r_vector1,iverb,ierr)
+  call krylov_cholesky(q,z_array3,r_vector1,z_array7,iverb,ierr)
 !! check ierr value to see whether routine terminated with an error
 !! test if ierr is not equal to 0
   if (ierr.ne.0) then
 !! if true, write routine failed, write the ierr value
-    print *, 'krylov_check failed, ierr=',ierr
+    print *, 'krylov_cholesky failed, ierr=',ierr
     check = .true.
 !! set ierr to 0
     ierr = 0
   else
 !! if false, write gheev runs
-    print *, 'krylov_check runs'
+    print *, 'krylov_cholesky runs'
   end if
 !! write info about output
   print *, 'z_array3 should be identity, unchanged'
@@ -461,14 +462,40 @@ program test_ritz
       check = .true.
     end if
   end do
+!! write info about output
+  print *, 'output z_array7(cholesky) should be identity'
+!! write test to check each element
+  print *, 'testing each element of z_array7'
+!! using do loops to take the absolute difference
+!! between the elements in test array 
+!! and the elements in reference value
+  do j2 = 1, q 
+    do j1 = 1, q
+      r_ref = z_array7(j1,j2)
+      if (j1.eq.j2) then
+        r_test = real(1,kind=kind_float)
+      else
+        r_test = real(0,kind=kind_float)
+      end if
+!! test if difference if greater than machine precision
+!! (defined by the constant eps)
+      if (abs(r_test-r_ref).gt.eps) then
+!! if true, write failed for elements
+!! and the position of the element that failed
+        print *, 'failed for elements', j1, j2 
+!! set logical check = .true.
+        check = .true.
+      end if
+    end do
+  end do
   if (check) then
 !! write subroutine failed to output file
-    print *, 'subroutine krylov_check failed'
-    write(unit=funit,fmt=*) 'subroutine krylov_check failed'
+    print *, 'subroutine krylov_cholesky failed'
+    write(unit=funit,fmt=*) 'subroutine krylov_cholesky failed'
   else
 !! write subroutine succeeded to output file
-    print *, 'tested subroutine krylov_check'
-    write(unit=funit,fmt=*) 'tested subroutine krylov_check'
+    print *, 'tested subroutine krylov_cholesky'
+    write(unit=funit,fmt=*) 'tested subroutine krylov_cholesky'
   end if
   print *, ''
 
@@ -596,6 +623,14 @@ program test_ritz
   do j1 = 1, m
     z_array6(j1,j1) = real(j1,kind=kind_float)
   end do
+  z_array7 = real(0,kind=kind_float)
+  do j1 = 1, q
+    z_array7(j1,j1) = real(1,kind=kind_float)
+  end do
+  z_array8 = real(0,kind=kind_float)
+  do j1 = 1, q
+    z_array8(j1,j1) = real(j1,kind=kind_float)
+  end do
 !!! testing ritz_a
 !! set logical check = .false.
   check = .false.
@@ -611,8 +646,11 @@ program test_ritz
   &' matrix of integer values'
   print *, 'input z_array3(overlap) is identity'
   print *, 'input r_vector1(diag_overlap) is all 1'
+  print *, 'input z_array7(cholesky) is diagonal',&
+  & ' with sqrt(integer values)'
+  print *, 'input z_array8(rayleigh) is diagonal of integer values'
 !! call normalize subroutine
-  call krylov_a_ritz(n,q,m,z_array2,z_array4,z_array3,&
+  call krylov_a_ritz(n,q,m,z_array8,z_array7,z_array3,&
   & r_vector1,r_vector2,z_vector1,z_array5,iverb,ierr)
 !! check ierr value to see whether routine terminated with an error
 !! test if ierr is not equal to 0
@@ -720,8 +758,11 @@ program test_ritz
   &' matrix of integer values'
   print *, 'input z_array3(overlap) is identity'
   print *, 'input r_vector1(diag_overlap) is all 1'
+  print *, 'input z_array7(cholesky) is diagonal',&
+  & ' with sqrt(integer values)'
+  print *, 'input z_array8(rayleigh) is diagonal of integer values'
 !! call normalize subroutine
-  call krylov_b_ritz(n,q,m,z_array2,z_array4,z_array6,z_array3,&
+  call krylov_b_ritz(n,q,m,z_array8,z_array7,z_array6,z_array3,&
   & r_vector1,z_vector1,z_array5,iverb,ierr)
 !! check ierr value to see whether routine terminated with an error
 !! test if ierr is not equal to 0
@@ -796,9 +837,9 @@ program test_ritz
   check = .false.
 !! setting unique input
   x1 = real(-5,kind=kind_float)
-  z_array4 = real(0,kind=kind_float)
+  z_array8 = real(0,kind=kind_float)
   do j1 = 1, q
-    z_array4(j1,j1) = real(j1+x1(1),kind=kind_float)
+    z_array8(j1,j1) = real(j1+x1(1),kind=kind_float)
   end do
 !! zeroing output
   z_vector1 = real(0,kind=kind_float)
@@ -814,8 +855,11 @@ program test_ritz
   print *, 'input z_array3(overlap) is identity'
   print *, 'input r_vector1(diag_overlap) is all 1'
   print *, 'input x1(omega) is -5'
+  print *, 'input z_array7(cholesky) is diagonal',&
+  & ' with sqrt(integer values)'
+  print *, 'input z_array8(rayleigh) is diagonal of integer values'
 !! call normalize subroutine
-  call krylov_c_ritz(n,q,1,m,m,z_array2,z_array4,z_array6,z_array3,&
+  call krylov_c_ritz(n,q,1,m,m,z_array8,z_array7,z_array6,z_array3,&
   & r_vector1,x1,z_vector1,z_array5,iverb,ierr)
 !! check ierr value to see whether routine terminated with an error
 !! test if ierr is not equal to 0

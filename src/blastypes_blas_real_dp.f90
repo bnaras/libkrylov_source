@@ -320,6 +320,61 @@ contains
 !--------------------------------------------------------------------
 
 !--------------------------------------------------------------------
+  subroutine gpotrs(trans1,m,n,obj1,ld1, &
+  &   obj2,ld2,ierr)
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+!< Description:
+!< wrapper for
+!< Matrix Multiplication ((obj1)**-1)*obj2
+!< of type(base)
+!< where obj1 is cholesky decomposed
+!< done by forward (and backward) substitution
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Modules
+!--------------------------------------------------------------------
+    use basekinds
+    use floatformat
+!--------------------------------------------------------------------
+!
+    implicit none
+!
+!--------------------------------------------------------------------
+! Input Parameters
+!--------------------------------------------------------------------
+!! lower triangular decomposition of overlap
+    type(base), intent(in) :: obj1(:,:)
+!! eigenvectors or matrix to be transformed
+    type(base), intent(inout) :: obj2(:,:)
+!! number of rows in obj1
+    integer(kind_integer), intent(in) :: m
+!! number of columns in obj2
+    integer(kind_integer), intent(in) :: n
+!! first dimension of obj1
+    integer(kind_integer), intent(in) :: ld1
+!! first dimension of obj2
+    integer(kind_integer), intent(in) :: ld2
+!! character for L or U of  obj1 stored
+    character(len=1), intent(in) :: trans1
+!--------------------------------------------------------------------
+! Error Parameter
+!--------------------------------------------------------------------
+    integer(kind_integer), intent(inout) :: ierr
+!--------------------------------------------------------------------
+!  Local Variables
+!--------------------------------------------------------------------
+
+    call dpotrs(trans1,m,n,obj1%element,ld1, &
+  &   obj2%element,ld2,ierr)
+
+!--------------------------------------------------------------------
+  end subroutine gpotrs
+!--------------------------------------------------------------------
+
+!--------------------------------------------------------------------
   subroutine ggetrs(trans1,m,n,obj1,ld1,ipiv, &
   &   obj2,ld2,ierr)
 !--------------------------------------------------------------------
@@ -351,7 +406,7 @@ contains
     type(base), intent(in) :: obj1(:,:)
 !! eigenvectors or matrix to be transformed
     type(base), intent(inout) :: obj2(:,:)
-!! number of rows in obj2
+!! number of rows in obj1
     integer(kind_integer), intent(in) :: m
 !! number of columns in obj2
     integer(kind_integer), intent(in) :: n
@@ -732,6 +787,327 @@ contains
 
 !--------------------------------------------------------------------
   end subroutine ghesv
+!--------------------------------------------------------------------
+
+!--------------------------------------------------------------------
+  subroutine gunmqr(side,trans,m,n,k,obj1,ld1,tau,obj2,ld2,ierr)
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+!< Description:
+!< wrapper for
+!< BLAS solve multiplying QR decomposition with another matrix
+!< calculates optimized lwork
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Modules
+!--------------------------------------------------------------------
+    use basekinds
+    use floatformat
+    use basetypes
+!--------------------------------------------------------------------
+!
+    implicit none
+!
+!--------------------------------------------------------------------
+! Input Parameters
+!--------------------------------------------------------------------
+!! output of ggeqrf
+    type(base), intent(inout) :: obj1(:,:)
+!! note dim(tau) is min(n,m) 
+    type(base), intent(inout) :: tau(:)
+!! number of rows in obj2
+    integer(kind_integer), intent(in) :: m
+!! number of columns in obj2
+    integer(kind_integer), intent(in) :: n
+!! number of reflectors
+    integer(kind_integer), intent(in) :: k
+!! first dimension of obj1
+    integer(kind_integer), intent(in) :: ld1
+!! first dimension of obj2
+    integer(kind_integer), intent(in) :: ld2
+!! obj1 multipled from left('l') or right('r') matrix stored
+    character(len=1), intent(in) :: side
+!! obj1 multipled normally('n') or conjugate('c') matrix stored
+    character(len=1), intent(in) :: trans
+!--------------------------------------------------------------------
+! Input/Output Parameters
+!--------------------------------------------------------------------
+!! matrix to be multiplied
+    type(base), intent(inout) :: obj2(:,:)
+!--------------------------------------------------------------------
+! Error Parameter
+!--------------------------------------------------------------------
+    integer(kind_integer), intent(inout) :: ierr
+!--------------------------------------------------------------------
+!  Local Variables
+!--------------------------------------------------------------------
+!! translate 'c' to 't' for real case
+    character(len=1) :: translate
+!!  integer variable to store optimal WORK size
+    integer(kind_integer) :: lwork_val = 1
+!!  array for optimal lwork (work in first call of LAPACK)
+    real(kind_float) :: lworker
+!!  array for lwork
+    real(kind_float), allocatable :: lwork(:)
+!--------------------------------------------------------------------
+
+!! translate
+   if (trans .eq. 'n') translate = 'n'
+   if (trans .eq. 'c') translate = 't'
+
+!! first call to LAPACK for optimal lwork
+    call dormqr(side,translate,m,n,k,obj1(:,:)%element,ld1,&
+  &     tau(:)%element,obj2(:,:)%element,ld2,lworker,-1,ierr)
+
+    if (ierr.ne.0) return
+
+    lwork_val = int(lworker,kind=kind_integer)
+!! allocate lwork
+    allocate(lwork(lwork_val))
+
+    call dormqr(side,translate,m,n,k,obj1(:,:)%element,ld1,&
+  &     tau(:)%element,obj2(:,:)%element,ld2,lwork,lwork_val,ierr)
+
+    deallocate(lwork)
+
+!--------------------------------------------------------------------
+  end subroutine gunmqr
+!--------------------------------------------------------------------
+
+!--------------------------------------------------------------------
+  subroutine ggeqrf(m,n,obj1,ld1,tau,ierr)
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+!< Description:
+!< wrapper for
+!< BLAS solve for QR decomposition
+!< calculates optimized lwork
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Modules
+!--------------------------------------------------------------------
+    use basekinds
+    use floatformat
+    use basetypes
+!--------------------------------------------------------------------
+!
+    implicit none
+!
+!--------------------------------------------------------------------
+! Input Parameters
+!--------------------------------------------------------------------
+!! matrix problem in, QR factorization out
+    type(base), intent(inout) :: obj1(:,:)
+!! number of rows in obj1
+    integer(kind_integer), intent(in) :: m
+!! number of columns in obj1
+    integer(kind_integer), intent(in) :: n
+!! first dimension of obj1
+    integer(kind_integer), intent(in) :: ld1
+!--------------------------------------------------------------------
+! Output Parameters
+!--------------------------------------------------------------------
+!! note dim(tau) is min(n,m) 
+    type(base), intent(inout) :: tau(:)
+!--------------------------------------------------------------------
+! Error Parameter
+!--------------------------------------------------------------------
+    integer(kind_integer), intent(inout) :: ierr
+!--------------------------------------------------------------------
+!  Local Variables
+!--------------------------------------------------------------------
+!!  integer variable to store optimal WORK size
+    integer(kind_integer) :: lwork_val = 1
+!!  array for optimal lwork (work in first call of LAPACK)
+    real(kind_float) :: lworker
+!!  array for lwork
+    real(kind_float), allocatable :: lwork(:)
+!--------------------------------------------------------------------
+
+!! first call to LAPACK for optimal lwork
+    call dgeqrf(m,n,obj1(:,:)%element,ld1,tau(:)%element,&
+  &     lworker,-1,ierr)
+
+    if (ierr.ne.0) return
+
+    lwork_val = int(lworker,kind=kind_integer)
+!! allocate lwork
+    allocate(lwork(lwork_val))
+
+    call dgeqrf(m,n,obj1(:,:)%element,ld1,tau(:)%element,&
+  &     lwork,lwork_val,ierr) 
+
+    deallocate(lwork)
+
+!--------------------------------------------------------------------
+  end subroutine ggeqrf
+!--------------------------------------------------------------------
+
+!--------------------------------------------------------------------
+  subroutine gungqr(m,n,k,obj1,ld1,tau,ierr)
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+!< Description:
+!< wrapper for
+!< BLAS solve for Q of QR decomposition
+!< calculates optimized lwork
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Modules
+!--------------------------------------------------------------------
+    use basekinds
+    use floatformat
+    use basetypes
+!--------------------------------------------------------------------
+!
+    implicit none
+!
+!--------------------------------------------------------------------
+! Input Parameters
+!--------------------------------------------------------------------
+!! number of rows in obj1
+    integer(kind_integer), intent(in) :: m
+!! number of columns in obj1
+    integer(kind_integer), intent(in) :: n
+!! number of elements in tau
+    integer(kind_integer), intent(in) :: k
+!! first dimension of obj1
+    integer(kind_integer), intent(in) :: ld1
+!! solutions out. note dim(tau) is min(n,m) 
+    type(base), intent(in) :: tau(:)
+!--------------------------------------------------------------------
+! Input/Output Parameters
+!--------------------------------------------------------------------
+!! QR factorization in , Q out
+    type(base), intent(inout) :: obj1(:,:)
+!--------------------------------------------------------------------
+! Error Parameter
+!--------------------------------------------------------------------
+    integer(kind_integer), intent(inout) :: ierr
+!--------------------------------------------------------------------
+!  Local Variables
+!--------------------------------------------------------------------
+!!  integer variable to store optimal WORK size
+    integer(kind_integer) :: lwork_val = 1
+!!  array for optimal lwork (work in first call of LAPACK)
+    real(kind_float) :: lworker
+!!  array for lwork
+    real(kind_float), allocatable :: lwork(:)
+!--------------------------------------------------------------------
+
+!! first call to LAPACK for optimal lwork
+    call dorgqr(m,n,k,obj1(:,:)%element,ld1,tau(:)%element,&
+  &     lworker,-1,ierr)
+
+    if (ierr.ne.0) return
+
+    lwork_val = int(lworker,kind=kind_integer)
+!! allocate lwork
+    allocate(lwork(lwork_val))
+
+    call dorgqr(m,n,k,obj1(:,:)%element,ld1,tau(:)%element,&
+  &     lwork,lwork_val,ierr) 
+
+    deallocate(lwork)
+
+!--------------------------------------------------------------------
+  end subroutine gungqr
+!--------------------------------------------------------------------
+
+!--------------------------------------------------------------------
+  subroutine ggesvd(jobu,jobvt,m,n,obj1,ld1,s,&
+  &         obj2,ld2,obj3,ld3,ierr)
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+!< Description:
+!< wrapper for
+!< BLAS solve for Q of QR decomposition
+!< calculates optimized lwork
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Modules
+!--------------------------------------------------------------------
+    use basekinds
+    use floatformat
+    use basetypes
+!--------------------------------------------------------------------
+!
+    implicit none
+!
+!--------------------------------------------------------------------
+! Input Parameters
+!--------------------------------------------------------------------
+!! number of rows in obj1
+    integer(kind_integer), intent(in) :: m
+!! number of columns in obj1
+    integer(kind_integer), intent(in) :: n
+!! first dimension of obj1
+    integer(kind_integer), intent(in) :: ld1
+!! first dimension of obj2
+    integer(kind_integer), intent(in) :: ld2
+!! first dimension of obj3
+    integer(kind_integer), intent(in) :: ld3
+!! determine where U is on output
+    character(len=1), intent(in) :: jobu
+!! determine where V transpose is on output
+    character(len=1), intent(in) :: jobvt
+!--------------------------------------------------------------------
+! Input/Output Parameters
+!--------------------------------------------------------------------
+!! Input matrix here, desired output here
+    type(base), intent(inout) :: obj1(:,:)
+!--------------------------------------------------------------------
+! Output Parameters
+!--------------------------------------------------------------------
+!! Output singular values, sorted largest to small
+!! Dimension min(m,n)
+    real(kind_float), intent(inout) :: s(:)
+!! matrix U
+    type(base), intent(inout) :: obj2(:,:)
+!! matrix VT
+    type(base), intent(inout) :: obj3(:,:)
+!--------------------------------------------------------------------
+! Error Parameter
+!--------------------------------------------------------------------
+    integer(kind_integer), intent(inout) :: ierr
+!--------------------------------------------------------------------
+!  Local Variables
+!--------------------------------------------------------------------
+!!  integer variable to store optimal WORK size
+    integer(kind_integer) :: lwork_val = 1
+!!  array for optimal lwork (work in first call of LAPACK)
+    real(kind_float) :: lworker
+!!  array for lwork
+    real(kind_float), allocatable :: lwork(:)
+!--------------------------------------------------------------------
+
+!! first call to LAPACK for optimal lwork
+    call dgesvd(jobu,jobvt,m,n,obj1(:,:)%element,ld1,s(:),&
+  &     obj2(:,:)%element,ld2,obj3(:,:)%element,ld3,&
+  &     lworker,-1,ierr)
+
+    if (ierr.ne.0) return
+
+    lwork_val = int(lworker,kind=kind_integer)
+!! allocate lwork
+    allocate(lwork(lwork_val))
+
+    call dgesvd(jobu,jobvt,m,n,obj1(:,:)%element,ld1,s(:),&
+  &     obj2(:,:)%element,ld2,obj3(:,:)%element,ld3,&
+  &     lwork,lwork_val,ierr) 
+
+    deallocate(lwork)
+
+!--------------------------------------------------------------------
+  end subroutine ggesvd
 !--------------------------------------------------------------------
 
 !--------------------------------------------------------------------

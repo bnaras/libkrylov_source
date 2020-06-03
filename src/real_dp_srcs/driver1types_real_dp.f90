@@ -246,7 +246,7 @@ contains
       maxstart = floor(0.8*nbasis,kind=kind_integer)
     else
       nroots = 5
-      minstart = 20
+      minstart = 50
       maxstart = floor(0.3*nbasis,kind=kind_integer)
     end if
 

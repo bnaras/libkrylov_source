@@ -40,21 +40,11 @@ real_sp_restartdir = $(PWD)/real_sp_lib
 real_sp_restart_PROGRAMS = restart_check_libkrylov_real_sp
 restart_check_libkrylov_real_sp_SOURCES = restart_check.f90
 restart_check_libkrylov_real_sp_LDADD = libkrylov_real_sp.la
-# generate vandermonde matrix for driver1a
-real_sp_vm_problem1adir = $(PWD)/real_sp_test
-real_sp_vm_problem1a_PROGRAMS = problem1a_vm_real_sp
-problem1a_vm_real_sp_SOURCES = problem_1a_vandermonde.f90
-problem1a_vm_real_sp_LDADD = libkrylov_real_sp.la
-# generate pascal matrix for driver1a
-real_sp_ps_problem1adir = $(PWD)/real_sp_test
-real_sp_ps_problem1a_PROGRAMS = problem1a_ps_real_sp
-problem1a_ps_real_sp_SOURCES = problem_1a_pascal.f90
-problem1a_ps_real_sp_LDADD = libkrylov_real_sp.la
-# generate pascal matrix for driver1a
-real_sp_hk_problem1adir = $(PWD)/real_sp_test
-real_sp_hk_problem1a_PROGRAMS = problem1a_hk_real_sp
-problem1a_hk_real_sp_SOURCES = problem_1a_huckel.f90
-problem1a_hk_real_sp_LDADD = libkrylov_real_sp.la
+# generate symmetric matrix for driver1a
+real_sp_sym_problem1dir = $(PWD)/real_sp_test
+real_sp_sym_problem1_PROGRAMS = problem1_sym_real_sp
+problem1_sym_real_sp_SOURCES = symmetric_problem.f90
+problem1_sym_real_sp_LDADD = libkrylov_real_sp.la
 # driver1a - program for calling solver on a problem on file
 real_sp_driver1adir = $(PWD)/real_sp_test
 real_sp_driver1a_PROGRAMS = driver1a_real_sp
@@ -130,11 +120,11 @@ cmplx_sp_restartdir = $(PWD)/cmplx_sp_lib
 cmplx_sp_restart_PROGRAMS = restart_check_libkrylov_cmplx_sp
 restart_check_libkrylov_cmplx_sp_SOURCES = restart_check.f90
 restart_check_libkrylov_cmplx_sp_LDADD = libkrylov_cmplx_sp.la
-# generate vandermonde matrix for driver1a
-cmplx_sp_vm_problem1adir = $(PWD)/cmplx_sp_test
-cmplx_sp_vm_problem1a_PROGRAMS = problem1a_vm_cmplx_sp
-problem1a_vm_cmplx_sp_SOURCES = problem_1a_vandermonde.f90
-problem1a_vm_cmplx_sp_LDADD = libkrylov_cmplx_sp.la
+# generate symmetric matrix for driver1a
+cmplx_sp_sym_problem1dir = $(PWD)/cmplx_sp_test
+cmplx_sp_sym_problem1_PROGRAMS = problem1_sym_cmplx_sp
+problem1_sym_cmplx_sp_SOURCES = symmetric_problem.f90
+problem1_sym_cmplx_sp_LDADD = libkrylov_cmplx_sp.la
 # driver1a - program for calling solver on a problem on file
 cmplx_sp_driver1adir = $(PWD)/cmplx_sp_test
 cmplx_sp_driver1a_PROGRAMS = driver1a_cmplx_sp
@@ -211,11 +201,11 @@ real_dp_restartdir = $(PWD)/real_dp_lib
 real_dp_restart_PROGRAMS = restart_check_libkrylov_real_dp
 restart_check_libkrylov_real_dp_SOURCES = restart_check.f90
 restart_check_libkrylov_real_dp_LDADD = libkrylov_real_dp.la
-# generate vandermonde matrix for driver1a
-real_dp_vm_problem1adir = $(PWD)/real_dp_test
-real_dp_vm_problem1a_PROGRAMS = problem1a_vm_real_dp
-problem1a_vm_real_dp_SOURCES = problem_1a_vandermonde.f90
-problem1a_vm_real_dp_LDADD = libkrylov_real_dp.la
+# generate symmetric matrix for driver1a
+real_dp_sym_problem1dir = $(PWD)/real_dp_test
+real_dp_sym_problem1_PROGRAMS = problem1_sym_real_dp
+problem1_sym_real_dp_SOURCES = symmetric_problem.f90
+problem1_sym_real_dp_LDADD = libkrylov_real_dp.la
 # driver1a - program for calling solver on a problem on file
 real_dp_driver1adir = $(PWD)/real_dp_test
 real_dp_driver1a_PROGRAMS = driver1a_real_dp
@@ -292,11 +282,11 @@ cmplx_dp_restartdir = $(PWD)/cmplx_dp_lib
 cmplx_dp_restart_PROGRAMS = restart_check_libkrylov_cmplx_dp
 restart_check_libkrylov_cmplx_dp_SOURCES = restart_check.f90
 restart_check_libkrylov_cmplx_dp_LDADD = libkrylov_cmplx_dp.la
-# generate vandermonde matrix for driver1a
-cmplx_dp_vm_problem1adir = $(PWD)/cmplx_dp_test
-cmplx_dp_vm_problem1a_PROGRAMS = problem1a_vm_cmplx_dp
-problem1a_vm_cmplx_dp_SOURCES = problem_1a_vandermonde.f90
-problem1a_vm_cmplx_dp_LDADD = libkrylov_cmplx_dp.la
+# generate symmetric matrix for driver1a
+cmplx_dp_sym_problem1dir = $(PWD)/cmplx_dp_test
+cmplx_dp_sym_problem1_PROGRAMS = problem1_sym_cmplx_dp
+problem1_sym_cmplx_dp_SOURCES = symmetric_problem.f90
+problem1_sym_cmplx_dp_LDADD = libkrylov_cmplx_dp.la
 # driver1a - program for calling solver on a problem on file
 cmplx_dp_driver1adir = $(PWD)/cmplx_dp_test
 cmplx_dp_driver1a_PROGRAMS = driver1a_cmplx_dp

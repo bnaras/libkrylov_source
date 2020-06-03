@@ -320,6 +320,61 @@ contains
 !--------------------------------------------------------------------
 
 !--------------------------------------------------------------------
+  subroutine gpotrs(trans1,m,n,obj1,ld1, &
+  &   obj2,ld2,ierr)
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+!< Description:
+!< wrapper for
+!< Matrix Multiplication ((obj1)**-1)*obj2
+!< of type(base)
+!< where obj1 is cholesky decomposed
+!< done by forward (and backward) substitution
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Modules
+!--------------------------------------------------------------------
+    use basekinds
+    use floatformat
+!--------------------------------------------------------------------
+!
+    implicit none
+!
+!--------------------------------------------------------------------
+! Input Parameters
+!--------------------------------------------------------------------
+!! lower triangular decomposition of overlap
+    type(base), intent(in) :: obj1(:,:)
+!! eigenvectors or matrix to be transformed
+    type(base), intent(inout) :: obj2(:,:)
+!! number of rows in obj1
+    integer(kind_integer), intent(in) :: m
+!! number of columns in obj2
+    integer(kind_integer), intent(in) :: n
+!! first dimension of obj1
+    integer(kind_integer), intent(in) :: ld1
+!! first dimension of obj2
+    integer(kind_integer), intent(in) :: ld2
+!! character for L or U of  obj1 stored
+    character(len=1), intent(in) :: trans1
+!--------------------------------------------------------------------
+! Error Parameter
+!--------------------------------------------------------------------
+    integer(kind_integer), intent(inout) :: ierr
+!--------------------------------------------------------------------
+!  Local Variables
+!--------------------------------------------------------------------
+
+    call gpotrs(trans1,m,n,obj1%element,ld1, &
+  &   obj2%element,ld2,ierr)
+
+!--------------------------------------------------------------------
+  end subroutine gpotrs
+!--------------------------------------------------------------------
+
+!--------------------------------------------------------------------
   subroutine ggetrs(trans1,m,n,obj1,ld1,ipiv, &
   &   obj2,ld2,ierr)
 !--------------------------------------------------------------------

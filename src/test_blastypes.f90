@@ -935,13 +935,13 @@ program test_blastypes
     end do  
 !! check value of logical check
     if (check) then
-!! if true, write subroutine gpotrf failed to output and output file
-      write(unit=funit,fmt=*) 'subroutine ggetrf failed'
-      print *, 'subroutine ggetrf failed'
+!! if true, write subroutine ggetrs failed to output and output file
+      write(unit=funit,fmt=*) 'subroutine ggetrs failed'
+      print *, 'subroutine ggetrs failed'
     else
-!! if false, write subroutine gpotrf tested to output and output file
-      write(unit=funit,fmt=*) 'tested subroutine ggetrf'
-      print *, 'tested subroutine ggetrf'
+!! if false, write subroutine ggetrs tested to output and output file
+      write(unit=funit,fmt=*) 'tested subroutine ggetrs'
+      print *, 'tested subroutine ggetrs'
     end if
   end if
 
