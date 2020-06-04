@@ -495,7 +495,7 @@ contains
 
 !--------------------------------------------------------------------
   subroutine krylov_rayleigh(nbasis,nsubspace,&
-  &     approx_spectra,mvproduct,&
+  &     approx_spectra,avproduct,&
   &     basis_vectors,rayleigh,iverb,ierr)
 !--------------------------------------------------------------------
 !
@@ -528,7 +528,7 @@ contains
     integer(kind_integer), intent(in) :: nbasis
     integer(kind_integer), intent(in) :: nsubspace ! first subspace!
     real(kind_float), intent(in) :: approx_spectra(nbasis)
-    type(base), intent(in) :: mvproduct(nbasis,nsubspace)
+    type(base), intent(in) :: avproduct(nbasis,nsubspace)
     type(base), intent(in) :: basis_vectors(nbasis,nsubspace)
 !--------------------------------------------------------------------
 ! Output Variables
@@ -556,7 +556,7 @@ contains
 !! first ggemm to get rayleigh
     call ggemm('c','n',nsubspace,nsubspace,nbasis,one_kb,&
   &   basis_vectors(1:nbasis,1:nsubspace),nbasis,&
-  &   mvproduct(1:nbasis,1:nsubspace),nbasis,&
+  &   avproduct(1:nbasis,1:nsubspace),nbasis,&
   &   zero_kb,&
   &   rayleigh(1:nsubspace,1:nsubspace),&
   &   nsubspace)
@@ -694,7 +694,7 @@ contains
 
 !--------------------------------------------------------------------
   subroutine krylov_expand(nbasis,nsubspace,&
-  &     nresiduals,prev_nsubspace,approx_spectra,mvproduct,&
+  &     nresiduals,prev_nsubspace,approx_spectra,avproduct,&
   &     basis_vectors,rayleigh,iverb,ierr)
 !--------------------------------------------------------------------
 !
@@ -729,7 +729,7 @@ contains
     integer(kind_integer), intent(in) :: nresiduals
     integer(kind_integer), intent(in) :: prev_nsubspace
     real(kind_float), intent(in) :: approx_spectra(nbasis)
-    type(base), intent(in) :: mvproduct(nbasis,nsubspace)
+    type(base), intent(in) :: avproduct(nbasis,nsubspace)
     type(base), intent(in) :: basis_vectors(nbasis,nsubspace)
 !--------------------------------------------------------------------
 ! Variables Expanded
@@ -757,7 +757,7 @@ contains
 !! first ggemm to get basis,new-basis block 
     call ggemm('c','n',nsubspace,nresiduals,nbasis,one_kb,&
   &   basis_vectors(1:nbasis,1:nsubspace),nbasis,&
-  &   mvproduct(1:nbasis,(prev_nsubspace+1):(nsubspace)),nbasis,&
+  &   avproduct(1:nbasis,(prev_nsubspace+1):(nsubspace)),nbasis,&
   &   zero_kb,&
   &   rayleigh(1:nsubspace,&
   &    (prev_nsubspace+1):(nsubspace)),&
@@ -768,7 +768,7 @@ contains
 !! second ggemm to get new-basis,old-basis block
     call ggemm('c','n',nresiduals,prev_nsubspace,nbasis,&
   &   one_kb,basis_vectors(1:nbasis,(prev_nsubspace+1):(nsubspace)),&
-  &   nbasis,mvproduct(1:nbasis,1:prev_nsubspace),&
+  &   nbasis,avproduct(1:nbasis,1:prev_nsubspace),&
   &   nbasis,zero_kb,&
   &   rayleigh((prev_nsubspace+1):(nsubspace),1:prev_nsubspace),&
   &   nresiduals)
