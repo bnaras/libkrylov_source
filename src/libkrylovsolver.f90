@@ -335,7 +335,7 @@ contains
 !! use Singular values to determine number of independent vectors
     n3 = n2
     do k = n2, 1, -1 
-      if (log10(s(k)).gt.(logeps+5)) exit
+      if (log10(s(k)).gt.(logeps)) exit
       n3 = n3 - 1
     end do
 
@@ -1964,7 +1964,10 @@ contains
   &   all_residuals,nbasis)
 !! calculate scaled eigenvectors on the subspace
     do j = 1, nroots
-      vxo(1:nbasis,j) = full_solutions(1:nbasis,j)*roots(j)
+      do k = 1, nbasis
+        vxo(k,j) = full_solutions(k,j) &
+  &       *(approx_spectra(k)-roots(j))
+      end do
     end do
 !! preserving
 !!!! !! calculate scaled eigenvectors on the subspace
@@ -1980,7 +1983,7 @@ contains
 !!!!   &   xo,nsubspace,zero_kb,&
 !!!!   &   vxo,nbasis)
 !! make residuals = avx-vxo
-    all_residuals = all_residuals - vxo
+    all_residuals = all_residuals + vxo
 
     if (iverb .ge. 6) then
       print *, 'number of roots solved for', nroots
@@ -2309,6 +2312,8 @@ contains
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !! filled in at matrix vector products
     type(base), allocatable :: mvproduct(:,:)
+    type(base), allocatable :: dvproduct(:,:)
+    type(base), allocatable :: avproduct(:,:)
     type(base), allocatable :: rayleigh(:,:)
 !< AV = matrix vector products = mvproduct
 !< V**dagger AV = rayleigh
@@ -2493,6 +2498,8 @@ contains
 ! Allocate all arrays that exist across iterations
     allocate(basis_vectors(nbasis,maxsubspace)) !maximum
     allocate(mvproduct(nbasis,maxsubspace)) !maximum
+    allocate(avproduct(nbasis,maxsubspace)) !maximum
+    allocate(dvproduct(nbasis,maxsubspace)) !maximum
     allocate(lagrangian(nroots))
     allocate(solutions(maxsubspace,nroots)) !maximum
     allocate(overlap(maxsubspace,maxsubspace)) !maximum
@@ -2762,8 +2769,19 @@ contains
       end if
     end if
 
+
+!! NAMBI : construction of dvproduct
+    do j = 1, nsubspace
+      dvproduct(1:nbasis,j) = basis_vectors(1:nbasis,j)&
+  &                         * approx_spectra(1:nbasis)
+    end do
+!! construct av product
+    avproduct(1:nbasis,1:nsubspace) = &
+  &   mvproduct(1:nbasis,1:nsubspace) +& 
+  &    dvproduct(1:nbasis,1:nsubspace)
+
     call krylov_rayleigh(nbasis,nsubspace,&
-  &     approx_spectra,mvproduct(1:nbasis,1:nsubspace),&
+  &     approx_spectra,avproduct(1:nbasis,1:nsubspace),&
   &     basis_vectors(1:nbasis,1:nsubspace),&
   &     rayleigh(1:nsubspace,1:nsubspace),iverb,ierr)
     if (ierr.ne.0) then
@@ -3147,8 +3165,17 @@ contains
           nsubspace = prev_nsubspace
           exit ! This exits subspace loop
         end if
+!! NAMBI : construction of dvproduct
+        do j = 1, prev_nsubspace
+          dvproduct(1:nbasis,j) = basis_vectors(1:nbasis,j)&
+  &                         * approx_spectra(1:nbasis)
+        end do
+!! construct av product
+        avproduct(1:nbasis,1:prev_nsubspace) = &
+  &      mvproduct(1:nbasis,1:prev_nsubspace) +& 
+  &       dvproduct(1:nbasis,1:prev_nsubspace)
         call krylov_rayleigh(nbasis,prev_nsubspace,&
-  &         approx_spectra,mvproduct(1:nbasis,1:prev_nsubspace),&
+  &         approx_spectra,avproduct(1:nbasis,1:prev_nsubspace),&
   &         basis_vectors(1:nbasis,1:prev_nsubspace),&
   &         rayleigh(1:prev_nsubspace,1:prev_nsubspace),iverb,ierr)
         if (ierr.ne.0) then
@@ -3188,6 +3215,15 @@ contains
         nsubspace = prev_nsubspace
         exit ! This exits subspace loop
       end if
+!! NAMBI : construction of dvproduct
+      do j = prev_nsubspace+1 , nsubspace
+        dvproduct(1:nbasis,j) = basis_vectors(1:nbasis,j)&
+  &                         * approx_spectra(1:nbasis)
+      end do
+!! construct av product
+      avproduct(1:nbasis,(prev_nsubspace+1):nsubspace) = &
+  &    mvproduct(1:nbasis,(prev_nsubspace+1):nsubspace) +& 
+  &     dvproduct(1:nbasis,(prev_nsubspace+1):nsubspace)
 
 ! print restart basis-vectors if required
       if (irestart.ge.2) then
@@ -3215,7 +3251,7 @@ contains
 ! expand rayleigh matrix
       call krylov_expand(nbasis,nsubspace,&
   &     nresiduals,prev_nsubspace,&
-  &     approx_spectra,mvproduct(1:nbasis,1:nsubspace),&
+  &     approx_spectra,avproduct(1:nbasis,1:nsubspace),&
   &     basis_vectors(1:nbasis,1:nsubspace),&
   &     rayleigh(1:nsubspace,1:nsubspace),iverb,ierr)
       if (ierr.ne.0) then
@@ -3316,6 +3352,8 @@ contains
 
     deallocate(basis_vectors)
     deallocate(mvproduct)
+    deallocate(avproduct)
+    deallocate(dvproduct)
     deallocate(approx_spectra)
     deallocate(lagrangian)
     deallocate(solutions)

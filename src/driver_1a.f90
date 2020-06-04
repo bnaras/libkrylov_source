@@ -173,7 +173,7 @@ program krylovdriver_1a
 
   do j = 1, krylov_problem%n_size
     krylov_d(j) = krylov_a(j,j)
-!    krylov_a(j,j) = real(0,kind=kind_float)
+    krylov_a(j,j) = real(0,kind=kind_float)
   end do
 
 ! set pointers to local variables required for input subroutines
