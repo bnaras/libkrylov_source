@@ -953,14 +953,11 @@ program test_blastypes
   do j1 = 1, n
     z_array1(j1,j1) = real(j1,kind=kind_float)
   end do
-!! set original r_test and r_ref to real number 0
-  r_test = real(0,kind=kind_float)
-  r_ref = real(0,kind=kind_float)
 !! write ggesvd and operation
   write(unit=funit,fmt=*) 'test ggesvd', &
-  &', calculate the singular value decomposition of a matrix'
+  &', calculate the singular value decomposition of z_array1'
 !! call ggesvd to on test input onto test output
-  call ggesvd('a','a',n,n,z_array1,3,x_array1,z_array2,3,z_array3,3,ierr)
+  call ggesvd('a','a',n,n,z_array1,n,x_array1,z_array2,n,z_array3,n,ierr)
 !! set logical check = .false.
   check = .false.
 !! checking ierr value to see if ggesvd terminated with an error
@@ -974,13 +971,12 @@ program test_blastypes
 !! if false, write ggesvd runs
     write(unit=funit,fmt=*) 'ggesvd runs'
 !! write an explanation of the funtion
-    write(unit=funit,fmt=*) 'type(base) solution for SV decomposition' 
+    write(unit=funit,fmt=*) 'type(base) solution for SVD' 
 !! write explanation to the output file
-    write(unit=funit,fmt=*) 'z_array1 should be equal to', &
-  & ' a diagonal matrix with 1,2,3 on diagonal'
+    write(unit=funit,fmt=*) 'z_array1 is unchanged'
 !! write start to check each element in both test array and reference  
-    write(unit=funit,fmt=*) 'test ggesvd, for each element'
-!! using do loops to assign z_array2 to r_test element by element
+    write(unit=funit,fmt=*) 'test z_array1, for each element'
+!! using do loops to assign z_array1 to r_test element by element
 !! and r_ref as a diagonal matrix with 1,2,3 on the diagonal
     do j2 = 1, n 
       do j1 = 1,n
@@ -1005,11 +1001,11 @@ program test_blastypes
     write(unit=funit,fmt=*) 'This should be 1,2,3'
 !! write start to check each element
 !! in both test array and reference
-    write(unit=funit,fmt=*) 'test eigenvalues, for each element'
+    write(unit=funit,fmt=*) 'test singular values of x_array1, for each element'
 !! assign a reference array (real(kind_float))
 !! by operations on real(kind_float) numbers
 !! using a do loop to fill in the matrix for the reference
-    do j1 = 1, n
+    do j1 = n, 1
       r_test = x_array1(j1)
       r_ref = real(j1,kind=kind_float)
 !! using a do loop to take the absolute difference
@@ -1030,6 +1026,59 @@ program test_blastypes
 !! write subroutine ggesvd failed to output and output file
       write(unit=funit,fmt=*) 'subroutine ggesvd failed'  
       print *, 'subroutine ggesvd failed'
+      write(unit=funit,fmt=*) 'test singular values of z_array1, for each element'
+!! using do loops to assign z_array2 to r_test element by element
+!! and r_ref as a diagonal matrix with 1,2,3 on the diagonal
+    write(unit=funit,fmt=*) 'test left singular vectors of z_array1, for each element'
+    write(unit=funit,fmt=*) 'contains ones on the secondary diagonal'
+    do j2 = 1, n 
+      do j1 = 1,n
+        r_test = z_array2(j1,j2)
+        if (j1.eq.(j2+2)) then
+          r_ref = real(j2,kind=kind_float)
+        else if (j1.eq.(j2-2)) then
+          r_ref = real(j1,kind=kind_float)
+        else if ((j1.eq.2) .or. (j2.eq.2)) then
+          r_ref = real(j2,kind=kind_float)
+        else
+          r_ref = real(0,kind=kind_float) 
+        end if
+!! test the absolute difference of r_test and r_ref 
+!! whether it is greater than machine precision defined by constant eps
+        if (abs(r_test-r_ref).gt.eps) then
+!! if true, write the test failed and the position of element failed
+          write(unit=funit,fmt=*) 'failed for element', j1, j2
+!! set logical check = .true.
+          check = .true.
+        end if
+      end do
+    end do  
+!! using do loops to assign z_array2 to r_test element by element
+!! and r_ref as a diagonal matrix with 1,2,3 on the diagonal
+    write(unit=funit,fmt=*) 'test right singular vectorss of z_array1, for each element'
+    write(unit=funit,fmt=*) 'contains ones on the secondary diagonal'
+    do j2 = 1, n 
+      do j1 = 1,n
+        r_test = z_array3(j1,j2)
+        if (j1.eq.(j2+2)) then
+          r_ref = real(j2,kind=kind_float)
+        else if (j1.eq.(j2-2)) then
+          r_ref = real(j1,kind=kind_float)
+        else if ((j1.eq.2) .or. (j2.eq.2)) then
+          r_ref = real(j2,kind=kind_float)
+        else
+          r_ref = real(0,kind=kind_float) 
+        end if
+!! test the absolute difference of r_test and r_ref 
+!! whether it is greater than machine precision defined by constant eps
+        if (abs(r_test-r_ref).gt.eps) then
+!! if true, write the test failed and the position of element failed
+          write(unit=funit,fmt=*) 'failed for element', j1, j2
+!! set logical check = .true.
+          check = .true.
+        end if
+      end do
+    end do  
     else
 !! write subroutine ggesvd succeeded to output file
       write(unit=funit,fmt=*) 'tested subroutine ggesvd'
