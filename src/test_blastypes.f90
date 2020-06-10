@@ -998,10 +998,10 @@ program test_blastypes
     end do  
 !! write the explanation of function and result
     write(unit=funit,fmt=*) 'real(kind_float) diagonal matrix S = x_array1'
-    write(unit=funit,fmt=*) 'This should be 1,2,3'
+    write(unit=funit,fmt=*) 'This should be 3,2,1'
 !! write start to check each element
 !! in both test array and reference
-    write(unit=funit,fmt=*) 'test singular values of x_array1, for each element'
+    write(unit=funit,fmt=*) 'test singular values of z_array1, for each element'
 !! assign a reference array (real(kind_float))
 !! by operations on real(kind_float) numbers
 !! using a do loop to fill in the matrix for the reference
@@ -1026,11 +1026,10 @@ program test_blastypes
 !! write subroutine ggesvd failed to output and output file
       write(unit=funit,fmt=*) 'subroutine ggesvd failed'  
       print *, 'subroutine ggesvd failed'
-      write(unit=funit,fmt=*) 'test singular values of z_array1, for each element'
 !! using do loops to assign z_array2 to r_test element by element
 !! and r_ref as a diagonal matrix with 1,2,3 on the diagonal
-    write(unit=funit,fmt=*) 'test left singular vectors of z_array1, for each element'
-    write(unit=funit,fmt=*) 'contains ones on the secondary diagonal'
+    print *, 'test left singular vectors of z_array1, for each element'
+    print *, 'contains ones on the secondary diagonal'
     do j2 = 1, n 
       do j1 = 1,n
         r_test = z_array2(j1,j2)
@@ -1055,10 +1054,10 @@ program test_blastypes
     end do  
 !! using do loops to assign z_array2 to r_test element by element
 !! and r_ref as a diagonal matrix with 1,2,3 on the diagonal
-    write(unit=funit,fmt=*) 'test right singular vectorss of z_array1, for each element'
-    write(unit=funit,fmt=*) 'contains ones on the secondary diagonal'
+    print *, 'test right singular vectorss of z_array1, for each element'
+    print *, 'contains ones on the secondary diagonal'
     do j2 = 1, n 
-      do j1 = 1,n
+      do j1 = 1, n
         r_test = z_array3(j1,j2)
         if (j1.eq.(j2+2)) then
           r_ref = real(j2,kind=kind_float)
@@ -1091,11 +1090,8 @@ program test_blastypes
 !! z_array1 
   z_array1 = real(0,kind=kind_float)
   do j1 = 1, n
-    z_array2(j1,j1) = real(j1,kind=kind_float)
+    z_array1(j1,j1) = real(j1,kind=kind_float)
   end do
-!! set original r_test and r_ref to real number 0
-  r_test = real(0,kind=kind_float)
-  r_ref = real(0,kind=kind_float)
 !! write ggeqrf and operation
   write(unit=funit,fmt=*) 'test ggeqrf', &
   &', calculate for Q of QR decomposition'
@@ -1122,8 +1118,8 @@ program test_blastypes
     write(unit=funit,fmt=*) 'test ggeqrf, for each element'
 !! using do loops to assign z_array1 to r_test element by element
 !! and r_ref as a diagonal matrix with 1,2,3 on the diagonal
-    do j2 = 1, n 
-      do j1 = 1,n
+    do j2 = n, 1 
+      do j1 = n, 1
         r_test = z_array1(j1,j2)
         if (j1.eq.j2) then
           r_ref = real(j2,kind=kind_float)
@@ -1140,6 +1136,220 @@ program test_blastypes
         end if
       end do
     end do  
+    print *, 'test tau array of z_array1, for each element'
+!! assign a reference array (real(kind_float))
+!! by operations on real(kind_float) numbers
+!! using a do loop to fill in the matrix for the reference
+    do j1 = n, 1
+      r_test = tau(j1)
+      r_ref = real(0,kind=kind_float)
+!! using a do loop to take the absolute difference
+!! between the elements in test array
+!! and elements in reference value
+!! test if difference is greater than machine precision
+!! (defined by the constant eps)
+      if (abs(r_test-r_ref).gt.eps) then
+!! if true, write the test failed 
+!! and the position of the element that failed
+        write(unit=funit,fmt=*) 'failed for elements', j1
+!! set logical check = .true.
+        check = .true.
+      end if
+    end do
+!! check value of logical check
+    if (check) then
+!! write subroutine ggesvd failed to output and output file
+      write(unit=funit,fmt=*) 'subroutine ggesvd failed'  
+      print *, 'subroutine ggesvd failed'
+    end if
+  end if
+
+
+!!! test gungqr
+!! write gungqr and operation
+  write(unit=funit,fmt=*) 'test gungqr', &
+  &', generate matrix Q with orthonormal columns as returned by ggeqrf routine'
+!! call ggesvd to on test input onto test output
+  call gungqr(n,n,n,z_array1,n,tau,ierr)
+!! set logical check = .false.
+  check = .false.
+!! checking ierr value to see if ggesvd terminated with an error
+!! test if ierr is not equal to 0
+  if (ierr.ne.0) then
+!! if true, write gungqr failed and write the ierr value
+    write(unit=funit,fmt=*) 'gungqr failed, ierr=', ierr
+!! set ierr to 0
+    ierr = 0
+  else
+!! if false, write gungqr runs
+    write(unit=funit,fmt=*) 'gungqr runs'
+!! write an explanation of the funtion
+    write(unit=funit,fmt=*) 'type(base) solution for generating Q matrix' 
+!! write explanation to the output file
+    write(unit=funit,fmt=*) 'z_array1 should be an identity'
+!! write start to check each element in both test array and reference  
+    write(unit=funit,fmt=*) 'test z_array1, for each element'
+!! using do loops to assign z_array1 to r_test element by element
+!! and r_ref as identity matrix
+    do j2 = 1, n 
+      do j1 = 1,n
+        r_test = z_array1(j1,j2)
+        if (j1.eq.j2) then
+          r_ref = real(1,kind=kind_float)
+        else
+          r_ref = real(0,kind=kind_float) 
+        end if
+!! test the absolute difference of r_test and r_ref 
+!! whether it is greater than machine precision defined by constant eps
+        if (abs(r_test-r_ref).gt.eps) then
+!! if true, write the test failed and the position of element failed
+          write(unit=funit,fmt=*) 'failed for element', j1, j2
+!! set logical check = .true.
+          check = .true.
+        end if
+      end do
+    end do  
+!! write start to check each element
+!! in both test array and reference
+    write(unit=funit,fmt=*) 'test tau of Q matrix, for each element'
+!! assign a reference array (real(kind_float))
+!! by operations on real(kind_float) numbers
+!! using a do loop to fill in the matrix for the reference
+    do j1 = 1, n
+      r_test = tau(j1)
+      r_ref = real(0,kind=kind_float)
+!! using a do loop to take the absolute difference
+!! between the elements in test array
+!! and elements in reference value
+!! test if difference is greater than machine precision
+!! (defined by the constant eps)
+      if (abs(r_test-r_ref).gt.eps) then
+!! if true, write the test failed 
+!! and the position of the element that failed
+        write(unit=funit,fmt=*) 'failed for elements', j1
+!! set logical check = .true.
+        check = .true.
+      end if
+    end do
+!! check value of logical check
+    if (check) then
+!! write subroutine gungqr failed to output and output file
+      write(unit=funit,fmt=*) 'subroutine gungqr failed'  
+      print *, 'subroutine gungqr failed'
+    else
+!! write subroutine gungqr succeeded to output file
+      write(unit=funit,fmt=*) 'tested subroutine gungqr'
+      print *, 'tested subroutine gungqr'
+    end if
+  end if
+
+
+!!! test gunmqr
+!! using a do loop to fill in the test input matrix
+!! z_array2 
+  z_array2 = real(0,kind=kind_float)
+  do j1 = 1, n
+    z_array2(j1,j1) = real(j1,kind=kind_float)
+  end do
+!! write gunmqr and operation
+  write(unit=funit,fmt=*) 'test gunmqr', &
+  &', matrix mulplication of QR as returned by ggeqrf routine'
+!! call ggesvd to on test input onto test output
+  call gunmqr('l','n',n,n,n,z_array1,n,tau,z_array2,n,ierr)
+!! set logical check = .false.
+  check = .false.
+!! checking ierr value to see if gunmqr terminated with an error
+!! test if ierr is not equal to 0
+  if (ierr.ne.0) then
+!! if true, write gungqr failed and write the ierr value
+    write(unit=funit,fmt=*) 'gunmqr failed, ierr=', ierr
+!! set ierr to 0
+    ierr = 0
+  else
+!! if false, write gungqr runs
+    write(unit=funit,fmt=*) 'gungqr runs'
+!! write an explanation of the funtion
+    write(unit=funit,fmt=*) 'type(base) solution for generating Q matrix' 
+!! write explanation to the output file
+    write(unit=funit,fmt=*) 'z_array1 should be an identity'
+!! write start to check each element in both test array and reference  
+    write(unit=funit,fmt=*) 'test z_array1, for each element'
+!! using do loops to assign z_array1 to r_test element by element
+!! and r_ref as identity matrix
+    do j2 = 1, n 
+      do j1 = 1,n
+        r_test = z_array1(j1,j2)
+        if (j1.eq.j2) then
+          r_ref = real(1,kind=kind_float)
+        else
+          r_ref = real(0,kind=kind_float) 
+        end if
+!! test the absolute difference of r_test and r_ref 
+!! whether it is greater than machine precision defined by constant eps
+        if (abs(r_test-r_ref).gt.eps) then
+!! if true, write the test failed and the position of element failed
+          write(unit=funit,fmt=*) 'failed for element', j1, j2
+!! set logical check = .true.
+          check = .true.
+        end if
+      end do
+    end do  
+!! write explanation to the output file
+    write(unit=funit,fmt=*) 'z_array2 should be a diagonal matrix with 1,2,3 as elements'
+!! write start to check each element in both test array and reference  
+    write(unit=funit,fmt=*) 'test z_array2, for each element'
+!! using do loops to assign z_array1 to r_test element by element
+!! and r_ref as identity matrix
+    do j2 = 1, n 
+      do j1 = 1,n
+        r_test = z_array2(j1,j2)
+        if (j1.eq.j2) then
+          r_ref = real(j2,kind=kind_float)
+        else
+          r_ref = real(0,kind=kind_float) 
+        end if
+!! test the absolute difference of r_test and r_ref 
+!! whether it is greater than machine precision defined by constant eps
+        if (abs(r_test-r_ref).gt.eps) then
+!! if true, write the test failed and the position of element failed
+          write(unit=funit,fmt=*) 'failed for element', j1, j2
+!! set logical check = .true.
+          check = .true.
+        end if
+      end do
+    end do  
+!! write start to check each element
+!! in both test array and reference
+    write(unit=funit,fmt=*) 'test tau of Q matrix, for each element'
+!! assign a reference array (real(kind_float))
+!! by operations on real(kind_float) numbers
+!! using a do loop to fill in the matrix for the reference
+    do j1 = 1, n
+      r_test = tau(j1)
+      r_ref = real(0,kind=kind_float)
+!! using a do loop to take the absolute difference
+!! between the elements in test array
+!! and elements in reference value
+!! test if difference is greater than machine precision
+!! (defined by the constant eps)
+      if (abs(r_test-r_ref).gt.eps) then
+!! if true, write the test failed 
+!! and the position of the element that failed
+        write(unit=funit,fmt=*) 'failed for elements', j1
+!! set logical check = .true.
+        check = .true.
+      end if
+    end do
+!! check value of logical check
+    if (check) then
+!! write subroutine gungqr failed to output and output file
+      write(unit=funit,fmt=*) 'subroutine gungqr failed'  
+      print *, 'subroutine gunmqr failed'
+    else
+!! write subroutine gungqr succeeded to output file
+      write(unit=funit,fmt=*) 'tested subroutine gunmqr'
+      print *, 'tested subroutine gunmqr'
+    end if
   end if
 
 
