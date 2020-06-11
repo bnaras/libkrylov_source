@@ -34,7 +34,7 @@ program problem_1
 ! Local Variables for Subroutines and reading problem
 !--------------------------------------------------------------------
 ! contains the matrix problem, read in from file
-  type(base), allocatable :: krylov_a(:,:), obj1(:,:), obj2(:,:)
+  type(base), allocatable :: krylov_a(:,:), obj1(:,:), obj2(:,:), tau(:)
   type(base), allocatable :: rhs(:,:), soln(:,:), ax(:,:), lagr(:,:)
 ! character string to identify all files
   character(len=32), target :: p1_string = ''
@@ -48,6 +48,11 @@ program problem_1
   character(len=32) :: lagr_string = ''
 ! character string for file name that contains the frequencies
   character(len=32) :: freqname_string = ''
+! character string for file name that contains the Q matrix from
+! QR decomposition
+  character(len=32) :: qr_matrix_string = ''
+! character string for file name that contains tau
+  character(len=32) :: tau_string = ''
 ! string indicating which eigenvalue
   character(len=32) :: eigenvalue_string = ''
 ! integers for the size of the problem
@@ -91,6 +96,7 @@ program problem_1
   allocate(ax(n,m))
   allocate(lagr(l,m))
   allocate(freq(l))
+  allocate(tau(n))
 
   print *, 'all allocations successful'
 
@@ -190,13 +196,7 @@ program problem_1
 
   print *, 'transformation matrix okay'
 
-!! generate eigenvalues
-!  do k = 1, n
-!    diag(k) = real(k+k,kind=kind_float)
-!  end do
-
-
-!! ask for user input on preconditoner
+!! ask for user input on eigenvalues
   print *, 'Please enter an option for type of eigenvalue'
   print *, '"positive_cosine" for positive cosine eigenvalues' 
   print *, '"positive_even" for positive even eigenvalues' 
@@ -247,7 +247,7 @@ program problem_1
     stop
   end if
 
-!! Compute D*U matrix into obj1, where D = (j + k)
+!! Compute D*U matrix into obj1
   do k = 1, n
     obj1(k, 1:n) = obj2(k, 1:n) * diag(k)
   end do
@@ -445,6 +445,40 @@ program problem_1
       stop
     end if 
 
+  obj1 = krylov_a
+!! QR decomposition on krylov_a
+  call ggeqrf(n,n,obj1,n,tau,ierr)
+
+!! set a1_string based on basetypes
+  p1_string = trim(base_print_string)//'_1a'
+
+!!allocate set the filename_string for the file name 
+  qr_matrix_string = trim(p1_string)//'_test_qr'
+
+!! print solutions of Q
+  call array_print_base(qr_matrix_string,n,&
+  &   n,obj1,ierr)
+
+  if (ierr.ne.0) then
+    print *, 'problem printing exact QR solutions!'
+    stop
+  end if
+
+!! set a1_string based on basetypes
+!  p1_string = trim(base_print_string)//'_1a'
+
+!!allocate set the filename_string for the file name 
+ ! tau_string = trim(p1_string)//'_test_tau'
+
+!! print solutions of tau
+  !call array_print_base(tau_string,n,&
+  !&   tau,ierr)
+
+  !if (ierr.ne.0) then
+   ! print *, 'problem printing exact tau solutions!'
+   ! stop
+  !end if
+
   deallocate(krylov_a)
   deallocate(obj1)
   deallocate(obj2)
@@ -455,6 +489,7 @@ program problem_1
   deallocate(ax)
   deallocate(lagr)
   deallocate(freq)
+  deallocate(tau)
 
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
