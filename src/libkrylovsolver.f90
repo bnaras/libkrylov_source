@@ -2331,7 +2331,8 @@ contains
 !--------------------------------------------------------------------
   subroutine problem_a_solver(krylov_approx,krylov_start,&
     & krylov_problem_a,&
-    & krylov_guess,krylov_mvp,krylov_precon,krylov_output_a,ierr)
+    & krylov_guess,krylov_mvp,krylov_precon,&
+    & krylov_maket_a,krylov_output_a,ierr)
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
 !
@@ -2376,6 +2377,7 @@ contains
     class(libkrylov_guess_subroutine) ::     krylov_guess
     class(libkrylov_mvp_subroutine) ::       krylov_mvp
     class(libkrylov_precon_subroutine) ::    krylov_precon
+    class(libkrylov_maket_a_subroutine) ::    krylov_maket_a
     class(libkrylov_output_a_subroutine) ::  krylov_output_a
 !--------------------------------------------------------------------
 ! Local Variables
@@ -2493,6 +2495,7 @@ contains
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !! filled in before extend
     integer(kind_integer) :: prev_nsubspace = 0
+    real(kind_float) :: largest_sv
 !< u = old q from previous iteration = prev_nsubspace
 !--------------------------------------------------------------------
 
@@ -3119,6 +3122,26 @@ contains
 ! spacer
       if (iverb.ge.0) then
         print *, ' '
+      end if
+
+!! determine residuals
+      call krylov_a_residue(nbasis,nsubspace,nroots,&
+  &     mvproduct(1:nbasis,1:nsubspace),full_solutions,&
+  &     solutions(1:nsubspace,1:nroots),&
+  &     roots,&
+  &     approx_spectra,krylov_maket_a,&
+  &     residuals,&
+  &     largest_sv,&
+  &     nresiduals,iverb,ierr)
+      if (ierr.ne.0) then
+        if (iverb.ge.0) then
+          print *, 'determining new basis vectors failed'
+          print *, 'error variable = ',ierr
+          print *, 'using previous subspace solutions for print'
+        end if
+        nsubspace = prev_nsubspace
+        ierr = 0
+        exit ! This exits subspace loop
       end if
 
 !! test normalizing all residuals

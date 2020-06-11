@@ -53,6 +53,7 @@ program test_restart_a_real_dp
   type(lkl_pc_davidson) :: krylov_pc_davidson
   type(kl_mvp) :: krylov_mvp
   type(kl_output_a) :: krylov_output
+  type(lkl_mta_all) :: krylov_maket
 !--------------------------------------------------------------------
 ! Local Variables for Subroutines and reading problem
 !--------------------------------------------------------------------
@@ -87,6 +88,7 @@ program test_restart_a_real_dp
 
 !! set irestart
   krylov_problem%irestart = user_input
+  krylov_maket%precon_string = 'davidson'
 
 !! set a1_string based on basetypes
   a1_string = trim(base_print_string)//'_1a'
@@ -138,7 +140,7 @@ program test_restart_a_real_dp
   call problem_a_solver(krylov_approx,krylov_s_eg,&
   &   krylov_problem, &
   &   krylov_g_uv,krylov_mvp,krylov_pc_davidson, &
-  &   krylov_output,ierr)
+  &   krylov_maket,krylov_output,ierr)
 
   print *, 'final ierr value = ',ierr
 
