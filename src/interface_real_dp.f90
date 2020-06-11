@@ -22,6 +22,7 @@ module libkrylovinterface
   &   libkrylov_mvp_subroutine => libkrylov_mvp_real_dp, &
   &   libkrylov_precon_subroutine => libkrylov_precon_real_dp, &
   &   libkrylov_problem_a_subroutine => libkrylov_problem_a_real_dp, &
+  &   libkrylov_maket_a_subroutine => libkrylov_maket_a_real_dp, &
   &   libkrylov_output_a_subroutine => libkrylov_output_a_real_dp, &
   &   libkrylov_problem_b_subroutine => libkrylov_problem_b_real_dp, &
   &   libkrylov_output_b_subroutine => libkrylov_output_b_real_dp, &

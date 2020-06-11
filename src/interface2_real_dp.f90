@@ -28,7 +28,9 @@ module libkrylovinterface2
   &   lkl_pc_davidson => lkl_pc_davidson_rdp, &
   &   lkl_precon_davidson => lkl_precon_davidson_rdp, &
   &   lkl_pc_sleijpen => lkl_pc_sleijpen_rdp, &
-  &   lkl_precon_sleijpen => lkl_precon_sleijpen_rdp
+  &   lkl_precon_sleijpen => lkl_precon_sleijpen_rdp, &
+  &   lkl_mta_all => lkl_mta_all_rdp, &
+  &   lkl_maket_a_all => lkl_maket_a_all_rdp
 !--------------------------------------------------------------------
 ! Implicit none
 !--------------------------------------------------------------------

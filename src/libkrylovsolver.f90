@@ -235,7 +235,8 @@ contains
 !--------------------------------------------------------------------
 
 !--------------------------------------------------------------------
-  subroutine krylov_orthogonalize(n1,n2,vectors,n3,iverb,ierr)
+  subroutine krylov_orthogonalize(n1,n2,vectors,singular_vals,&
+  &            n3,iverb,ierr)
 !--------------------------------------------------------------------
 !
 !--------------------------------------------------------------------
@@ -268,10 +269,12 @@ contains
 !--------------------------------------------------------------------
 ! Input/Output Parameters
 !--------------------------------------------------------------------
-!!    columns of vectors, on output
-    integer(kind_integer), intent(inout) :: n3
 !!  vectors
     type(base), intent(inout) :: vectors(n1,n2)
+!!  singular values
+    real(kind_float), intent(inout) :: singular_vals(n2)
+!!    columns of vectors, on output
+    integer(kind_integer), intent(inout) :: n3
 !--------------------------------------------------------------------
 ! Error Parameter
 !--------------------------------------------------------------------
@@ -2185,6 +2188,147 @@ contains
 
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
+  subroutine krylov_a_residue(nbasis,nsubspace,nroots,&
+  &     mvproduct,full_solutions,solutions,&
+  &     roots,&
+  &     approx_spectra,krylov_maket_a,residuals,&
+  &     largest_sv,&
+  &     nresiduals,iverb,ierr)
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Description:
+!--------------------------------------------------------------------
+!< This subroutine does the norms step of a krylov solve,
+!< producing the residual norms of the approximate solutions.
+!< to save computational power the residuals are passed out 
+!< from this routine as well.
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Modules and Global Variables
+!--------------------------------------------------------------------
+! for kind_integer and other precision related parameters
+    use basekinds
+! define real(kind_float) and associated operations
+    use floatformat
+! define type(base) and type(basereal) and associated operations
+    use basetypes
+    use blastypes
+!--------------------------------------------------------------------
+! Implicit None statement
+!--------------------------------------------------------------------
+    implicit none
+!--------------------------------------------------------------------
+! Input Variables
+!--------------------------------------------------------------------
+! Comments in the solver subroutine below
+    integer(kind_integer), intent(in) :: nbasis
+    integer(kind_integer), intent(in) :: nsubspace
+    integer(kind_integer), intent(in) :: nroots
+    type(base), intent(in) :: mvproduct(nbasis,nsubspace)
+    type(base), intent(in) :: full_solutions(nbasis,nroots)
+    type(base), intent(in) :: solutions(nsubspace,nroots)
+    real(kind_float), intent(in) :: roots(nroots)
+    real(kind_float), intent(in) :: approx_spectra(nbasis)
+    class(libkrylov_maket_a_subroutine) :: krylov_maket_a
+!--------------------------------------------------------------------
+! Output Variables
+!--------------------------------------------------------------------
+    type(base), intent(inout) :: residuals(nbasis,nroots)
+    real(kind_float), intent(inout) :: largest_sv
+    integer(kind_integer), intent(inout) :: nresiduals
+!--------------------------------------------------------------------
+! Error Parameter
+!--------------------------------------------------------------------
+    integer(kind_integer), intent(inout) :: iverb   
+    integer(kind_integer), intent(inout) :: ierr   
+!--------------------------------------------------------------------
+! Local Variables
+!--------------------------------------------------------------------
+    type(base) :: one_kb
+    type(base) :: zero_kb
+    type(base), allocatable :: mvx(:,:)
+    real(kind_float), allocatable :: singular_vals(:)
+    real(kind_float) :: lognbasis
+    integer(kind_integer) :: ntemp ! n of all_residuals
+    real(kind_float) :: res_temp
+    type(base) :: test_val
+!! integer for loops
+    integer(kind_integer) :: j,k,l = 0
+!--------------------------------------------------------------------
+
+! Allocate local arrays
+    allocate(mvx(nbasis,nroots))
+    allocate(singular_vals(nroots))
+
+!! Set constants required for BLAS
+    one_kb = real(1,kind=kind_float)
+    zero_kb = real(0,kind=kind_float)
+!! calculate matrix vector products of the approximate solutions
+!! in the representation of the full basis, aka avx, on residuals
+    call ggemm('n','n',nbasis,nroots,nsubspace,&
+  &   one_kb,mvproduct,nbasis,&
+  &   solutions,nsubspace,zero_kb,&
+  &   mvx,nbasis)
+
+!! Make preconditioned residuals with input function!
+    associate(interfacing_fs => full_solutions%element,&
+  &           interfacing_mvx => mvx%element,&
+  &           interfacing_rd => residuals%element)
+      call krylov_maket_a%lkl_maket_a(nbasis,nroots,&
+  &     approx_spectra,&
+  &     roots,interfacing_mvx,interfacing_fs,&
+  &     interfacing_rd,ierr)
+    end associate
+    if (ierr.ne.0) then
+      if (iverb.ge.0) then
+        print *, 'class(user_krylov_maket_a_subroutine) function failed'
+        print *, 'error variable = ',ierr
+        print *, 'exit residue step'
+      end if
+      ierr = -40
+      return ! return to solver loop
+    end if
+
+!! SVD of residuals to obtain 
+    call krylov_orthogonalize(nbasis,nroots,residuals,&
+  &       singular_vals,nresiduals,iverb,ierr)
+    if (ierr.ne.0) then
+      if (iverb.ge.0) then
+        print *, 'decomposing new basis vectors failed'
+        print *, 'error variable = ',ierr 
+        print *, 'exit residue step'
+      end if
+      ierr = -40
+      return
+    end if
+
+!! test for
+    if (nresiduals.eq.0) then
+      largest_sv = real(0,kind=kind_float)
+    else 
+      largest_sv = singular_vals(1)
+    end if
+
+
+    if (iverb.ge.3) then
+      print *, 'number of preconditioned residuals: ',nresiduals
+    end if
+
+! Deallocate local arrays
+    deallocate(mvx)
+    deallocate(singular_vals)
+
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+  end subroutine krylov_a_residue
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
   subroutine problem_a_solver(krylov_approx,krylov_start,&
     & krylov_problem_a,&
     & krylov_guess,krylov_mvp,krylov_precon,krylov_output_a,ierr)
@@ -3014,7 +3158,7 @@ contains
 !! orthogonalization via QR, have k hold nresiduals as input
       k = nresiduals
       call krylov_orthogonalize(nbasis,k,residuals(1:nbasis,1:k),&
-  &       nresiduals,iverb,ierr)
+  &       euc_norm(1:k),nresiduals,iverb,ierr)
       if (ierr.ne.0) then
         if (iverb.ge.0) then
           print *, 'optimizing new basis vectors failed'

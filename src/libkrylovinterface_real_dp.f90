@@ -219,6 +219,37 @@ module libkrylovinterface_real_dp
     end subroutine libkrylov_precon_interface
   end interface
 
+!! abstract type for krylov_maket function
+!! function to take krylov iteration objects
+!! and produce preconditioned residuals (T)
+  type, abstract :: libkrylov_maket_a_real_dp
+  contains
+    procedure(libkrylov_maket_a_interface), deferred :: lkl_maket_a
+  end type libkrylov_maket_a_real_dp
+  abstract interface
+    subroutine libkrylov_maket_a_interface(data,n1,n2,approx_spectra,&
+  &   roots,mvx,full_solutions,residuals,ierr)
+      import :: lkl_real_dp_k, lkl_int_rdp_k , libkrylov_maket_a_real_dp
+      class(libkrylov_maket_a_real_dp) :: data
+!!    rows of residuals, nbasis
+      integer(lkl_int_rdp_k), intent(in) :: n1
+!!    columns of residuals, nroots
+      integer(lkl_int_rdp_k), intent(in) :: n2
+!!    approximate spectra
+      real(lkl_real_dp_k), intent(in) :: approx_spectra(n1)
+!!    approximate spectra
+      real(lkl_real_dp_k), intent(in) :: roots(n2)
+!!    basis vectors
+      real(lkl_real_dp_k), intent(in) :: mvx(n1,n2)
+!!    full solutions
+      real(lkl_real_dp_k), intent(in) :: full_solutions(n1,n2)
+!!    residuals
+      real(lkl_real_dp_k), intent(inout) :: residuals(n1,n2)
+!!    error variable
+      integer(lkl_int_rdp_k), intent(inout) :: ierr
+    end subroutine libkrylov_maket_a_interface
+  end interface
+
 !--------------------------------------------------------------------
 
 !--------------------------------------------------------------------
@@ -281,6 +312,15 @@ module libkrylovinterface_real_dp
   contains
     procedure :: lkl_precon => lkl_precon_sleijpen_rdp
   end type lkl_pc_sleijpen_rdp
+
+!! defining input function with all options
+  type, extends(libkrylov_maket_a_real_dp) :: lkl_mta_all_rdp
+! external data required for the function
+!! string indicating which preconditioner
+    character(len=32) :: precon_string = 'davidson'
+  contains
+    procedure :: lkl_maket_a => lkl_maket_a_all_rdp
+  end type lkl_mta_all_rdp
 
 !--------------------------------------------------------------------
 
@@ -1264,6 +1304,129 @@ contains
 
 !--------------------------------------------------------------------
   end subroutine lkl_precon_all_rdp
+!--------------------------------------------------------------------
+
+!--------------------------------------------------------------------
+  subroutine lkl_maket_a_all_rdp(data,n1,n2,approx_spectra,&
+   &   roots,mvx,full_solutions,residuals,ierr)
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Description:
+!--------------------------------------------------------------------
+!! subroutine for preconditioning residuals
+!! using the jacobi-davidson method proposed by sleijen
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Modules and Global Variables
+!--------------------------------------------------------------------
+! Blank
+!--------------------------------------------------------------------
+!
+    implicit none
+!
+!--------------------------------------------------------------------
+! External data (IDEALLY EMPTY)
+!--------------------------------------------------------------------
+    class(lkl_mta_all_rdp) :: data
+!--------------------------------------------------------------------
+! Input Parameters
+!--------------------------------------------------------------------
+!!    rows of residuals, nbasis
+    integer(lkl_int_rdp_k), intent(in) :: n1
+!!    columns of residuals, nresiduals
+    integer(lkl_int_rdp_k), intent(in) :: n2
+!!    approximate spectra
+    real(lkl_real_dp_k), intent(in) :: approx_spectra(n1)
+!!    frequencies
+    real(lkl_real_dp_k), intent(in) :: roots(n2)
+!!    mvproduct
+    real(lkl_real_dp_k), intent(in) :: mvx(n1,n2)
+!!    full solutions
+    real(lkl_real_dp_k), intent(in) :: full_solutions(n1,n2)
+!--------------------------------------------------------------------
+! Input/Output Parameters
+!--------------------------------------------------------------------
+!!    guess vectors
+    real(lkl_real_dp_k), intent(inout) :: residuals(n1,n2)
+!--------------------------------------------------------------------
+! Error Parameter
+!--------------------------------------------------------------------
+    integer(lkl_int_rdp_k), intent(inout) :: ierr
+!--------------------------------------------------------------------
+!  Local Variables
+!--------------------------------------------------------------------
+    integer(lkl_int_rdp_k) :: j,k = 0
+    real(lkl_real_dp_k), allocatable :: vxo(:,:)
+    real(lkl_real_dp_k) :: numerator
+    real(lkl_real_dp_k) :: denominator
+    real(lkl_real_dp_k), external :: ddot
+    real(lkl_real_dp_k), allocatable :: mx(:,:)
+!--------------------------------------------------------------------
+
+    allocate(vxo(n1,n2))
+
+!! calculate scaled eigenvectors on the subspace
+    do j = 1, n2
+      do k = 1, n1
+        vxo(k,j) = full_solutions(k,j) &
+  &       *(approx_spectra(k)-roots(j))
+      end do
+    end do
+
+    residuals = mvx + vxo
+
+    if (data%precon_string.eq.'none') then
+    else if (data%precon_string.eq.'approx_spectra') then
+      do k = 1, n2
+        do j = 1, n1
+          residuals(j,k) = residuals(j,k)/&
+ &         ( approx_spectra(j) )
+        end do
+      end do
+    else if (data%precon_string.eq.'davidson') then
+      do k = 1, n2
+        do j = 1, n1
+          residuals(j,k) = residuals(j,k)/&
+ &         ( approx_spectra(j) - roots(k) )
+        end do
+      end do
+    else if (data%precon_string.eq.'sleijpen') then
+      allocate(mx(n1,n2))
+  
+  !! create scaled full solutions required for epsilon
+      do k = 1, n2
+        do j = 1, n1
+          mx(j,k) = full_solutions(j,k)/&
+  &         ( approx_spectra(j) - roots(k) )
+        end do
+      end do
+  
+      do k = 1, n2
+        denominator = ddot(n1,mx(1:n1,k),1,full_solutions(1:n1,k),1)
+        numerator = ddot(n1,mx(1:n1,k),1,residuals(1:n1,k),1)
+        do j = 1, n1
+          residuals(j,k) = ((residuals(j,k) &
+  &  - ((numerator/denominator)*full_solutions(j,k))) &
+  &   / ( approx_spectra(j) - roots(k) ))
+        end do
+      end do
+  
+      deallocate(mx)
+    else ! default to davidson
+      do k = 1, n2
+        do j = 1, n1
+          residuals(j,k) = residuals(j,k)/&
+ &         ( approx_spectra(j) - roots(k) )
+        end do
+      end do
+    end if
+
+    deallocate(vxo)
+
+!--------------------------------------------------------------------
+  end subroutine lkl_maket_a_all_rdp
 !--------------------------------------------------------------------
 
 !--------------------------------------------------------------------
