@@ -30,7 +30,11 @@ module libkrylovinterface2
   &   lkl_pc_sleijpen => lkl_pc_sleijpen_rdp, &
   &   lkl_precon_sleijpen => lkl_precon_sleijpen_rdp, &
   &   lkl_mta_all => lkl_mta_all_rdp, &
-  &   lkl_maket_a_all => lkl_maket_a_all_rdp
+  &   lkl_maket_a_all => lkl_maket_a_all_rdp, &
+  &   lkl_mtb_all => lkl_mtb_all_rdp, &
+  &   lkl_maket_b_all => lkl_maket_b_all_rdp, &
+  &   lkl_mtc_all => lkl_mtc_all_rdp, &
+  &   lkl_maket_c_all => lkl_maket_c_all_rdp
 !--------------------------------------------------------------------
 ! Implicit none
 !--------------------------------------------------------------------

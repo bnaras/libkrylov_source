@@ -49,7 +49,7 @@ program krylovdriver_1a
   type(lkl_s_elec_gas) :: krylov_s_eg
   type(lkl_g_unit_vec) :: krylov_g_uv
   type(lkl_pc_all) :: krylov_pc_all
-  type(lkl_mta_all) :: krylov_mta_all
+  type(lkl_mta_all) :: krylov_maket_all
   type(lkl_pc_none) :: krylov_pc_none
   type(lkl_pc_approx) :: krylov_pc_approx
   type(lkl_pc_davidson) :: krylov_pc_davidson
@@ -101,25 +101,50 @@ program krylovdriver_1a
         print *, ''
         print *, 'options:'
         print *, '--help        display this message'
+        print *, ''
         print *, '-precon       select preconditioner'
         print *, '               available options:'
         print *, '                none'
         print *, '                approx_spectra'
         print *, '                davidson'
         print *, '                sleijpen'
+        print *, ''
         print *, '-irestart     select restart level'
+        print *, '               available options: 1 - 4'
+        print *, ''
+        print *, '-nroots       select number of roots to solve'
+        print *, ''
+        print *, '-nstart       select size of initial subspace'
+        print *, ''
         stop
       else if (input.eq.'-precon') then
         k = k + 1
         call get_command_argument(k,value=input2,status=ierr)
         if (ierr.ne.0) stop
         krylov_pc_all%precon_string = input2
+        krylov_maket_all%precon_string = input2
       else if (input.eq.'-irestart') then
         k = k + 1
         call get_command_argument(k,value=input2,status=ierr)
         if (ierr.ne.0) stop
         read(input2,*,iostat=ierr) krylov_problem%irestart
         if (ierr.ne.0) stop
+      else if (input.eq.'-nroots') then
+        k = k + 1
+        call get_command_argument(k,value=input2,status=ierr)
+        if (ierr.ne.0) stop
+!        read(input2,*,iostat=ierr) krylov_problem%nroots
+        if (ierr.ne.0) stop
+      else if (input.eq.'-nstart') then
+        k = k + 1
+        call get_command_argument(k,value=input2,status=ierr)
+        if (ierr.ne.0) stop
+!        read(input2,*,iostat=ierr) krylov_start%nstart
+        if (ierr.ne.0) stop
+      else if (input.eq.'>') then
+        exit
+      else if (input.eq.'>>') then
+        exit
       end if
       k = k + 1
       if (k.gt.counter) exit
@@ -127,14 +152,6 @@ program krylovdriver_1a
   end if 
 
 !! setting up the problem before calling solver
-
-!! ask for user input on preconditoner
-  print *, 'Please enter an option for the preconditioner'
-  read (*,*) preconditioner
-  print *, preconditioner,' entered'
-
-  krylov_pc_all%precon_string = preconditioner
-  krylov_mta_all%precon_string = preconditioner
 
 
 !! set a1_string based on basetypes
@@ -187,7 +204,7 @@ program krylovdriver_1a
   call problem_a_solver(krylov_approx,krylov_s_eg,&
   &   krylov_problem, &
   &   krylov_g_uv,krylov_mvp,krylov_pc_all, &
-  &   krylov_mta_all,krylov_output,ierr)
+  &   krylov_maket_all,krylov_output,ierr)
 
   print *, 'final ierr value = ',ierr
 
