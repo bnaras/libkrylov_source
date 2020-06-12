@@ -235,7 +235,7 @@ contains
 !--------------------------------------------------------------------
 
 !--------------------------------------------------------------------
-  subroutine krylov_orthogonalize(n1,n2,vectors,singular_vals,&
+  subroutine krylov_orthogonalize(n1,n2,vectors,s,&
   &            n3,iverb,ierr)
 !--------------------------------------------------------------------
 !
@@ -272,7 +272,7 @@ contains
 !!  vectors
     type(base), intent(inout) :: vectors(n1,n2)
 !!  singular values
-    real(kind_float), intent(inout) :: singular_vals(n2)
+    real(kind_float), intent(inout) :: s(n2)
 !!    columns of vectors, on output
     integer(kind_integer), intent(inout) :: n3
 !--------------------------------------------------------------------
@@ -288,7 +288,6 @@ contains
     type(base), allocatable :: q(:,:)
     type(base), allocatable :: tau(:)
     type(base), allocatable :: r(:,:)
-    real(kind_float), allocatable :: s(:)
     type(base), allocatable :: u(:,:)
     type(base), allocatable :: vt(:,:)
     real(kind_float) :: test_val
@@ -301,7 +300,6 @@ contains
     allocate(r(n2,n2))
     allocate(u(n2,n2))
     allocate(vt(n2,n2))
-    allocate(s(n2))
 
 !! assign original vectors to q
     q = vectors
@@ -317,7 +315,7 @@ contains
       return ! return to solver loop
     end if
 
-!! save R from decomposition, do SVD
+!! save R from decomposition
     r = real(0,kind=kind_float)
     do k = 1, n2
       do j = 1, k
@@ -325,6 +323,9 @@ contains
       end do
     end do
 
+!! initialize s to zero
+    s = real(0,kind=kind_float)
+!! SVD
     call ggesvd('s','s',n2,n2,r,n2,s,u,n2,vt,n2,ierr)
     if (ierr.ne.0) then
       if (iverb.ge.0) then
@@ -384,7 +385,6 @@ contains
     deallocate(r)
     deallocate(u)
     deallocate(vt)
-    deallocate(s)
 
 !--------------------------------------------------------------------
   end subroutine krylov_orthogonalize
@@ -2306,15 +2306,15 @@ contains
     end if
 
 !! test for
-    if (nresiduals.eq.0) then
-      largest_sv = real(0,kind=kind_float)
-    else 
+    largest_sv = real(0,kind=kind_float)
+    if (nresiduals.gt.0) then
       largest_sv = singular_vals(1)
     end if
 
 
     if (iverb.ge.3) then
       print *, 'number of preconditioned residuals: ',nresiduals
+      print *, 'largest singular value: ', largest_sv
     end if
 
 ! Deallocate local arrays
@@ -3056,6 +3056,26 @@ contains
         exit ! This exits subspace loop
       end if
 
+!! determine residuals
+      call krylov_a_residue(nbasis,nsubspace,nroots,&
+  &     mvproduct(1:nbasis,1:nsubspace),full_solutions,&
+  &     solutions(1:nsubspace,1:nroots),&
+  &     roots,&
+  &     approx_spectra,krylov_maket_a,&
+  &     residuals,&
+  &     largest_sv,&
+  &     nresiduals,iverb,ierr)
+      if (ierr.ne.0) then
+        if (iverb.ge.0) then
+          print *, 'determining new basis vectors failed'
+          print *, 'error variable = ',ierr
+          print *, 'using previous subspace solutions for print'
+        end if
+        nsubspace = prev_nsubspace
+        ierr = 0
+        exit ! This exits subspace loop
+      end if
+
 ! determine convergence of solutions based on euclidean norm
       nconverged = 0
       jconverged = .false.
@@ -3123,93 +3143,6 @@ contains
       if (iverb.ge.0) then
         print *, ' '
       end if
-
-!! determine residuals
-      call krylov_a_residue(nbasis,nsubspace,nroots,&
-  &     mvproduct(1:nbasis,1:nsubspace),full_solutions,&
-  &     solutions(1:nsubspace,1:nroots),&
-  &     roots,&
-  &     approx_spectra,krylov_maket_a,&
-  &     residuals,&
-  &     largest_sv,&
-  &     nresiduals,iverb,ierr)
-      if (ierr.ne.0) then
-        if (iverb.ge.0) then
-          print *, 'determining new basis vectors failed'
-          print *, 'error variable = ',ierr
-          print *, 'using previous subspace solutions for print'
-        end if
-        nsubspace = prev_nsubspace
-        ierr = 0
-        exit ! This exits subspace loop
-      end if
-
-!! test normalizing all residuals
-!      do j = 1, nresiduals
-!        call gdot(nbasis,residuals(1:nbasis,j),1,&
-!  &           residuals(1:nbasis,j),1,&
-!  &           overlap(j+nsubspace,j+nsubspace),ierr)
-!        diag_overlap(j+nsubspace) = overlap(j+nsubspace,j+nsubspace)
-!        diag_overlap(j+nsubspace) = sqrt(diag_overlap(j+nsubspace))
-!        print *, 'normalizing residual',j
-!        residuals(1:nbasis,j) = residuals(1:nbasis,j)/&
-!  &         diag_overlap(j+nsubspace)
-!      end do
-
-!!! !! orthogonalizing residuals - MGS
-!!!       do j = 2, nresiduals
-!!!         do k = 1, j-1
-!!!           call gdot(nbasis,residuals(1:nbasis,k),1,&
-!!!   &             residuals(1:nbasis,k),1,&
-!!!   &             overlap(k+nsubspace,k+nsubspace),ierr)
-!!!           call gdot(nbasis,residuals(1:nbasis,j),1,&
-!!!   &             residuals(1:nbasis,k),1,&
-!!!   &             overlap(k+nsubspace,j+nsubspace),ierr)
-!!!           if (iverb.ge.4) then
-!!!             print *, 'inner product of residual: ', j
-!!!             print *, ' and residual: ',k
-!!!             print *, overlap(k+nsubspace,j+nsubspace)
-!!!           end if
-!!!           residuals(1:nbasis,j) = &
-!!!   &              residuals(1:nbasis,j) -&
-!!!   &              (residuals(1:nbasis,k)*&
-!!!   &              overlap(k+nsubspace,j+nsubspace)/&
-!!!   &              overlap(k+nsubspace,k+nsubspace))
-!!!         end do
-!!!       end do
-
-!! orthogonalization via QR, have k hold nresiduals as input
-      k = nresiduals
-      call krylov_orthogonalize(nbasis,k,residuals(1:nbasis,1:k),&
-  &       euc_norm(1:k),nresiduals,iverb,ierr)
-      if (ierr.ne.0) then
-        if (iverb.ge.0) then
-          print *, 'optimizing new basis vectors failed'
-          print *, 'error variable = ',ierr
-          print *, 'using previous subspace solutions for print'
-        end if
-        nsubspace = prev_nsubspace
-        ierr = 0
-        exit ! This exits subspace loop
-      end if
-
-! Check that there are residuals to extend the subspace with
-      if (nresiduals.eq.0) then
-        if (iverb.ge.0) then
-          print *, 'No orthogonalized residuals above machine precision!'
-          print *, 'failed to find vectors to expand subspace!'
-        end if
-        exit ! This exits subspace loop
-      end if
-
-!!! !! project residuals out of subspace
-!!!       call krylov_project(nbasis,nsubspace,nroots,&
-!!!   &     diag_overlap(1:nsubspace),&
-!!!   &     basis_vectors(1:nbasis,1:nsubspace),&
-!!!   &     cholesky(1:nsubspace,1:nsubspace),&
-!!!   &     residuals(1:nbasis,1:nroots),&
-!!!   &     iverb,ierr)
-
 
 ! call krylov extend subroutine, after saving prev_nsubspace
       prev_nsubspace = nsubspace
