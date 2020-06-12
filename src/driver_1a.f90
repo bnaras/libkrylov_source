@@ -123,23 +123,27 @@ program krylovdriver_1a
         if (ierr.ne.0) stop
         krylov_pc_all%precon_string = input2
         krylov_maket_all%precon_string = input2
+        print *, 'preconditioner: ',input2
       else if (input.eq.'-irestart') then
         k = k + 1
         call get_command_argument(k,value=input2,status=ierr)
         if (ierr.ne.0) stop
         read(input2,*,iostat=ierr) krylov_problem%irestart
         if (ierr.ne.0) stop
+        print *, 'restart level: ',input2
       else if (input.eq.'-nroots') then
         k = k + 1
         call get_command_argument(k,value=input2,status=ierr)
         if (ierr.ne.0) stop
 !        read(input2,*,iostat=ierr) krylov_problem%nroots
+        print *, 'number of roots: ',input2
         if (ierr.ne.0) stop
       else if (input.eq.'-nstart') then
         k = k + 1
         call get_command_argument(k,value=input2,status=ierr)
         if (ierr.ne.0) stop
 !        read(input2,*,iostat=ierr) krylov_start%nstart
+        print *, 'starting subspace size: ',input2
         if (ierr.ne.0) stop
       else if (input.eq.'>') then
         exit
