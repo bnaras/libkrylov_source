@@ -2917,15 +2917,15 @@ contains
     end if
 
 
-!! NAMBI : construction of dvproduct
+!! NAMBI : construction of avproduct
     do j = 1, nsubspace
-      dvproduct(1:nbasis,j) = basis_vectors(1:nbasis,j)&
-  &                         * approx_spectra(1:nbasis)
+      avproduct(1:nbasis,j) = mvproduct(1:nbasis,j) &
+  &      + (basis_vectors(1:nbasis,j) * approx_spectra(1:nbasis))
     end do
 !! construct av product
-    avproduct(1:nbasis,1:nsubspace) = &
-  &   mvproduct(1:nbasis,1:nsubspace) +& 
-  &    dvproduct(1:nbasis,1:nsubspace)
+!    avproduct(1:nbasis,1:nsubspace) = &
+!  &   mvproduct(1:nbasis,1:nsubspace) +& 
+!  &    dvproduct(1:nbasis,1:nsubspace)
 
     call krylov_rayleigh(nbasis,nsubspace,&
   &     approx_spectra,avproduct(1:nbasis,1:nsubspace),&
@@ -3265,15 +3265,15 @@ contains
           nsubspace = prev_nsubspace
           exit ! This exits subspace loop
         end if
-!! NAMBI : construction of dvproduct
+!! NAMBI : construction of avproduct
         do j = 1, prev_nsubspace
-          dvproduct(1:nbasis,j) = basis_vectors(1:nbasis,j)&
-  &                         * approx_spectra(1:nbasis)
+          avproduct(1:nbasis,j) = mvproduct(1:nbasis,j) &
+  &       + ( basis_vectors(1:nbasis,j) * approx_spectra(1:nbasis))
         end do
 !! construct av product
-        avproduct(1:nbasis,1:prev_nsubspace) = &
-  &      mvproduct(1:nbasis,1:prev_nsubspace) +& 
-  &       dvproduct(1:nbasis,1:prev_nsubspace)
+!        avproduct(1:nbasis,1:prev_nsubspace) = &
+!  &      mvproduct(1:nbasis,1:prev_nsubspace) +& 
+!  &       dvproduct(1:nbasis,1:prev_nsubspace)
         call krylov_rayleigh(nbasis,prev_nsubspace,&
   &         approx_spectra,avproduct(1:nbasis,1:prev_nsubspace),&
   &         basis_vectors(1:nbasis,1:prev_nsubspace),&
@@ -3315,15 +3315,15 @@ contains
         nsubspace = prev_nsubspace
         exit ! This exits subspace loop
       end if
-!! NAMBI : construction of dvproduct
+!! NAMBI : construction of avproduct
       do j = prev_nsubspace+1 , nsubspace
-        dvproduct(1:nbasis,j) = basis_vectors(1:nbasis,j)&
-  &                         * approx_spectra(1:nbasis)
+        avproduct(1:nbasis,j) = mvproduct(1:nbasis,j)&
+  &    +  (basis_vectors(1:nbasis,j) * approx_spectra(1:nbasis))
       end do
 !! construct av product
-      avproduct(1:nbasis,(prev_nsubspace+1):nsubspace) = &
-  &    mvproduct(1:nbasis,(prev_nsubspace+1):nsubspace) +& 
-  &     dvproduct(1:nbasis,(prev_nsubspace+1):nsubspace)
+!      avproduct(1:nbasis,(prev_nsubspace+1):nsubspace) = &
+!  &    mvproduct(1:nbasis,(prev_nsubspace+1):nsubspace) +& 
+!  &     dvproduct(1:nbasis,(prev_nsubspace+1):nsubspace)
 
 ! print restart basis-vectors if required
       if (irestart.ge.2) then
