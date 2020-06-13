@@ -52,6 +52,7 @@ program test_ritz
   type(base) :: z_array6(q,m)
   type(base) :: z_array7(q,q)
   type(base) :: z_array8(q,q)
+  type(base) :: z_array9(q,q)
   real(kind_float) :: r_vector1(q)
   real(kind_float) :: r_vector2(m)
   type(base) :: z_vector1(m)
@@ -631,6 +632,10 @@ program test_ritz
   do j1 = 1, q
     z_array8(j1,j1) = real(j1,kind=kind_float)
   end do
+  z_array9 = real(0,kind=kind_float)
+  do j1 = 1, q
+    z_array9(j1,j1) = real(j1*j1,kind=kind_float)
+  end do
 !!! testing ritz_a
 !! set logical check = .false.
   check = .false.
@@ -649,8 +654,9 @@ program test_ritz
   print *, 'input z_array7(cholesky) is diagonal',&
   & ' with sqrt(integer values)'
   print *, 'input z_array8(rayleigh) is diagonal of integer values'
+  print *, 'input z_array9(rayleigh_sq) is diagonal of integer squared values'
 !! call normalize subroutine
-  call krylov_a_ritz(n,q,m,z_array8,z_array7,z_array3,&
+  call krylov_a_ritz(n,q,m,z_array8,z_array9,z_array7,z_array3,&
   & r_vector1,r_vector2,z_vector1,z_array5,iverb,ierr)
 !! check ierr value to see whether routine terminated with an error
 !! test if ierr is not equal to 0

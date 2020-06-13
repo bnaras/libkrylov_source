@@ -499,7 +499,7 @@ contains
 !--------------------------------------------------------------------
   subroutine krylov_rayleigh(nbasis,nsubspace,&
   &     approx_spectra,avproduct,&
-  &     basis_vectors,rayleigh,iverb,ierr)
+  &     basis_vectors,rayleigh,rayleigh_sq,iverb,ierr)
 !--------------------------------------------------------------------
 !
 !--------------------------------------------------------------------
@@ -537,6 +537,7 @@ contains
 ! Output Variables
 !--------------------------------------------------------------------
     type(base), intent(inout) :: rayleigh(nsubspace,nsubspace)
+    type(base), intent(inout) :: rayleigh_sq(nsubspace,nsubspace)
 !--------------------------------------------------------------------
 ! Error Variables
 !--------------------------------------------------------------------
@@ -575,6 +576,16 @@ contains
   &       (rayleigh(k,k) + conjg(rayleigh(k,k)))&
           /(real(2,kind=kind_float))
     end do
+
+    one_kb = real(1,kind=kind_float)
+    zero_kb = real(0,kind=kind_float)
+!! second ggemm to get rayleigh
+    call ggemm('c','n',nsubspace,nsubspace,nbasis,one_kb,&
+  &   avproduct(1:nbasis,1:nsubspace),nbasis,&
+  &   avproduct(1:nbasis,1:nsubspace),nbasis,&
+  &   zero_kb,&
+  &   rayleigh_sq(1:nsubspace,1:nsubspace),&
+  &   nsubspace)
 
 !--------------------------------------------------------------------
   end subroutine krylov_rayleigh
@@ -698,7 +709,7 @@ contains
 !--------------------------------------------------------------------
   subroutine krylov_expand(nbasis,nsubspace,&
   &     nresiduals,prev_nsubspace,approx_spectra,avproduct,&
-  &     basis_vectors,rayleigh,iverb,ierr)
+  &     basis_vectors,rayleigh,rayleigh_sq,iverb,ierr)
 !--------------------------------------------------------------------
 !
 !--------------------------------------------------------------------
@@ -738,6 +749,7 @@ contains
 ! Variables Expanded
 !--------------------------------------------------------------------
     type(base), intent(inout) :: rayleigh(nsubspace,nsubspace)
+    type(base), intent(inout) :: rayleigh_sq(nsubspace,nsubspace)
 !--------------------------------------------------------------------
 ! Error Variables
 !--------------------------------------------------------------------
@@ -757,7 +769,7 @@ contains
 !! Set constants required for BLAS
     one_kb = real(1,kind=kind_float)
     zero_kb = real(0,kind=kind_float)
-!! first ggemm to get basis,new-basis block 
+!! first ggemm to get basis,new-basis block (rayleigh)
     call ggemm('c','n',nsubspace,nresiduals,nbasis,one_kb,&
   &   basis_vectors(1:nbasis,1:nsubspace),nbasis,&
   &   avproduct(1:nbasis,(prev_nsubspace+1):(nsubspace)),nbasis,&
@@ -768,7 +780,7 @@ contains
 !! Set constants required for BLAS
     one_kb = real(1,kind=kind_float)
     zero_kb = real(0,kind=kind_float)
-!! second ggemm to get new-basis,old-basis block
+!! second ggemm to get new-basis,old-basis block (rayleigh)
     call ggemm('c','n',nresiduals,prev_nsubspace,nbasis,&
   &   one_kb,basis_vectors(1:nbasis,(prev_nsubspace+1):(nsubspace)),&
   &   nbasis,avproduct(1:nbasis,1:prev_nsubspace),&
@@ -787,6 +799,31 @@ contains
   &       (rayleigh(k,k) + conjg(rayleigh(k,k)))&
           /(real(2,kind=kind_float))
     end do
+
+    one_kb = real(1,kind=kind_float)
+    zero_kb = real(0,kind=kind_float)
+!! third ggemm to get basis,new-basis block (rayleigh sq)
+    call ggemm('c','n',nsubspace,nresiduals,nbasis,one_kb,&
+  &   avproduct(1:nbasis,1:nsubspace),nbasis,&
+  &   avproduct(1:nbasis,(prev_nsubspace+1):(nsubspace)),nbasis,&
+  &   zero_kb,&
+  &   rayleigh_sq(1:nsubspace,&
+  &    (prev_nsubspace+1):(nsubspace)),&
+  &   nsubspace)
+!! elementwise copying to get new-basis, old-basis block (rayleigh sq)
+    do k = (prev_nsubspace+1), nsubspace 
+      do j = 1, prev_nsubspace 
+        rayleigh_sq(k,j) = conjg(rayleigh_sq(j,k))
+      end do
+    end do
+!!! !! fourth ggemm to get full (rayleigh sq)
+!!!     call ggemm('c','n',nsubspace,nresiduals,nbasis,one_kb,&
+!!!   &   avproduct(1:nbasis,1:nsubspace),nbasis,&
+!!!   &   avproduct(1:nbasis,1:(nsubspace)),nbasis,&
+!!!   &   zero_kb,&
+!!!   &   rayleigh_sq(1:nsubspace,&
+!!!   &    1:nsubspace),&
+!!!   &   nsubspace)
 
 
 !--------------------------------------------------------------------
@@ -1665,7 +1702,7 @@ contains
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
   subroutine krylov_a_ritz(nbasis,nsubspace,nroots,&
-  &     rayleigh,&
+  &     rayleigh,rayleigh_sq,&
   &     cholesky,&
   &     overlap,diag_overlap,&
   &     roots,lagrangian,solutions,iverb,ierr)
@@ -1702,6 +1739,7 @@ contains
     integer(kind_integer), intent(in) :: nsubspace
     integer(kind_integer), intent(in) :: nroots
     type(base), intent(in) :: rayleigh(nsubspace,nsubspace)
+    type(base), intent(in) :: rayleigh_sq(nsubspace,nsubspace)
     type(base), intent(in) :: cholesky(nsubspace,nsubspace)
     type(base), intent(in) :: overlap(nsubspace,nsubspace)
     real(kind_float), intent(in) :: diag_overlap(nsubspace)
@@ -1723,9 +1761,17 @@ contains
     type(base) :: zero_kb
     type(base), allocatable :: subspace(:,:)
     type(base), allocatable :: vavx(:,:)
+    type(base), allocatable :: svavx(:,:)
+    type(base), allocatable :: vaavx(:,:)
     type(base), allocatable :: vvx(:,:)
     type(base) :: expectation
     type(base) :: norm
+    type(base) :: xvaavx
+    type(base) :: xvavvavx
+    type(base) :: xvavsvavx
+    type(base) :: xaax
+    real(kind_float) :: fro_norm
+    real(kind_float), allocatable :: euc_norm(:)
     real(kind_float), allocatable :: all_roots(:)
     real(kind_float), allocatable :: d_o_sqrt(:)
 !! integer for loops
@@ -1741,7 +1787,10 @@ contains
     allocate(all_roots(nsubspace))
     allocate(d_o_sqrt(nsubspace))
     allocate(vavx(nsubspace,nroots))
+    allocate(svavx(nsubspace,nroots))
+    allocate(vaavx(nsubspace,nroots))
     allocate(vvx(nsubspace,nroots))
+    allocate(euc_norm(nroots))
 
 !! construct d_o_sqrt
     d_o_sqrt = sqrt(diag_overlap)
@@ -1806,7 +1855,7 @@ contains
       end do
     end do
 
-!! compute lagrangian
+!! compute lagrangian and norms
     one_kb = real(1,kind=kind_float)
     zero_kb = real(0,kind=kind_float)
 !! compute vavx 
@@ -1814,6 +1863,20 @@ contains
   &   one_kb,rayleigh,nsubspace,&
   &   solutions,nsubspace,zero_kb,&
   &   vavx,nsubspace)
+    one_kb = real(1,kind=kind_float)
+    zero_kb = real(0,kind=kind_float)
+!! compute svavx 
+    call ggemm('n','n',nsubspace,nroots,nsubspace,&
+  &   one_kb,overlap,nsubspace,&
+  &   vavx,nsubspace,zero_kb,&
+  &   svavx,nsubspace)
+    one_kb = real(1,kind=kind_float)
+    zero_kb = real(0,kind=kind_float)
+!! compute vaavx 
+    call ggemm('n','n',nsubspace,nroots,nsubspace,&
+  &   one_kb,rayleigh_sq,nsubspace,&
+  &   solutions,nsubspace,zero_kb,&
+  &   vaavx,nsubspace)
     one_kb = real(1,kind=kind_float)
     zero_kb = real(0,kind=kind_float)
 !! compute vvx 
@@ -1845,16 +1908,63 @@ contains
         ierr = -40
         return ! return to solver loop
       end if
+      call gdot(nsubspace,solutions(1:nsubspace,j),1,&
+  &     vaavx(1:nsubspace,j),1,xvaavx,ierr)
+      if (ierr.ne.0) then
+        if (iverb.ge.0) then
+          print *, '*dot(c) linear algebra error!', ierr
+          print *, 'exit ritz step'
+        end if
+        ierr = -40
+        return ! return to solver loop
+      end if
+      call gdot(nsubspace,vavx(1:nsubspace,j),1,&
+  &     vavx(1:nsubspace,j),1,xvavvavx,ierr)
+      if (ierr.ne.0) then
+        if (iverb.ge.0) then
+          print *, '*dot(c) linear algebra error!', ierr
+          print *, 'exit ritz step'
+        end if
+        ierr = -40
+        return ! return to solver loop
+      end if
+      call gdot(nsubspace,svavx(1:nsubspace,j),1,&
+  &     vavx(1:nsubspace,j),1,xvavsvavx,ierr)
+      if (ierr.ne.0) then
+        if (iverb.ge.0) then
+          print *, '*dot(c) linear algebra error!', ierr
+          print *, 'exit ritz step'
+        end if
+        ierr = -40
+        return ! return to solver loop
+      end if
       one_kb = real(1,kind=kind_float)
       lagrangian(j) = expectation-((norm-one_kb)*roots(j))
       if (iverb.ge.2) then
         print *, 'L of ',j,': ',lagrangian(j)
       end if
+      euc_norm(j) = xvaavx &
+!  &     - (expectation*roots(j)) &
+!  &     - (expectation*roots(j)) &
+  &     - (expectation*expectation/norm)
+      print *, 'error of root ',j,': ', (expectation-(norm*roots(j)))
     end do
+
+    fro_norm = sum(abs(euc_norm(1:nroots)))
+    fro_norm = sqrt(fro_norm)
+
+    if (iverb.ge.2) then
+      print *, 'estimate of frobenius norm:',fro_norm
+      do j = 1, nroots
+        print *, 'estimate of sq of euc norm of residual ',j,': ',euc_norm(j)
+      end do
+    end if 
 
 ! Deallocate local arrays
     deallocate(vavx)
+    deallocate(vaavx)
     deallocate(vvx)
+    deallocate(euc_norm)
     deallocate(subspace)
     deallocate(all_roots)
     deallocate(d_o_sqrt)
@@ -2347,10 +2457,11 @@ contains
   !< krylov_approx for the approximate spectra
   !< krylov_start for determining number of start vectors
   !< krylov_problem  for details of the problem
-  !< krylov_guess for initializing more guess vectors and their
+  !< krylov_guess for initializing (more) guess vectors and their
   !< overlap
   !< krylov_mvp for matrix vector products
   !< krylov_precon for preconditioning
+  !< krylov_maket_a for preconditioned residuals
   !< krylov_output for what to do with the eigenvectors and eigenvalues
 !--------------------------------------------------------------------
 !
@@ -2458,9 +2569,9 @@ contains
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !! filled in at matrix vector products
     type(base), allocatable :: mvproduct(:,:)
-    type(base), allocatable :: dvproduct(:,:)
     type(base), allocatable :: avproduct(:,:)
     type(base), allocatable :: rayleigh(:,:)
+    type(base), allocatable :: rayleigh_sq(:,:)
 !< AV = matrix vector products = mvproduct
 !< V**dagger AV = rayleigh
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2646,12 +2757,12 @@ contains
     allocate(basis_vectors(nbasis,maxsubspace)) !maximum
     allocate(mvproduct(nbasis,maxsubspace)) !maximum
     allocate(avproduct(nbasis,maxsubspace)) !maximum
-    allocate(dvproduct(nbasis,maxsubspace)) !maximum
     allocate(lagrangian(nroots))
     allocate(solutions(maxsubspace,nroots)) !maximum
     allocate(overlap(maxsubspace,maxsubspace)) !maximum
     allocate(cholesky(maxsubspace,maxsubspace)) !maximum
     allocate(rayleigh(maxsubspace,maxsubspace)) !maximum
+    allocate(rayleigh_sq(maxsubspace,maxsubspace)) !maximum
     allocate(roots(nroots))
     allocate(diag_overlap(maxsubspace)) !maximum
     allocate(full_solutions(nbasis,nroots))
@@ -2922,15 +3033,12 @@ contains
       avproduct(1:nbasis,j) = mvproduct(1:nbasis,j) &
   &      + (basis_vectors(1:nbasis,j) * approx_spectra(1:nbasis))
     end do
-!! construct av product
-!    avproduct(1:nbasis,1:nsubspace) = &
-!  &   mvproduct(1:nbasis,1:nsubspace) +& 
-!  &    dvproduct(1:nbasis,1:nsubspace)
 
     call krylov_rayleigh(nbasis,nsubspace,&
   &     approx_spectra,avproduct(1:nbasis,1:nsubspace),&
   &     basis_vectors(1:nbasis,1:nsubspace),&
-  &     rayleigh(1:nsubspace,1:nsubspace),iverb,ierr)
+  &     rayleigh(1:nsubspace,1:nsubspace),&
+  &     rayleigh_sq(1:nsubspace,1:nsubspace),iverb,ierr)
     if (ierr.ne.0) then
       if (iverb.ge.0) then
         print *, 'initial construction of rayleigh matrix failed' 
@@ -2984,6 +3092,7 @@ contains
 ! call krylov ritz subroutine
       call krylov_a_ritz(nbasis,nsubspace,nroots,&
   &     rayleigh(1:nsubspace,1:nsubspace),&
+  &     rayleigh_sq(1:nsubspace,1:nsubspace),&
   &     cholesky(1:nsubspace,1:nsubspace),&
   &     overlap(1:nsubspace,1:nsubspace),diag_overlap(1:nsubspace),&
   &     roots,lagrangian,solutions(1:nsubspace,1:nroots),iverb,ierr)
@@ -3270,14 +3379,11 @@ contains
           avproduct(1:nbasis,j) = mvproduct(1:nbasis,j) &
   &       + ( basis_vectors(1:nbasis,j) * approx_spectra(1:nbasis))
         end do
-!! construct av product
-!        avproduct(1:nbasis,1:prev_nsubspace) = &
-!  &      mvproduct(1:nbasis,1:prev_nsubspace) +& 
-!  &       dvproduct(1:nbasis,1:prev_nsubspace)
         call krylov_rayleigh(nbasis,prev_nsubspace,&
   &         approx_spectra,avproduct(1:nbasis,1:prev_nsubspace),&
   &         basis_vectors(1:nbasis,1:prev_nsubspace),&
-  &         rayleigh(1:prev_nsubspace,1:prev_nsubspace),iverb,ierr)
+  &         rayleigh(1:prev_nsubspace,1:prev_nsubspace),&
+  &         rayleigh_sq(1:prev_nsubspace,1:prev_nsubspace),iverb,ierr)
         if (ierr.ne.0) then
           if (iverb.ge.0) then
             print *, 'initial (re)construction of rayleigh matrix failed' 
@@ -3320,10 +3426,6 @@ contains
         avproduct(1:nbasis,j) = mvproduct(1:nbasis,j)&
   &    +  (basis_vectors(1:nbasis,j) * approx_spectra(1:nbasis))
       end do
-!! construct av product
-!      avproduct(1:nbasis,(prev_nsubspace+1):nsubspace) = &
-!  &    mvproduct(1:nbasis,(prev_nsubspace+1):nsubspace) +& 
-!  &     dvproduct(1:nbasis,(prev_nsubspace+1):nsubspace)
 
 ! print restart basis-vectors if required
       if (irestart.ge.2) then
@@ -3353,7 +3455,8 @@ contains
   &     nresiduals,prev_nsubspace,&
   &     approx_spectra,avproduct(1:nbasis,1:nsubspace),&
   &     basis_vectors(1:nbasis,1:nsubspace),&
-  &     rayleigh(1:nsubspace,1:nsubspace),iverb,ierr)
+  &     rayleigh(1:nsubspace,1:nsubspace),&
+  &     rayleigh_sq(1:nsubspace,1:nsubspace),iverb,ierr)
       if (ierr.ne.0) then
         if (iverb.ge.0) then
           print *, 'expanding rayleigh matrix failed'
@@ -3453,7 +3556,6 @@ contains
     deallocate(basis_vectors)
     deallocate(mvproduct)
     deallocate(avproduct)
-    deallocate(dvproduct)
     deallocate(approx_spectra)
     deallocate(lagrangian)
     deallocate(solutions)
@@ -3461,6 +3563,7 @@ contains
     deallocate(overlap)
     deallocate(cholesky)
     deallocate(rayleigh)
+    deallocate(rayleigh_sq)
     deallocate(roots)
     deallocate(diag_overlap)
     deallocate(residuals)
@@ -4080,6 +4183,7 @@ contains
     type(base), allocatable :: proj_rhs(:,:)
 !< (V^T)P = projected rhs = proj_rhs  
     type(base), allocatable :: rayleigh(:,:)
+    type(base), allocatable :: rayleigh_sq(:,:)
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !! filled in at krylov_b_ritz
     type(base), allocatable ::  solutions(:,:)
@@ -4260,6 +4364,7 @@ contains
     allocate(rhs(nbasis,nrhs))
     allocate(proj_rhs(maxsubspace,nrhs)) !maximum
     allocate(rayleigh(maxsubspace,maxsubspace)) !maximum
+    allocate(rayleigh_sq(maxsubspace,maxsubspace)) !maximum
     allocate(lagrangian(nrhs))
     allocate(solutions(maxsubspace,nrhs)) !maximum
     allocate(full_solutions(nbasis,nrhs))
@@ -4606,7 +4711,8 @@ contains
     call krylov_rayleigh(nbasis,nsubspace,&
   &     approx_spectra,mvproduct(1:nbasis,1:nsubspace),&
   &     basis_vectors(1:nbasis,1:nsubspace),&
-  &     rayleigh(1:nsubspace,1:nsubspace),iverb,ierr)
+  &     rayleigh(1:nsubspace,1:nsubspace),&
+  &     rayleigh_sq(1:nsubspace,1:nsubspace),iverb,ierr)
     if (ierr.ne.0) then
       if (iverb.ge.0) then
         print *, 'initial construction of rayleigh matrix failed' 
@@ -4899,7 +5005,8 @@ contains
   &     nresiduals,prev_nsubspace,&
   &     approx_spectra,mvproduct(1:nbasis,1:nsubspace),&
   &     basis_vectors(1:nbasis,1:nsubspace),&
-  &     rayleigh(1:nsubspace,1:nsubspace),iverb,ierr)
+  &     rayleigh(1:nsubspace,1:nsubspace),&
+  &     rayleigh_sq(1:nsubspace,1:nsubspace),iverb,ierr)
       if (ierr.ne.0) then
         if (iverb.ge.0) then
           print *, 'expanding rayleigh matrix failed'
@@ -5006,6 +5113,7 @@ contains
     deallocate(rhs)
     deallocate(proj_rhs)
     deallocate(rayleigh)
+    deallocate(rayleigh_sq)
     deallocate(lagrangian)
     deallocate(solutions)
     deallocate(full_solutions)
@@ -5847,6 +5955,7 @@ contains
     type(base), allocatable :: proj_rhs(:,:)
 !< (V^T)P = projected rhs = proj_rhs  
     type(base), allocatable :: rayleigh(:,:)
+    type(base), allocatable :: rayleigh_sq(:,:)
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !! filled in at krylov_b_ritz
     type(base), allocatable ::  solutions(:,:)
@@ -6077,6 +6186,7 @@ contains
     allocate(rhs(nbasis,nrhs))
     allocate(proj_rhs(maxsubspace,nrhs)) !maximum
     allocate(rayleigh(maxsubspace,maxsubspace)) !maximum
+    allocate(rayleigh_sq(maxsubspace,maxsubspace)) !maximum
     allocate(lagrangian(nroots))
     allocate(solutions(maxsubspace,nroots)) !maximum
     allocate(full_solutions(nbasis,nroots))
@@ -6370,7 +6480,8 @@ contains
     call krylov_rayleigh(nbasis,nsubspace,&
   &     approx_spectra,mvproduct(1:nbasis,1:nsubspace),&
   &     basis_vectors(1:nbasis,1:nsubspace),&
-  &     rayleigh(1:nsubspace,1:nsubspace),iverb,ierr)
+  &     rayleigh(1:nsubspace,1:nsubspace),&
+  &     rayleigh_sq(1:nsubspace,1:nsubspace),iverb,ierr)
     if (ierr.ne.0) then
       if (iverb.ge.0) then
         print *, 'initial construction of rayleigh matrix failed' 
@@ -6731,7 +6842,8 @@ contains
   &     nresiduals,prev_nsubspace,&
   &     approx_spectra,mvproduct(1:nbasis,1:nsubspace),&
   &     basis_vectors(1:nbasis,1:nsubspace),&
-  &     rayleigh(1:nsubspace,1:nsubspace),iverb,ierr)
+  &     rayleigh(1:nsubspace,1:nsubspace),&
+  &     rayleigh_sq(1:nsubspace,1:nsubspace),iverb,ierr)
       if (ierr.ne.0) then
         if (iverb.ge.0) then
           print *, 'expanding rayleigh matrix failed'
@@ -6839,6 +6951,7 @@ contains
     deallocate(rhs)
     deallocate(proj_rhs)
     deallocate(rayleigh)
+    deallocate(rayleigh_sq)
     deallocate(lagrangian)
     deallocate(solutions)
     deallocate(full_solutions)
@@ -6861,6 +6974,7 @@ contains
   end subroutine problem_c_solver
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
+
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
 end module libkrylovsolver
