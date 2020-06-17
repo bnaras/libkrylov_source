@@ -1506,72 +1506,152 @@ contains
 !  Local Variables
 !--------------------------------------------------------------------
     integer(lkl_int_rdp_k) :: j,k = 0
-    real(lkl_real_dp_k), allocatable :: vxo(:,:)
     real(lkl_real_dp_k) :: numerator
     real(lkl_real_dp_k) :: denominator
     real(lkl_real_dp_k), external :: ddot
-    real(lkl_real_dp_k), allocatable :: mx(:,:)
+    real(lkl_real_dp_k), allocatable :: dmvx(:,:)
 !--------------------------------------------------------------------
 
-    allocate(vxo(n1,n2))
-
-!! calculate scaled eigenvectors on the subspace
-    do j = 1, n2
-      do k = 1, n1
-        vxo(k,j) = full_solutions(k,j) &
-  &       *(approx_spectra(k)-roots(j))
-      end do
-    end do
-
-    residuals = mvx + vxo
-
     if (data%precon_string.eq.'none') then
+
+      do j = 1, n2
+        do k = 1, n1
+          residuals(k,j) = mvx(k,j) &
+  &         + (full_solutions(k,j) &
+  &         *(approx_spectra(k)-roots(j)))
+        end do
+      end do
+
     else if (data%precon_string.eq.'approx_spectra') then
+
+      do j = 1, n2
+        do k = 1, n1
+          residuals(k,j) = mvx(k,j) &
+  &         + (full_solutions(k,j) &
+  &         *(approx_spectra(k)-roots(j)))
+        end do
+      end do
+
       do k = 1, n2
         do j = 1, n1
           residuals(j,k) = residuals(j,k)/&
  &         ( approx_spectra(j) )
         end do
       end do
+
+    else if (data%precon_string.eq.'new_approx_spectra') then
+
+      do j = 1, n2
+        do k = 1, n1
+          residuals(k,j) = (mvx(k,j)/approx_spectra(k)) &
+  &         + full_solutions(k,j) &
+  &         - (full_solutions(k,j) &
+  &         *(roots(j)/approx_spectra(k)))
+        end do
+      end do
+
+    else if (data%precon_string.eq.'new_davidson') then
+
+      do j = 1, n2
+        do k = 1, n1
+          residuals(k,j) = (mvx(k,j)&
+  &         /(approx_spectra(k)-roots(j))) &
+  &         + full_solutions(k,j) 
+        end do
+      end do
+
     else if (data%precon_string.eq.'davidson') then
+
+      do j = 1, n2
+        do k = 1, n1
+          residuals(k,j) = mvx(k,j) &
+  &         + (full_solutions(k,j) &
+  &         *(approx_spectra(k)-roots(j)))
+        end do
+      end do
+
       do k = 1, n2
         do j = 1, n1
           residuals(j,k) = residuals(j,k)/&
  &         ( approx_spectra(j) - roots(k) )
         end do
       end do
-    else if (data%precon_string.eq.'sleijpen') then
-      allocate(mx(n1,n2))
-  
-  !! create scaled full solutions required for epsilon
+
+    else if (data%precon_string.eq.'new_sleijpen') then
+
+      allocate(dmvx(n1,n2))
+
+  !! create scaled mvproduct(solutions) required for epsilon, use dmvx
       do k = 1, n2
         do j = 1, n1
-          mx(j,k) = full_solutions(j,k)/&
+          dmvx(j,k) = mvx(j,k)/&
   &         ( approx_spectra(j) - roots(k) )
         end do
       end do
   
       do k = 1, n2
-        denominator = ddot(n1,mx(1:n1,k),1,full_solutions(1:n1,k),1)
-        numerator = ddot(n1,mx(1:n1,k),1,residuals(1:n1,k),1)
+        numerator = ddot(n1,dmvx(1:n1,k),1,full_solutions(1:n1,k),1)
+        denominator = ddot(n1,full_solutions(1:n1,k),1,full_solutions(1:n1,k),1)
         do j = 1, n1
-          residuals(j,k) = ((residuals(j,k) &
-  &  - ((numerator/denominator)*full_solutions(j,k))) &
-  &   / ( approx_spectra(j) - roots(k) ))
+          residuals(j,k) = dmvx(j,k) &
+  &          - (full_solutions(j,k)*numerator/denominator)
         end do
       end do
   
-      deallocate(mx)
+      deallocate(dmvx)
+
+    else if (data%precon_string.eq.'sleijpen') then
+
+      do j = 1, n2
+        do k = 1, n1
+          residuals(k,j) = mvx(k,j) &
+  &         + (full_solutions(k,j) &
+  &         *(approx_spectra(k)-roots(j)))
+        end do
+      end do
+
+      allocate(dmvx(n1,n2))
+
+  !! create scaled full solutions required for epsilon, use dmvx
+      do k = 1, n2
+        do j = 1, n1
+          dmvx(j,k) = full_solutions(j,k)/&
+  &         ( approx_spectra(j) - roots(k) )
+        end do
+      end do
+  
+      do k = 1, n2
+        denominator = ddot(n1,dmvx(1:n1,k),1,full_solutions(1:n1,k),1)
+        numerator = ddot(n1,dmvx(1:n1,k),1,residuals(1:n1,k),1)
+        do j = 1, n1
+          residuals(j,k) = &
+  &    (residuals(j,k)/(approx_spectra(j) - roots(k)))&
+  &  - ( ((numerator/denominator)*full_solutions(j,k)) &
+  &   / (approx_spectra(j) - roots(k)) )
+        end do
+      end do
+  
+      deallocate(dmvx)
+
     else ! default to davidson
+
+      do j = 1, n2
+        do k = 1, n1
+          residuals(k,j) = mvx(k,j) &
+  &         + (full_solutions(k,j) &
+  &         *(approx_spectra(k)-roots(j)))
+        end do
+      end do
+
       do k = 1, n2
         do j = 1, n1
           residuals(j,k) = residuals(j,k)/&
  &         ( approx_spectra(j) - roots(k) )
         end do
       end do
+
     end if
 
-    deallocate(vxo)
 
 !--------------------------------------------------------------------
   end subroutine lkl_maket_a_all_rdp

@@ -2359,6 +2359,8 @@ contains
 !--------------------------------------------------------------------
     type(base) :: one_kb
     type(base) :: zero_kb
+    type(base) :: euc_sq
+    real(kind_float) :: euc_norm
     type(base), allocatable :: mvx(:,:)
     real(kind_float), allocatable :: singular_vals(:)
     real(kind_float) :: lognbasis
@@ -2402,7 +2404,24 @@ contains
       return ! return to solver loop
     end if
 
-!! SVD of residuals to obtain 
+!! get inner product of residual with itself
+    if (iverb.ge.4) then
+      do j = 1, nroots
+        call gdot(nbasis,residuals(1:nbasis,j),1,&
+  &       residuals(1:nbasis,j),1,euc_sq,ierr)
+        if (ierr.ne.0) then
+          print *, '*dot linear algebra error!', ierr
+          print *, 'exit residue step'
+          ierr = -40
+          return ! return to solver loop
+        end if
+        euc_norm = euc_sq
+        euc_norm = sqrt(euc_norm)
+        print *, j,' preconditioned residual norm: ', euc_norm
+      end do
+    end if
+
+!! SVD of residuals to obtain singular values
     call krylov_orthogonalize(nbasis,nroots,residuals,&
   &       singular_vals,nresiduals,iverb,ierr)
     if (ierr.ne.0) then
