@@ -47,6 +47,7 @@ program krylovdriver_1a
   type(kl_problem_a) :: krylov_problem
   type(kl_approx) :: krylov_approx
   type(lkl_s_elec_gas) :: krylov_s_eg
+  type(lkl_s_ext_in) :: krylov_s_ext_in
   type(lkl_g_unit_vec) :: krylov_g_uv
   type(lkl_pc_all) :: krylov_pc_all
   type(lkl_mta_all) :: krylov_maket_all
@@ -88,6 +89,7 @@ program krylovdriver_1a
 !! set default options
   krylov_pc_all%precon_string = 'davidson'
   krylov_problem%irestart = 0
+  krylov_s_ext_in%nstart = 0
 !! checking command line options:
   counter = command_argument_count()
 !! loop over command line
@@ -135,14 +137,14 @@ program krylovdriver_1a
         k = k + 1
         call get_command_argument(k,value=input2,status=ierr)
         if (ierr.ne.0) stop
-!        read(input2,*,iostat=ierr) krylov_problem%nroots
+        read(input2,*,iostat=ierr) krylov_problem%nroots
         print *, 'number of roots: ',input2
         if (ierr.ne.0) stop
       else if (input.eq.'-nstart') then
         k = k + 1
         call get_command_argument(k,value=input2,status=ierr)
         if (ierr.ne.0) stop
-!        read(input2,*,iostat=ierr) krylov_start%nstart
+        read(input2,*,iostat=ierr) krylov_s_ext_in%nstart
         print *, 'starting subspace size: ',input2
         if (ierr.ne.0) stop
       else if (input.eq.'>') then
@@ -205,10 +207,17 @@ program krylovdriver_1a
   krylov_mvp%krylov_a => krylov_a
 
 ! call solver
-  call problem_a_solver(krylov_approx,krylov_s_eg,&
+  if (krylov_s_ext_in%nstart.le.0) then
+    call problem_a_solver(krylov_approx,krylov_s_eg,&
   &   krylov_problem, &
   &   krylov_g_uv,krylov_mvp,krylov_pc_all, &
   &   krylov_maket_all,krylov_output,ierr)
+  else
+    call problem_a_solver(krylov_approx,krylov_s_ext_in,&
+  &   krylov_problem, &
+  &   krylov_g_uv,krylov_mvp,krylov_pc_all, &
+  &   krylov_maket_all,krylov_output,ierr)
+  end if
 
   print *, 'final ierr value = ',ierr
 

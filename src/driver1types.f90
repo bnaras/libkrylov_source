@@ -28,12 +28,9 @@ module driver1types
 ! with elementary functions and BLAS calls
   use basetypes
   use blastypes
-! krylov subspace function signatures
+! libkrylov solver input functions signatures and functions
   use libkrylovinterface
   use libkrylovinterface2
-! krylov subspace function signatures, specifically
-! for a symmetric slyvester problem
-  use libkrylovinterface_real_dp
 !--------------------------------------------------------------------
 ! Implicit none
 !--------------------------------------------------------------------
@@ -58,6 +55,9 @@ module driver1types
 ! restart level integer
 ! must be set before calling solver
     integer(kind_integer) :: irestart
+! number of roots to be solved
+! must be set before calling solver
+    integer(kind_integer) :: nroots
   contains
     procedure :: lkl_problem_a => eval_kl_problem_a
   end type kl_problem_a
@@ -246,8 +246,23 @@ contains
       maxstart = floor(0.8*nbasis,kind=kind_integer)
     else
       nroots = 5
-      minstart = 20
+      minstart = 0
       maxstart = floor(0.3*nbasis,kind=kind_integer)
+    end if
+
+!! set nroots based on user input
+    if ((data%nroots.gt.0).and.(data%nroots.lt.maxstart)) then
+      nroots = data%nroots
+    else !! set reasonable nroots
+      if (nbasis.lt.16) then
+        nroots = nbasis
+      else if (nbasis.lt.50) then
+        nroots = 2
+      else if (nbasis.lt.200) then
+        nroots = 5
+      else
+        nroots = 10
+      end if
     end if
 
 !! choice based on problem description

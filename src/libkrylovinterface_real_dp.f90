@@ -331,6 +331,14 @@ module libkrylovinterface_real_dp
     procedure :: lkl_start => lkl_start_elec_gas_rdp
   end type lkl_s_elec_gas_rdp
 
+!! defining input function for number of starting basis vectors
+  type, extends(libkrylov_start_real_dp) :: lkl_s_ext_in_rdp
+! external data required for the function
+    integer(lkl_int_rdp_k) :: nstart = 0
+  contains
+    procedure :: lkl_start => lkl_start_ext_in_rdp
+  end type lkl_s_ext_in_rdp
+
 !! defining input function for initial basis vectors
   type, extends(libkrylov_guess_real_dp) :: lkl_g_unit_vec_rdp
 ! external data required for the function
@@ -853,6 +861,61 @@ contains
 
 !--------------------------------------------------------------------
   end subroutine lkl_start_elec_gas_rdp
+!--------------------------------------------------------------------
+
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+  subroutine lkl_start_ext_in_rdp(data,n1,n2,approx_spectra,&
+   &   nstart,ierr)
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Description:
+!--------------------------------------------------------------------
+!! subroutine to determine the number of initial guess vectors
+!! by external data input
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Modules and Global Variables
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+!
+    implicit none
+!
+!--------------------------------------------------------------------
+! External data (IDEALLY EMPTY)
+!--------------------------------------------------------------------
+    class(lkl_s_ext_in_rdp) :: data
+!--------------------------------------------------------------------
+! Input Parameters
+!--------------------------------------------------------------------
+!!   nbasis
+    integer(lkl_int_rdp_k), intent(in) :: n1
+!!   nroots
+    integer(lkl_int_rdp_k), intent(in) :: n2
+!!    approximate spectra
+    real(lkl_real_dp_k), intent(in) :: approx_spectra(n1)
+!--------------------------------------------------------------------
+! Output Parameters
+!--------------------------------------------------------------------
+!! nstart
+    integer(lkl_int_rdp_k), intent(inout) :: nstart
+!--------------------------------------------------------------------
+! Error Parameter
+!--------------------------------------------------------------------
+    integer(lkl_int_rdp_k), intent(inout) :: ierr
+!--------------------------------------------------------------------
+!  Local Variables
+!--------------------------------------------------------------------
+!! Blank
+!--------------------------------------------------------------------
+
+    nstart = data%nstart
+
+!--------------------------------------------------------------------
+  end subroutine lkl_start_ext_in_rdp
 !--------------------------------------------------------------------
 
 !--------------------------------------------------------------------

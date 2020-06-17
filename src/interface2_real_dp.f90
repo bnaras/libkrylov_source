@@ -17,6 +17,8 @@ module libkrylovinterface2
   &   quicksort_stl_float => quicksort_stl_float_rdp, &
   &   lkl_s_elec_gas => lkl_s_elec_gas_rdp, &
   &   lkl_start_elec_gas => lkl_start_elec_gas_rdp, &
+  &   lkl_s_ext_in => lkl_s_ext_in_rdp, &
+  &   lkl_start_ext_in => lkl_start_ext_in_rdp, &
   &   lkl_g_unit_vec => lkl_g_unit_vec_rdp, &
   &   lkl_guess_unit_vec => lkl_guess_unit_vec_rdp, &
   &   lkl_pc_all => lkl_pc_all_rdp, &
