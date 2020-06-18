@@ -430,7 +430,7 @@ module libkrylovinterface_real_dp
   abstract interface
     subroutine libkrylov_problem_a_interface(data,nbasis,nroots,&
   &   minstart,maxstart,threshold,maxiter,&
-  &   id_string,iverb,irestart,ierr)
+  &   id_string,precon_string,iverb,irestart,ierr)
       import :: lkl_int_rdp_k, libkrylov_problem_a_real_dp, lkl_real_dp_k
       class(libkrylov_problem_a_real_dp) :: data
       integer(lkl_int_rdp_k), intent(inout) :: nbasis
@@ -440,6 +440,7 @@ module libkrylovinterface_real_dp
       real(lkl_real_dp_k), intent(inout) :: threshold
       integer(lkl_int_rdp_k), intent(inout) :: maxiter
       character(len=22), intent(inout) :: id_string
+      character(len=32), intent(inout) :: precon_string
       integer(lkl_int_rdp_k), intent(inout) :: iverb
       integer(lkl_int_rdp_k), intent(inout) :: irestart
       integer(lkl_int_rdp_k), intent(inout) :: ierr

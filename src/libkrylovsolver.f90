@@ -2301,7 +2301,7 @@ contains
   subroutine krylov_a_residue(nbasis,nsubspace,nroots,&
   &     mvproduct,full_solutions,solutions,&
   &     roots,&
-  &     approx_spectra,krylov_maket_a,residuals,&
+  &     approx_spectra,precon_string,residuals,&
   &     largest_sv,&
   &     nresiduals,iverb,ierr)
 !--------------------------------------------------------------------
@@ -2342,7 +2342,7 @@ contains
     type(base), intent(in) :: solutions(nsubspace,nroots)
     real(kind_float), intent(in) :: roots(nroots)
     real(kind_float), intent(in) :: approx_spectra(nbasis)
-    class(libkrylov_maket_a_subroutine) :: krylov_maket_a
+    character(len=32), intent(in) :: precon_string
 !--------------------------------------------------------------------
 ! Output Variables
 !--------------------------------------------------------------------
@@ -2363,6 +2363,9 @@ contains
     real(kind_float) :: euc_norm
     type(base), allocatable :: mvx(:,:)
     real(kind_float), allocatable :: singular_vals(:)
+    type(base) :: numerator
+    type(base) :: denominator
+    type(base), allocatable :: dmvx(:,:)
     real(kind_float) :: lognbasis
     integer(kind_integer) :: ntemp ! n of all_residuals
     real(kind_float) :: res_temp
@@ -2385,24 +2388,111 @@ contains
   &   solutions,nsubspace,zero_kb,&
   &   mvx,nbasis)
 
-!! Make preconditioned residuals with input function!
-    associate(interfacing_fs => full_solutions%element,&
-  &           interfacing_mvx => mvx%element,&
-  &           interfacing_rd => residuals%element)
-      call krylov_maket_a%lkl_maket_a(nbasis,nroots,&
-  &     approx_spectra,&
-  &     roots,interfacing_mvx,interfacing_fs,&
-  &     interfacing_rd,ierr)
-    end associate
-    if (ierr.ne.0) then
-      if (iverb.ge.0) then
-        print *, 'class(user_krylov_maket_a_subroutine) function failed'
-        print *, 'error variable = ',ierr
-        print *, 'exit residue step'
-      end if
-      ierr = -40
-      return ! return to solver loop
+
+    if (precon_string.eq.'none') then
+
+      do j = 1, nroots
+        do k = 1, nbasis
+          residuals(k,j) = mvx(k,j) &
+  &         + (full_solutions(k,j) &
+  &         *(approx_spectra(k)-roots(j)))
+        end do
+      end do
+
+    else if (precon_string.eq.'approx_spectra') then
+
+      do j = 1, nroots
+        do k = 1, nbasis
+          residuals(k,j) = (mvx(k,j)/approx_spectra(k)) &
+  &         + full_solutions(k,j) &
+  &         - (full_solutions(k,j) &
+  &         *(roots(j)/approx_spectra(k)))
+        end do
+      end do
+
+    else if (precon_string.eq.'davidson') then
+
+      do j = 1, nroots
+        do k = 1, nbasis
+          residuals(k,j) = (mvx(k,j)&
+  &         /(approx_spectra(k)-roots(j))) &
+  &         + full_solutions(k,j) 
+        end do
+      end do
+
+    else if (precon_string.eq.'new_sleijpen') then
+
+      allocate(dmvx(nbasis,nroots))
+
+  !! create scaled mvproduct(solutions) required for epsilon, use dmvx
+      do k = 1, nroots
+        do j = 1, nbasis
+          dmvx(j,k) = mvx(j,k)/&
+  &         ( approx_spectra(j) - roots(k) )
+        end do
+      end do
+  
+      do k = 1, nroots
+        call gdot(nbasis,dmvx(1:nbasis,k),1,&
+  &            full_solutions(1:nbasis,k),1,numerator,ierr)
+        call gdot(nbasis,full_solutions(1:nbasis,k),1,&
+  &            full_solutions(1:nbasis,k),1,denominator,ierr)
+        do j = 1, nbasis
+          residuals(j,k) = dmvx(j,k) &
+  &          - (full_solutions(j,k)*numerator/denominator)
+        end do
+      end do
+  
+      deallocate(dmvx)
+
+    else if (precon_string.eq.'sleijpen') then
+
+      do j = 1, nroots
+        do k = 1, nbasis
+          residuals(k,j) = mvx(k,j) &
+  &         + (full_solutions(k,j) &
+  &         *(approx_spectra(k)-roots(j)))
+        end do
+      end do
+
+      allocate(dmvx(nbasis,nroots))
+
+  !! create scaled full solutions required for epsilon, use dmvx
+      do k = 1, nroots
+        do j = 1, nbasis
+          dmvx(j,k) = full_solutions(j,k)/&
+  &         ( approx_spectra(j) - roots(k) )
+        end do
+      end do
+  
+      do k = 1, nroots
+        call gdot(nbasis,dmvx(1:nbasis,k),1,&
+  &            full_solutions(1:nbasis,k),1,denominator,ierr)
+        call gdot(nbasis,dmvx(1:nbasis,k),1,&
+  &            residuals(1:nbasis,k),1,numerator,ierr)
+        do j = 1, nbasis
+          residuals(j,k) = &
+  &    (residuals(j,k)/(approx_spectra(j) - roots(k)))&
+  &  - ( ((numerator/denominator)*full_solutions(j,k)) &
+  &   / (approx_spectra(j) - roots(k)) )
+        end do
+      end do
+  
+      deallocate(dmvx)
+
+    else ! default to davidson
+
+      do j = 1, nroots
+        do k = 1, nbasis
+          residuals(k,j) = (mvx(k,j)&
+  &         /(approx_spectra(k)-roots(j))) &
+  &         + full_solutions(k,j) 
+        end do
+      end do
+
     end if
+
+
 
 !! get inner product of residual with itself
     if (iverb.ge.4) then
@@ -2545,6 +2635,8 @@ contains
 !< maximum number of subspace iterations 
     character(len=22) :: id_string = 'libkrylov_a'
 !< id = ID of the calculation
+    character(len=32) :: precon_string = 'davidson'
+!< precon = option for preconditioner
 !< used only for dumping output
     integer(kind_integer) :: iverb = 0
 !< verbosity level
@@ -2636,7 +2728,7 @@ contains
   ! USER-DEFINED FUNCTION
     call krylov_problem_a%lkl_problem_a(nbasis,nroots,&
   &   minstart,maxstart,threshold,maxiter,&
-  &   id_string,iverb,irestart,ierr)
+  &   id_string,precon_string,iverb,irestart,ierr)
     if (ierr.ne.0) then
       if (iverb.ge.0) then
         print *, 'class(user_krylov_a_problem_subroutine) function failed'
@@ -3080,6 +3172,7 @@ contains
       print *, 'initial subspace:  ',nstart
       print *, 'full vector space: ',nbasis
       print *, 'maximum number of iterations: ',maxiter
+      print *, 'preconditioner type: ',precon_string
       print *, ''
     end if
 
@@ -3192,7 +3285,7 @@ contains
   &     mvproduct(1:nbasis,1:nsubspace),full_solutions,&
   &     solutions(1:nsubspace,1:nroots),&
   &     roots,&
-  &     approx_spectra,krylov_maket_a,&
+  &     approx_spectra,precon_string,&
   &     residuals,&
   &     largest_sv,&
   &     nresiduals,iverb,ierr)

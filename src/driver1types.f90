@@ -11,7 +11,7 @@ module driver1types
 !--------------------------------------------------------------------
 !< This module implements functions that are input
 !< to the solver in libkrylov.
-!< Specifically defining the solver reading a slyvester problem
+!< Specifically defining the solver reading a problem
 !< already present on file and pointed to before calling the solver
 !< this module uses the basetype.f90 selected at compile time
 !< and is thus generic with respect to base type 
@@ -45,10 +45,14 @@ module driver1types
 
   type, extends(libkrylov_problem_a_subroutine) :: kl_problem_a
 ! external data required for the function
-! character string for problem
+! character string for problem naming for output/input files
 ! pointer to target set outside of solver
 ! must be set before calling solver
     character(len=22), pointer :: problem_string => null()
+! character string for preconditioner selection
+! pointer to target set outside of solver
+! must be set before calling solver
+    character(len=32), pointer :: precon_string => null()
 ! size of the matrix problem
 ! must be set before calling solver
     integer(kind_integer) :: n_size
@@ -177,7 +181,7 @@ contains
 !--------------------------------------------------------------------
   subroutine eval_kl_problem_a(data,nbasis,nroots,&
   &     minstart,maxstart,threshold,maxiter,&
-  &     id_string,iverb,irestart,ierr)
+  &     id_string,precon_string,iverb,irestart,ierr)
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
 !
@@ -220,6 +224,7 @@ contains
     real(kind_float), intent(inout) :: threshold
     integer(kind_integer), intent(inout) :: maxiter
     character(len=22), intent(inout) :: id_string
+    character(len=32), intent(inout) :: precon_string
     integer(kind_integer), intent(inout) :: iverb
     integer(kind_integer), intent(inout) :: irestart
     integer(kind_integer), intent(inout) :: ierr
@@ -274,6 +279,9 @@ contains
 
 !! set id_string based on basetypes
     id_string = data%problem_string
+
+!! set id_string based on basetypes
+    precon_string = data%precon_string
 
 !! set iverb to most verbose operation
     iverb = 5

@@ -14,8 +14,6 @@ program krylovdriver_1a
 !< which when combined create a krylov space eigenvalue
 !< solver which reads in the matrix problem from file
 !< (named : <basetype>_1a_prob.raft )
-!< solves the lowest 5% of the eigenvalues,
-!< starting from the smallest 20% of the subspace.
 !< and prints the solutions to file
 !< (eigenvectors named : <basetype>_1a_vecs.raft )
 !< (eigenvalues named : <basetype>_1a_vals.raft )
@@ -65,7 +63,7 @@ program krylovdriver_1a
 ! character string for preconditioner string
   character(len=32) :: input,input2 = ''
 ! character string for preconditioner string
-  character(len=32) :: preconditioner = ''
+  character(len=32),target :: preconditioner = ''
 ! contains the matrix problem, read in from file
   type(base), target, allocatable :: krylov_a(:,:)
   real(kind_float), target, allocatable :: krylov_d(:)
@@ -88,6 +86,7 @@ program krylovdriver_1a
 
 !! set default options
   krylov_pc_all%precon_string = 'davidson'
+  preconditioner = 'davidson'
   krylov_problem%irestart = 0
   krylov_s_ext_in%nstart = 0
 !! checking command line options:
@@ -125,6 +124,7 @@ program krylovdriver_1a
         if (ierr.ne.0) stop
         krylov_pc_all%precon_string = input2
         krylov_maket_all%precon_string = input2
+        preconditioner = input2
         print *, 'preconditioner: ',input2
       else if (input.eq.'-irestart') then
         k = k + 1
@@ -203,6 +203,7 @@ program krylovdriver_1a
 
 ! set pointers to local variables required for input subroutines
   krylov_problem%problem_string => a1_string
+  krylov_problem%precon_string => preconditioner
   krylov_approx%krylov_d => krylov_d
   krylov_mvp%krylov_a => krylov_a
 

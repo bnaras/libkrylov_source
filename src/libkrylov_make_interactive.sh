@@ -131,10 +131,10 @@ then
   make install-real_dp_driver1bPROGRAMS
   make install-real_dp_driver1cPROGRAMS
   echo '----------Real Double Precision driver1 made----------'
-  make install-real_dp_test_restart_aPROGRAMS
-  make install-real_dp_test_restart_bPROGRAMS
-  make install-real_dp_test_restart_cPROGRAMS
-  echo '----------Real Double Precision restart tests made----------'
+#  make install-real_dp_test_restart_aPROGRAMS
+#  make install-real_dp_test_restart_bPROGRAMS
+#  make install-real_dp_test_restart_cPROGRAMS
+#  echo '----------Real Double Precision restart tests made----------'
   make install-real_dp_sym_problem1PROGRAMS
   echo '----------Real Double Precision reference problems made----------'
   cp *.mod real_dp_mods/.
