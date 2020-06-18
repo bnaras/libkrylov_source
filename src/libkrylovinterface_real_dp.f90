@@ -331,6 +331,14 @@ module libkrylovinterface_real_dp
     procedure :: lkl_start => lkl_start_elec_gas_rdp
   end type lkl_s_elec_gas_rdp
 
+!! defining input function for number of starting basis vectors
+  type, extends(libkrylov_start_real_dp) :: lkl_s_ext_in_rdp
+! external data required for the function
+    integer(lkl_int_rdp_k) :: nstart = 0
+  contains
+    procedure :: lkl_start => lkl_start_ext_in_rdp
+  end type lkl_s_ext_in_rdp
+
 !! defining input function for initial basis vectors
   type, extends(libkrylov_guess_real_dp) :: lkl_g_unit_vec_rdp
 ! external data required for the function
@@ -422,7 +430,7 @@ module libkrylovinterface_real_dp
   abstract interface
     subroutine libkrylov_problem_a_interface(data,nbasis,nroots,&
   &   minstart,maxstart,threshold,maxiter,&
-  &   id_string,iverb,irestart,ierr)
+  &   id_string,precon_string,iverb,irestart,ierr)
       import :: lkl_int_rdp_k, libkrylov_problem_a_real_dp, lkl_real_dp_k
       class(libkrylov_problem_a_real_dp) :: data
       integer(lkl_int_rdp_k), intent(inout) :: nbasis
@@ -432,6 +440,7 @@ module libkrylovinterface_real_dp
       real(lkl_real_dp_k), intent(inout) :: threshold
       integer(lkl_int_rdp_k), intent(inout) :: maxiter
       character(len=22), intent(inout) :: id_string
+      character(len=32), intent(inout) :: precon_string
       integer(lkl_int_rdp_k), intent(inout) :: iverb
       integer(lkl_int_rdp_k), intent(inout) :: irestart
       integer(lkl_int_rdp_k), intent(inout) :: ierr
@@ -853,6 +862,61 @@ contains
 
 !--------------------------------------------------------------------
   end subroutine lkl_start_elec_gas_rdp
+!--------------------------------------------------------------------
+
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+  subroutine lkl_start_ext_in_rdp(data,n1,n2,approx_spectra,&
+   &   nstart,ierr)
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Description:
+!--------------------------------------------------------------------
+!! subroutine to determine the number of initial guess vectors
+!! by external data input
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Modules and Global Variables
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+!
+    implicit none
+!
+!--------------------------------------------------------------------
+! External data (IDEALLY EMPTY)
+!--------------------------------------------------------------------
+    class(lkl_s_ext_in_rdp) :: data
+!--------------------------------------------------------------------
+! Input Parameters
+!--------------------------------------------------------------------
+!!   nbasis
+    integer(lkl_int_rdp_k), intent(in) :: n1
+!!   nroots
+    integer(lkl_int_rdp_k), intent(in) :: n2
+!!    approximate spectra
+    real(lkl_real_dp_k), intent(in) :: approx_spectra(n1)
+!--------------------------------------------------------------------
+! Output Parameters
+!--------------------------------------------------------------------
+!! nstart
+    integer(lkl_int_rdp_k), intent(inout) :: nstart
+!--------------------------------------------------------------------
+! Error Parameter
+!--------------------------------------------------------------------
+    integer(lkl_int_rdp_k), intent(inout) :: ierr
+!--------------------------------------------------------------------
+!  Local Variables
+!--------------------------------------------------------------------
+!! Blank
+!--------------------------------------------------------------------
+
+    nstart = data%nstart
+
+!--------------------------------------------------------------------
+  end subroutine lkl_start_ext_in_rdp
 !--------------------------------------------------------------------
 
 !--------------------------------------------------------------------
@@ -1443,72 +1507,152 @@ contains
 !  Local Variables
 !--------------------------------------------------------------------
     integer(lkl_int_rdp_k) :: j,k = 0
-    real(lkl_real_dp_k), allocatable :: vxo(:,:)
     real(lkl_real_dp_k) :: numerator
     real(lkl_real_dp_k) :: denominator
     real(lkl_real_dp_k), external :: ddot
-    real(lkl_real_dp_k), allocatable :: mx(:,:)
+    real(lkl_real_dp_k), allocatable :: dmvx(:,:)
 !--------------------------------------------------------------------
 
-    allocate(vxo(n1,n2))
-
-!! calculate scaled eigenvectors on the subspace
-    do j = 1, n2
-      do k = 1, n1
-        vxo(k,j) = full_solutions(k,j) &
-  &       *(approx_spectra(k)-roots(j))
-      end do
-    end do
-
-    residuals = mvx + vxo
-
     if (data%precon_string.eq.'none') then
+
+      do j = 1, n2
+        do k = 1, n1
+          residuals(k,j) = mvx(k,j) &
+  &         + (full_solutions(k,j) &
+  &         *(approx_spectra(k)-roots(j)))
+        end do
+      end do
+
     else if (data%precon_string.eq.'approx_spectra') then
+
+      do j = 1, n2
+        do k = 1, n1
+          residuals(k,j) = mvx(k,j) &
+  &         + (full_solutions(k,j) &
+  &         *(approx_spectra(k)-roots(j)))
+        end do
+      end do
+
       do k = 1, n2
         do j = 1, n1
           residuals(j,k) = residuals(j,k)/&
  &         ( approx_spectra(j) )
         end do
       end do
+
+    else if (data%precon_string.eq.'new_approx_spectra') then
+
+      do j = 1, n2
+        do k = 1, n1
+          residuals(k,j) = (mvx(k,j)/approx_spectra(k)) &
+  &         + full_solutions(k,j) &
+  &         - (full_solutions(k,j) &
+  &         *(roots(j)/approx_spectra(k)))
+        end do
+      end do
+
+    else if (data%precon_string.eq.'new_davidson') then
+
+      do j = 1, n2
+        do k = 1, n1
+          residuals(k,j) = (mvx(k,j)&
+  &         /(approx_spectra(k)-roots(j))) &
+  &         + full_solutions(k,j) 
+        end do
+      end do
+
     else if (data%precon_string.eq.'davidson') then
+
+      do j = 1, n2
+        do k = 1, n1
+          residuals(k,j) = mvx(k,j) &
+  &         + (full_solutions(k,j) &
+  &         *(approx_spectra(k)-roots(j)))
+        end do
+      end do
+
       do k = 1, n2
         do j = 1, n1
           residuals(j,k) = residuals(j,k)/&
  &         ( approx_spectra(j) - roots(k) )
         end do
       end do
-    else if (data%precon_string.eq.'sleijpen') then
-      allocate(mx(n1,n2))
-  
-  !! create scaled full solutions required for epsilon
+
+    else if (data%precon_string.eq.'new_sleijpen') then
+
+      allocate(dmvx(n1,n2))
+
+  !! create scaled mvproduct(solutions) required for epsilon, use dmvx
       do k = 1, n2
         do j = 1, n1
-          mx(j,k) = full_solutions(j,k)/&
+          dmvx(j,k) = mvx(j,k)/&
   &         ( approx_spectra(j) - roots(k) )
         end do
       end do
   
       do k = 1, n2
-        denominator = ddot(n1,mx(1:n1,k),1,full_solutions(1:n1,k),1)
-        numerator = ddot(n1,mx(1:n1,k),1,residuals(1:n1,k),1)
+        numerator = ddot(n1,dmvx(1:n1,k),1,full_solutions(1:n1,k),1)
+        denominator = ddot(n1,full_solutions(1:n1,k),1,full_solutions(1:n1,k),1)
         do j = 1, n1
-          residuals(j,k) = ((residuals(j,k) &
-  &  - ((numerator/denominator)*full_solutions(j,k))) &
-  &   / ( approx_spectra(j) - roots(k) ))
+          residuals(j,k) = dmvx(j,k) &
+  &          - (full_solutions(j,k)*numerator/denominator)
         end do
       end do
   
-      deallocate(mx)
+      deallocate(dmvx)
+
+    else if (data%precon_string.eq.'sleijpen') then
+
+      do j = 1, n2
+        do k = 1, n1
+          residuals(k,j) = mvx(k,j) &
+  &         + (full_solutions(k,j) &
+  &         *(approx_spectra(k)-roots(j)))
+        end do
+      end do
+
+      allocate(dmvx(n1,n2))
+
+  !! create scaled full solutions required for epsilon, use dmvx
+      do k = 1, n2
+        do j = 1, n1
+          dmvx(j,k) = full_solutions(j,k)/&
+  &         ( approx_spectra(j) - roots(k) )
+        end do
+      end do
+  
+      do k = 1, n2
+        denominator = ddot(n1,dmvx(1:n1,k),1,full_solutions(1:n1,k),1)
+        numerator = ddot(n1,dmvx(1:n1,k),1,residuals(1:n1,k),1)
+        do j = 1, n1
+          residuals(j,k) = &
+  &    (residuals(j,k)/(approx_spectra(j) - roots(k)))&
+  &  - ( ((numerator/denominator)*full_solutions(j,k)) &
+  &   / (approx_spectra(j) - roots(k)) )
+        end do
+      end do
+  
+      deallocate(dmvx)
+
     else ! default to davidson
+
+      do j = 1, n2
+        do k = 1, n1
+          residuals(k,j) = mvx(k,j) &
+  &         + (full_solutions(k,j) &
+  &         *(approx_spectra(k)-roots(j)))
+        end do
+      end do
+
       do k = 1, n2
         do j = 1, n1
           residuals(j,k) = residuals(j,k)/&
  &         ( approx_spectra(j) - roots(k) )
         end do
       end do
+
     end if
 
-    deallocate(vxo)
 
 !--------------------------------------------------------------------
   end subroutine lkl_maket_a_all_rdp

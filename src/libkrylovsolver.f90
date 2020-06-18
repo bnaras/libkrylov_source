@@ -2301,7 +2301,7 @@ contains
   subroutine krylov_a_residue(nbasis,nsubspace,nroots,&
   &     mvproduct,full_solutions,solutions,&
   &     roots,&
-  &     approx_spectra,krylov_maket_a,residuals,&
+  &     approx_spectra,precon_string,residuals,&
   &     largest_sv,&
   &     nresiduals,iverb,ierr)
 !--------------------------------------------------------------------
@@ -2342,7 +2342,7 @@ contains
     type(base), intent(in) :: solutions(nsubspace,nroots)
     real(kind_float), intent(in) :: roots(nroots)
     real(kind_float), intent(in) :: approx_spectra(nbasis)
-    class(libkrylov_maket_a_subroutine) :: krylov_maket_a
+    character(len=32), intent(in) :: precon_string
 !--------------------------------------------------------------------
 ! Output Variables
 !--------------------------------------------------------------------
@@ -2359,8 +2359,13 @@ contains
 !--------------------------------------------------------------------
     type(base) :: one_kb
     type(base) :: zero_kb
+    type(base) :: euc_sq
+    real(kind_float) :: euc_norm
     type(base), allocatable :: mvx(:,:)
     real(kind_float), allocatable :: singular_vals(:)
+    type(base) :: numerator
+    type(base) :: denominator
+    type(base), allocatable :: dmvx(:,:)
     real(kind_float) :: lognbasis
     integer(kind_integer) :: ntemp ! n of all_residuals
     real(kind_float) :: res_temp
@@ -2383,26 +2388,130 @@ contains
   &   solutions,nsubspace,zero_kb,&
   &   mvx,nbasis)
 
-!! Make preconditioned residuals with input function!
-    associate(interfacing_fs => full_solutions%element,&
-  &           interfacing_mvx => mvx%element,&
-  &           interfacing_rd => residuals%element)
-      call krylov_maket_a%lkl_maket_a(nbasis,nroots,&
-  &     approx_spectra,&
-  &     roots,interfacing_mvx,interfacing_fs,&
-  &     interfacing_rd,ierr)
-    end associate
-    if (ierr.ne.0) then
-      if (iverb.ge.0) then
-        print *, 'class(user_krylov_maket_a_subroutine) function failed'
-        print *, 'error variable = ',ierr
-        print *, 'exit residue step'
-      end if
-      ierr = -40
-      return ! return to solver loop
+
+    if (precon_string.eq.'none') then
+
+      do j = 1, nroots
+        do k = 1, nbasis
+          residuals(k,j) = mvx(k,j) &
+  &         + (full_solutions(k,j) &
+  &         *(approx_spectra(k)-roots(j)))
+        end do
+      end do
+
+    else if (precon_string.eq.'approx_spectra') then
+
+      do j = 1, nroots
+        do k = 1, nbasis
+          residuals(k,j) = (mvx(k,j)/approx_spectra(k)) &
+  &         + full_solutions(k,j) &
+  &         - (full_solutions(k,j) &
+  &         *(roots(j)/approx_spectra(k)))
+        end do
+      end do
+
+    else if (precon_string.eq.'davidson') then
+
+      do j = 1, nroots
+        do k = 1, nbasis
+          residuals(k,j) = (mvx(k,j)&
+  &         /(approx_spectra(k)-roots(j))) &
+  &         + full_solutions(k,j) 
+        end do
+      end do
+
+    else if (precon_string.eq.'new_sleijpen') then
+
+      allocate(dmvx(nbasis,nroots))
+
+  !! create scaled mvproduct(solutions) required for epsilon, use dmvx
+      do k = 1, nroots
+        do j = 1, nbasis
+          dmvx(j,k) = mvx(j,k)/&
+  &         ( approx_spectra(j) - roots(k) )
+        end do
+      end do
+  
+      do k = 1, nroots
+        call gdot(nbasis,dmvx(1:nbasis,k),1,&
+  &            full_solutions(1:nbasis,k),1,numerator,ierr)
+        call gdot(nbasis,full_solutions(1:nbasis,k),1,&
+  &            full_solutions(1:nbasis,k),1,denominator,ierr)
+        do j = 1, nbasis
+          residuals(j,k) = dmvx(j,k) &
+  &          - (full_solutions(j,k)*numerator/denominator)
+        end do
+      end do
+  
+      deallocate(dmvx)
+
+    else if (precon_string.eq.'sleijpen') then
+
+      do j = 1, nroots
+        do k = 1, nbasis
+          residuals(k,j) = mvx(k,j) &
+  &         + (full_solutions(k,j) &
+  &         *(approx_spectra(k)-roots(j)))
+        end do
+      end do
+
+      allocate(dmvx(nbasis,nroots))
+
+  !! create scaled full solutions required for epsilon, use dmvx
+      do k = 1, nroots
+        do j = 1, nbasis
+          dmvx(j,k) = full_solutions(j,k)/&
+  &         ( approx_spectra(j) - roots(k) )
+        end do
+      end do
+  
+      do k = 1, nroots
+        call gdot(nbasis,dmvx(1:nbasis,k),1,&
+  &            full_solutions(1:nbasis,k),1,denominator,ierr)
+        call gdot(nbasis,dmvx(1:nbasis,k),1,&
+  &            residuals(1:nbasis,k),1,numerator,ierr)
+        do j = 1, nbasis
+          residuals(j,k) = &
+  &    (residuals(j,k)/(approx_spectra(j) - roots(k)))&
+  &  - ( ((numerator/denominator)*full_solutions(j,k)) &
+  &   / (approx_spectra(j) - roots(k)) )
+        end do
+      end do
+  
+      deallocate(dmvx)
+
+    else ! default to davidson
+
+      do j = 1, nroots
+        do k = 1, nbasis
+          residuals(k,j) = (mvx(k,j)&
+  &         /(approx_spectra(k)-roots(j))) &
+  &         + full_solutions(k,j) 
+        end do
+      end do
+
     end if
 
-!! SVD of residuals to obtain 
+
+
+!! get inner product of residual with itself
+    if (iverb.ge.4) then
+      do j = 1, nroots
+        call gdot(nbasis,residuals(1:nbasis,j),1,&
+  &       residuals(1:nbasis,j),1,euc_sq,ierr)
+        if (ierr.ne.0) then
+          print *, '*dot linear algebra error!', ierr
+          print *, 'exit residue step'
+          ierr = -40
+          return ! return to solver loop
+        end if
+        euc_norm = euc_sq
+        euc_norm = sqrt(euc_norm)
+        print *, j,' preconditioned residual norm: ', euc_norm
+      end do
+    end if
+
+!! SVD of residuals to obtain singular values
     call krylov_orthogonalize(nbasis,nroots,residuals,&
   &       singular_vals,nresiduals,iverb,ierr)
     if (ierr.ne.0) then
@@ -2500,7 +2609,7 @@ contains
 !! integer for loops
     integer(kind_integer) :: j,k = 0
 !! integer for restart files
-    integer(kind_integer) :: k1,k2 = 0
+    integer(kind_integer) :: k1,k2,k3,k4 = 0
 !! integer for iteration counting
     integer(kind_integer) :: jter = 0
 !! logical to pass a logic check as an arguement
@@ -2526,6 +2635,8 @@ contains
 !< maximum number of subspace iterations 
     character(len=22) :: id_string = 'libkrylov_a'
 !< id = ID of the calculation
+    character(len=32) :: precon_string = 'davidson'
+!< precon = option for preconditioner
 !< used only for dumping output
     integer(kind_integer) :: iverb = 0
 !< verbosity level
@@ -2617,7 +2728,7 @@ contains
   ! USER-DEFINED FUNCTION
     call krylov_problem_a%lkl_problem_a(nbasis,nroots,&
   &   minstart,maxstart,threshold,maxiter,&
-  &   id_string,iverb,irestart,ierr)
+  &   id_string,precon_string,iverb,irestart,ierr)
     if (ierr.ne.0) then
       if (iverb.ge.0) then
         print *, 'class(user_krylov_a_problem_subroutine) function failed'
@@ -2731,6 +2842,69 @@ contains
       end if
     end if
 
+!! define file name for restart files
+    vname = trim(id_string)//'v.rstrt'
+    wname = trim(id_string)//'w.rstrt'
+    sname = trim(id_string)//'v.save'
+
+!! check for restart files that would affect nstart
+
+!! if restart is allowed, look for saved v files
+
+!! if restart is allowed, look for restart v files
+!!  invert irestart if new restart is to be generated
+!!   as v-file is missing
+    if (irestart.ge.2) then
+      inquire(file=vname,exist=check)
+      if (check) then
+        call array_read_rstrt_size(vname,k1,k2,iverb,ierr)
+        if (ierr.ne.0) then ! no restart available
+          ierr = 0
+          irestart = -abs(irestart)
+        else if (k1.ne.nbasis) then ! vfile not in this basis
+          irestart = -abs(irestart)
+        else if (k2.le.0) then ! not possible number of vectors
+          irestart = -abs(irestart)
+        else if (k2.ne.nstart) then ! vfile from different iter ! vfile pass all checks
+            nstart = k2
+        end if ! vfile pass all checks
+      else !no restart available or possible
+        irestart = -abs(irestart)
+      end if
+    end if
+    !! k1 and k2 MUST BE PRESERVED
+
+    check = .false.
+    if ((irestart.eq.1).or.(irestart.lt.0)) then
+    ! save file if it could be useful
+      inquire(file=sname,exist=check) ! CHECK MUST BE PRESERVED
+      if (check) then
+        call array_read_rstrt_size(sname,k3,k4,iverb,ierr)
+        if (ierr.ne.0) then ! no restart available
+          ierr = 0
+          irestart = -abs(irestart)
+        else if (k3.ne.nbasis) then ! sfile not in this basis
+          irestart = -abs(irestart)
+        else if (k4.le.0) then ! not possible number of vectors
+          irestart = -abs(irestart)
+        else ! sfile passes all checks, using sfile
+          if ((nstart.gt.k4).and.(k4.ge.nroots)) then 
+          ! expanding with new vectors may lead to linear dependence!!
+            k4 = nroots
+            nstart = k4
+          else if (k4.gt.nstart) then
+          ! no need for all k4 vectors.
+            k4 = nstart
+          else 
+!! PRINT WARNING ABOUT SMALL SAVE FILE?? :Nambi
+          end if
+        end if
+      else !no save available or possible
+        irestart = -abs(irestart)
+      end if
+    end if
+    !! k3 and k4 MUST BE PRESERVED
+
 ! Set initial subspace size
     nsubspace = nstart
 
@@ -2747,10 +2921,6 @@ contains
   &     nroots+real(1,kind=kind_float)),kind=kind_integer)
     end if
 
-!! define file name for restart files
-    vname = trim(id_string)//'v.rstrt'
-    wname = trim(id_string)//'w.rstrt'
-    sname = trim(id_string)//'v.save'
 
 
 ! Allocate all arrays that exist across iterations
@@ -2776,31 +2946,6 @@ contains
     overlap = real(0,kind=kind_float)
     diag_overlap = real(0,kind=kind_float)
 
-!! if restart is allowed, look for restart v files
-!!  invert irestart if new restart is to be generated
-!!   as v-file is missing
-!! check can be moved after allocation? move back to before!
-    if (irestart.ge.2) then
-      inquire(file=vname,exist=check)
-      if (check) then
-        call array_read_rstrt_size(vname,k1,k2,iverb,ierr)
-        if (ierr.ne.0) then ! no restart available
-          ierr = 0
-          irestart = -abs(irestart)
-        else if (k1.ne.nbasis) then ! vfile not in this basis
-          irestart = -abs(irestart)
-        else if (k2.lt.nstart) then ! vfile from a different start?
-          irestart = -abs(irestart)
-        else if (k2.gt.nstart) then ! vfile from iter>1? ! vfile pass all checks
-            nstart = k2
-            maxiter = floor((real((maxsubspace-nstart),kind=kind_float)/&
-  &           nroots+real(1,kind=kind_float)),kind=kind_integer)
-        end if ! vfile pass all checks
-      else !no restart available or possible
-        irestart = -abs(irestart)
-      end if
-    end if
-
     if (irestart.ge.2) then !read restart if possible
       if (iverb.ge.2) then
         print *, 'Calculation starting from restart file!'
@@ -2816,9 +2961,50 @@ contains
         ierr = -50
         return ! abort solver, return to call
       end if
-    else if (irestart.eq.0) then !! skip savefile check if no restart
+    else if (check) then !! USE CHECK
       if (iverb.ge.2) then
-        print *, 'Calcuation starting from scratch!'
+        print *, 'Calculation starting from save file!'
+      end if
+      call array_read_rstrt(sname,nbasis,k4,&
+  &     basis_vectors(1:nbasis,1:k4),iverb,ierr)
+      if (ierr.ne.0) then
+        if (iverb.ge.0) then
+          print *, 'v.save passed checks but failed to read'
+          print *, 'error variable = ',ierr
+          print *, 'suggestion: delete v.save'
+        end if
+        ierr = -50
+        return ! abort solver, return to call
+      end if
+      if (k4.eq.nstart) then ! no new initial vectors needed
+        if (iverb.ge.2) then
+          print *, ' with no new vectors needed!'
+        end if
+      else ! more initial vectors needed
+        if (iverb.ge.2) then
+          print *, ' generating more start vectors!'
+        end if
+        associate(interfacing_bv => basis_vectors%element)
+          call krylov_guess%lkl_guess(nbasis,nstart,k4,&
+  &             approx_spectra,interfacing_bv(1:nbasis,1:nstart),&
+  &             ierr)
+        end associate
+        if (ierr.ne.0) then
+          if (iverb.ge.0) then
+            print *, 'class(user_krylov_guess_subroutine) function failed' 
+            print *, 'for extending current subspace' 
+            print *, 'error variable = ',ierr
+          end if
+          ierr = -45
+          return ! abort solver, return to call
+        end if
+      end if
+    else ! have to start from scratch
+!! Fresh starting basis vectors generated if 
+!! conditions are met.
+      irestart = -abs(irestart) ! may be redundant!!! NAMBI
+      if (iverb.ge.2) then
+        print *, 'Calculation starting from scratch!'
       end if
       associate(interfacing_bv => basis_vectors%element)
         call krylov_guess%lkl_guess(nbasis,nstart,0,&
@@ -2831,79 +3017,7 @@ contains
           print *, 'error variable = ',ierr
         end if
         ierr = -45
-        return ! abort solver, return to call
-      end if
-    else ! save file if it could be useful
-      inquire(file=sname,exist=check)
-      if (check) then
-        call array_read_rstrt_size(sname,k1,k2,iverb,ierr)
-        if (ierr.ne.0) then ! no restart available
-          ierr = 0
-          irestart = -abs(irestart)
-        else if (k1.ne.nbasis) then ! sfile not in this basis
-          irestart = -abs(irestart)
-        else ! sfile passes all checks, using sfile
-          if (iverb.ge.2) then
-            print *, 'Calculation starting from save file!'
-          end if
-          if (k2.gt.nstart) then ! read in only up to nstart vecs
-            k2 = nstart
-          end if
-          call array_read_rstrt(sname,nbasis,k2,&
-  &           basis_vectors(1:nbasis,1:k2),iverb,ierr)
-          if (ierr.ne.0) then
-            if (iverb.ge.0) then
-              print *, 'v.save passed checks but failed to read'
-              print *, 'error variable = ',ierr
-              print *, 'suggestion: delete v.save'
-            end if
-            ierr = -50
-            return ! abort solver, return to call
-          end if
-          if (k2.eq.nstart) then ! no new initial vectors needed
-            if (iverb.ge.2) then
-              print *, ' with no new vectors needed!'
-            end if
-!! NAMBI : HERE IS WHERE to put restart from non converged calculation?
-          else ! more initial vectors needed
-            if (iverb.ge.2) then
-              print *, ' generating more start vectors!'
-            end if
-            associate(interfacing_bv => basis_vectors%element)
-              call krylov_guess%lkl_guess(nbasis,nstart,k2,&
-  &             approx_spectra,interfacing_bv(1:nbasis,1:nstart),&
-  &             ierr)
-            end associate
-            if (ierr.ne.0) then
-              if (iverb.ge.0) then
-                print *, 'class(user_krylov_guess_subroutine) function failed' 
-                print *, 'error variable = ',ierr
-              end if
-              ierr = -45
-              return ! abort solver, return to call
-            end if
-          end if
-        end if
-      else !no save file
-!! Fresh starting basis vectors generated if 
-!! conditions are met.
-        irestart = -abs(irestart)
-        if (iverb.ge.2) then
-          print *, 'Calculation starting from scratch!'
-        end if
-        associate(interfacing_bv => basis_vectors%element)
-          call krylov_guess%lkl_guess(nbasis,nstart,0,&
-  &         approx_spectra,interfacing_bv(1:nbasis,1:nstart),&
-  &         ierr)
-        end associate
-        if (ierr.ne.0) then
-          if (iverb.ge.0) then
-            print *, 'class(user_krylov_guess_subroutine) function failed' 
-            print *, 'error variable = ',ierr
-          end if
-          ierr = -45
-          return ! abort solver, return to call 
-        end if
+        return ! abort solver, return to call 
       end if
     end if
 
@@ -3058,6 +3172,7 @@ contains
       print *, 'initial subspace:  ',nstart
       print *, 'full vector space: ',nbasis
       print *, 'maximum number of iterations: ',maxiter
+      print *, 'preconditioner type: ',precon_string
       print *, ''
     end if
 
@@ -3170,7 +3285,7 @@ contains
   &     mvproduct(1:nbasis,1:nsubspace),full_solutions,&
   &     solutions(1:nsubspace,1:nroots),&
   &     roots,&
-  &     approx_spectra,krylov_maket_a,&
+  &     approx_spectra,precon_string,&
   &     residuals,&
   &     largest_sv,&
   &     nresiduals,iverb,ierr)

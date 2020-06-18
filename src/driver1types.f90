@@ -11,7 +11,7 @@ module driver1types
 !--------------------------------------------------------------------
 !< This module implements functions that are input
 !< to the solver in libkrylov.
-!< Specifically defining the solver reading a slyvester problem
+!< Specifically defining the solver reading a problem
 !< already present on file and pointed to before calling the solver
 !< this module uses the basetype.f90 selected at compile time
 !< and is thus generic with respect to base type 
@@ -28,12 +28,9 @@ module driver1types
 ! with elementary functions and BLAS calls
   use basetypes
   use blastypes
-! krylov subspace function signatures
+! libkrylov solver input functions signatures and functions
   use libkrylovinterface
   use libkrylovinterface2
-! krylov subspace function signatures, specifically
-! for a symmetric slyvester problem
-  use libkrylovinterface_real_dp
 !--------------------------------------------------------------------
 ! Implicit none
 !--------------------------------------------------------------------
@@ -48,16 +45,23 @@ module driver1types
 
   type, extends(libkrylov_problem_a_subroutine) :: kl_problem_a
 ! external data required for the function
-! character string for problem
+! character string for problem naming for output/input files
 ! pointer to target set outside of solver
 ! must be set before calling solver
     character(len=22), pointer :: problem_string => null()
+! character string for preconditioner selection
+! pointer to target set outside of solver
+! must be set before calling solver
+    character(len=32), pointer :: precon_string => null()
 ! size of the matrix problem
 ! must be set before calling solver
     integer(kind_integer) :: n_size
 ! restart level integer
 ! must be set before calling solver
     integer(kind_integer) :: irestart
+! number of roots to be solved
+! must be set before calling solver
+    integer(kind_integer) :: nroots
   contains
     procedure :: lkl_problem_a => eval_kl_problem_a
   end type kl_problem_a
@@ -177,7 +181,7 @@ contains
 !--------------------------------------------------------------------
   subroutine eval_kl_problem_a(data,nbasis,nroots,&
   &     minstart,maxstart,threshold,maxiter,&
-  &     id_string,iverb,irestart,ierr)
+  &     id_string,precon_string,iverb,irestart,ierr)
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
 !
@@ -220,6 +224,7 @@ contains
     real(kind_float), intent(inout) :: threshold
     integer(kind_integer), intent(inout) :: maxiter
     character(len=22), intent(inout) :: id_string
+    character(len=32), intent(inout) :: precon_string
     integer(kind_integer), intent(inout) :: iverb
     integer(kind_integer), intent(inout) :: irestart
     integer(kind_integer), intent(inout) :: ierr
@@ -246,8 +251,23 @@ contains
       maxstart = floor(0.8*nbasis,kind=kind_integer)
     else
       nroots = 5
-      minstart = 20
+      minstart = 0
       maxstart = floor(0.3*nbasis,kind=kind_integer)
+    end if
+
+!! set nroots based on user input
+    if ((data%nroots.gt.0).and.(data%nroots.lt.maxstart)) then
+      nroots = data%nroots
+    else !! set reasonable nroots
+      if (nbasis.lt.16) then
+        nroots = nbasis
+      else if (nbasis.lt.50) then
+        nroots = 2
+      else if (nbasis.lt.200) then
+        nroots = 5
+      else
+        nroots = 10
+      end if
     end if
 
 !! choice based on problem description
@@ -259,6 +279,9 @@ contains
 
 !! set id_string based on basetypes
     id_string = data%problem_string
+
+!! set id_string based on basetypes
+    precon_string = data%precon_string
 
 !! set iverb to most verbose operation
     iverb = 5

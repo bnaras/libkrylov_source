@@ -14,8 +14,6 @@ program krylovdriver_1a
 !< which when combined create a krylov space eigenvalue
 !< solver which reads in the matrix problem from file
 !< (named : <basetype>_1a_prob.raft )
-!< solves the lowest 5% of the eigenvalues,
-!< starting from the smallest 20% of the subspace.
 !< and prints the solutions to file
 !< (eigenvectors named : <basetype>_1a_vecs.raft )
 !< (eigenvalues named : <basetype>_1a_vals.raft )
@@ -47,6 +45,7 @@ program krylovdriver_1a
   type(kl_problem_a) :: krylov_problem
   type(kl_approx) :: krylov_approx
   type(lkl_s_elec_gas) :: krylov_s_eg
+  type(lkl_s_ext_in) :: krylov_s_ext_in
   type(lkl_g_unit_vec) :: krylov_g_uv
   type(lkl_pc_all) :: krylov_pc_all
   type(lkl_mta_all) :: krylov_maket_all
@@ -64,7 +63,7 @@ program krylovdriver_1a
 ! character string for preconditioner string
   character(len=32) :: input,input2 = ''
 ! character string for preconditioner string
-  character(len=32) :: preconditioner = ''
+  character(len=32),target :: preconditioner = ''
 ! contains the matrix problem, read in from file
   type(base), target, allocatable :: krylov_a(:,:)
   real(kind_float), target, allocatable :: krylov_d(:)
@@ -87,7 +86,9 @@ program krylovdriver_1a
 
 !! set default options
   krylov_pc_all%precon_string = 'davidson'
+  preconditioner = 'davidson'
   krylov_problem%irestart = 0
+  krylov_s_ext_in%nstart = 0
 !! checking command line options:
   counter = command_argument_count()
 !! loop over command line
@@ -123,6 +124,7 @@ program krylovdriver_1a
         if (ierr.ne.0) stop
         krylov_pc_all%precon_string = input2
         krylov_maket_all%precon_string = input2
+        preconditioner = input2
         print *, 'preconditioner: ',input2
       else if (input.eq.'-irestart') then
         k = k + 1
@@ -135,14 +137,14 @@ program krylovdriver_1a
         k = k + 1
         call get_command_argument(k,value=input2,status=ierr)
         if (ierr.ne.0) stop
-!        read(input2,*,iostat=ierr) krylov_problem%nroots
+        read(input2,*,iostat=ierr) krylov_problem%nroots
         print *, 'number of roots: ',input2
         if (ierr.ne.0) stop
       else if (input.eq.'-nstart') then
         k = k + 1
         call get_command_argument(k,value=input2,status=ierr)
         if (ierr.ne.0) stop
-!        read(input2,*,iostat=ierr) krylov_start%nstart
+        read(input2,*,iostat=ierr) krylov_s_ext_in%nstart
         print *, 'starting subspace size: ',input2
         if (ierr.ne.0) stop
       else if (input.eq.'>') then
@@ -201,14 +203,22 @@ program krylovdriver_1a
 
 ! set pointers to local variables required for input subroutines
   krylov_problem%problem_string => a1_string
+  krylov_problem%precon_string => preconditioner
   krylov_approx%krylov_d => krylov_d
   krylov_mvp%krylov_a => krylov_a
 
 ! call solver
-  call problem_a_solver(krylov_approx,krylov_s_eg,&
+  if (krylov_s_ext_in%nstart.le.0) then
+    call problem_a_solver(krylov_approx,krylov_s_eg,&
   &   krylov_problem, &
   &   krylov_g_uv,krylov_mvp,krylov_pc_all, &
   &   krylov_maket_all,krylov_output,ierr)
+  else
+    call problem_a_solver(krylov_approx,krylov_s_ext_in,&
+  &   krylov_problem, &
+  &   krylov_g_uv,krylov_mvp,krylov_pc_all, &
+  &   krylov_maket_all,krylov_output,ierr)
+  end if
 
   print *, 'final ierr value = ',ierr
 
