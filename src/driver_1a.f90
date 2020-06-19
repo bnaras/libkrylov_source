@@ -98,7 +98,8 @@ program krylovdriver_1a
       call get_command_argument(k,value=input,status=ierr)
       if (ierr.ne.0) stop
       if ((input.eq.'-help').or.(input.eq.'--help')) then
-        print *, 'solver for problem_a on file:'
+        print *, 'driver for libkrylov problem_a_solver '
+        print *, ' where problem is on file:'
         print *, ''
         print *, 'options:'
         print *, '--help        display this message'
@@ -109,14 +110,30 @@ program krylovdriver_1a
         print *, '                approx_spectra'
         print *, '                davidson'
         print *, '                sleijpen'
+        print *, '               default option: davidson'
         print *, ''
         print *, '-irestart     select restart level'
-        print *, '               available options: 1 - 4'
+        print *, '               available options: 0 - 4'
+        print *, '               default option: 0'
         print *, ''
         print *, '-nroots       select number of roots to solve'
+        print *, '               default option: nbasis for nbasis < 17'
+        print *, '               default option: 2 for 16 < nbasis < 50'
+        print *, '               default option: 5 for 200 < nbasis'
         print *, ''
         print *, '-nstart       select size of initial subspace'
+        print *, '               default option: estimated'
         print *, ''
+        print *, '-test         call solver with ierr .ne. 0'
+        print *, '               to see subroutine description'
+        print *, ''
+        stop
+      else if (input.eq.'-test') then
+        ierr = 20
+        call problem_a_solver(krylov_approx,krylov_s_eg,&
+  &       krylov_problem, &
+  &       krylov_g_uv,krylov_mvp,krylov_pc_all, &
+  &       krylov_maket_all,krylov_output,ierr)
         stop
       else if (input.eq.'-precon') then
         k = k + 1
@@ -207,13 +224,13 @@ program krylovdriver_1a
   krylov_approx%krylov_d => krylov_d
   krylov_mvp%krylov_a => krylov_a
 
-! call solver
+! call solver with function to calculate nstart based on electron gas
   if (krylov_s_ext_in%nstart.le.0) then
     call problem_a_solver(krylov_approx,krylov_s_eg,&
   &   krylov_problem, &
   &   krylov_g_uv,krylov_mvp,krylov_pc_all, &
   &   krylov_maket_all,krylov_output,ierr)
-  else
+  else ! call solver with input nstart
     call problem_a_solver(krylov_approx,krylov_s_ext_in,&
   &   krylov_problem, &
   &   krylov_g_uv,krylov_mvp,krylov_pc_all, &

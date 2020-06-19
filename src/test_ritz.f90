@@ -403,7 +403,7 @@ program test_ritz
   print *, 'input z_array3 is identity which is positive definite'
   print *, 'input r_vector1 is all 1'
 !! call subroutine
-  call krylov_cholesky(q,z_array3,r_vector1,z_array7,iverb,ierr)
+  call krylov_cholesky(q,z_array3,r_vector1,z_array7,x2,iverb,ierr)
 !! check ierr value to see whether routine terminated with an error
 !! test if ierr is not equal to 0
   if (ierr.ne.0) then
@@ -417,6 +417,7 @@ program test_ritz
     print *, 'krylov_cholesky runs'
   end if
 !! write info about output
+  print *, 'x2 should be one'
   print *, 'z_array3 should be identity, unchanged'
 !! write test to check each element
   print *, 'testing each element of z_array3'
