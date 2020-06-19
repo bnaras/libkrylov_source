@@ -85,8 +85,8 @@ program test_libkrylovinterface
   end if
   
 !! define fname
-  fname = 'real_dp_interface_test.out'
-
+  fname = trim(base_print_string)//'_interface_test.out'
+  
 !! open file
   open(unit=funit,file=fname,action='write',status='replace',&
   & iostat=ierr)
@@ -95,7 +95,8 @@ program test_libkrylovinterface
   write(unit=funit,fmt=*) 'Testing subroutines in libkrylovinterface'
 
   write(unit=funit,fmt=*) 'The interface is for:'
-  write(unit=funit,fmt=*) 'type real, double precision elements'
+  write(unit=funit,fmt=*) 'matrix elements of type ', trim(basetype_string), ' with '
+  write(unit=funit,fmt=*) float_print_string
   
   write(unit=funit,fmt=*) 'machine precision'
   write(unit=funit,fmt=*) eps

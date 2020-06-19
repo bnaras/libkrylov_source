@@ -1,6 +1,6 @@
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
-module libkrylovsolver_real_dp
+module libkrylovsolver_real_sp
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
 !
@@ -13,7 +13,7 @@ module libkrylovsolver_real_dp
 !--------------------------------------------------------------------
 ! Modules and Global Varaibles
 !--------------------------------------------------------------------
-  use libkrylovinterface_real_dp
+  use libkrylovinterface_real_sp
   use libkrylovsolver
 !--------------------------------------------------------------------
 ! Implicit none
@@ -27,10 +27,10 @@ contains
 
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
-  subroutine problem_a_real_dp(krylov_approx,krylov_start,&
+  subroutine problem_a_real_sp(krylov_approx,krylov_start,&
     & krylov_problem_a,&
     & krylov_guess,krylov_mvp,krylov_precon,&
-    & krylov_maket_a,krylov_output_a,ierr)
+    & krylov_output_a,ierr)
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
 !
@@ -56,7 +56,7 @@ contains
 !--------------------------------------------------------------------
 ! Modules and Global Variables
 !--------------------------------------------------------------------
-    use libkrylovinterface_real_dp
+    use libkrylovinterface_real_sp
     use libkrylovsolver
 !--------------------------------------------------------------------
 ! Implicit None statement
@@ -65,14 +65,13 @@ contains
 !--------------------------------------------------------------------
 ! Input functions
 !--------------------------------------------------------------------
-    class(libkrylov_vector_real_dp) ::    krylov_approx
-    class(libkrylov_start_real_dp) ::     krylov_start
-    class(libkrylov_problem_a_real_dp) :: krylov_problem_a
-    class(libkrylov_guess_real_dp) ::     krylov_guess
-    class(libkrylov_mvp_real_dp) ::       krylov_mvp
-    class(libkrylov_precon_real_dp) ::    krylov_precon
-    class(libkrylov_maket_a_real_dp) ::    krylov_maket_a
-    class(libkrylov_output_a_real_dp) ::  krylov_output_a
+    class(libkrylov_vector_real_sp) ::    krylov_approx
+    class(libkrylov_start_real_sp) ::     krylov_start
+    class(libkrylov_problem_a_real_sp) :: krylov_problem_a
+    class(libkrylov_guess_real_sp) ::     krylov_guess
+    class(libkrylov_mvp_real_sp) ::       krylov_mvp
+    class(libkrylov_precon_real_sp) ::    krylov_precon
+    class(libkrylov_output_a_real_sp) ::  krylov_output_a
 !! variable for error variable
     integer(kind_integer), intent(inout) :: ierr 
 !--------------------------------------------------------------------
@@ -80,17 +79,17 @@ contains
     call problem_a_solver(krylov_approx,krylov_start,&
   &  krylov_problem_a,&
   &  krylov_guess,krylov_mvp,krylov_precon,&
-  &  krylov_maket_a,krylov_output_a,ierr)
+  &  krylov_output_a,ierr)
 
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
-  end subroutine problem_a_real_dp 
+  end subroutine problem_a_real_sp 
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
 
 
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
-end module libkrylovsolver_real_dp
+end module libkrylovsolver_real_sp
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------

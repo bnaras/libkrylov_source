@@ -213,6 +213,14 @@ module libkrylovinterface_real_sp
     procedure :: lkl_start => lkl_start_elec_gas_rsp
   end type lkl_s_elec_gas_rsp
 
+!! defining input function for number of starting basis vectors
+  type, extends(libkrylov_start_real_sp) :: lkl_s_ext_in_rsp
+! external data required for the function
+    integer(lkl_int_rsp_k) :: nstart = 0
+  contains
+    procedure :: lkl_start => lkl_start_ext_in_rsp
+  end type lkl_s_ext_in_rsp
+
 !! defining input function for initial basis vectors
   type, extends(libkrylov_guess_real_sp) :: lkl_g_unit_vec_rsp
 ! external data required for the function
@@ -277,7 +285,7 @@ module libkrylovinterface_real_sp
   abstract interface
     subroutine libkrylov_problem_a_interface(data,nbasis,nroots,&
   &   minstart,maxstart,threshold,maxiter,&
-  &   id_string,iverb,irestart,ierr)
+  &   id_string,precon_string,iverb,irestart,ierr)
       import :: lkl_int_rsp_k, libkrylov_problem_a_real_sp, lkl_real_sp_k
       class(libkrylov_problem_a_real_sp) :: data
       integer(lkl_int_rsp_k), intent(inout) :: nbasis
@@ -287,6 +295,7 @@ module libkrylovinterface_real_sp
       real(lkl_real_sp_k), intent(inout) :: threshold
       integer(lkl_int_rsp_k), intent(inout) :: maxiter
       character(len=22), intent(inout) :: id_string
+      character(len=32), intent(inout) :: precon_string
       integer(lkl_int_rsp_k), intent(inout) :: iverb
       integer(lkl_int_rsp_k), intent(inout) :: irestart
       integer(lkl_int_rsp_k), intent(inout) :: ierr
@@ -573,10 +582,10 @@ contains
       j2 = j2-1
     end do
     if (first.lt.j1-1) then
-      call quicksort_stl_float(n,obj,dex,first,j1-1,ierr)
+      call quicksort_stl_float_rsp(n,obj,dex,first,j1-1,ierr)
     end if
     if (last.gt.j2+1) then
-      call quicksort_stl_float(n,obj,dex,j2+1,last,ierr)
+      call quicksort_stl_float_rsp(n,obj,dex,j2+1,last,ierr)
     end if
 
 !--------------------------------------------------------------------
@@ -708,6 +717,61 @@ contains
 
 !--------------------------------------------------------------------
   end subroutine lkl_start_elec_gas_rsp
+!--------------------------------------------------------------------
+
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+  subroutine lkl_start_ext_in_rsp(data,n1,n2,approx_spectra,&
+   &   nstart,ierr)
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Description:
+!--------------------------------------------------------------------
+!! subroutine to determine the number of initial guess vectors
+!! by external data input
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Modules and Global Variables
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+!
+    implicit none
+!
+!--------------------------------------------------------------------
+! External data (IDEALLY EMPTY)
+!--------------------------------------------------------------------
+    class(lkl_s_ext_in_rsp) :: data
+!--------------------------------------------------------------------
+! Input Parameters
+!--------------------------------------------------------------------
+!!   nbasis
+    integer(lkl_int_rsp_k), intent(in) :: n1
+!!   nroots
+    integer(lkl_int_rsp_k), intent(in) :: n2
+!!    approximate spectra
+    real(lkl_real_sp_k), intent(in) :: approx_spectra(n1)
+!--------------------------------------------------------------------
+! Output Parameters
+!--------------------------------------------------------------------
+!! nstart
+    integer(lkl_int_rsp_k), intent(inout) :: nstart
+!--------------------------------------------------------------------
+! Error Parameter
+!--------------------------------------------------------------------
+    integer(lkl_int_rsp_k), intent(inout) :: ierr
+!--------------------------------------------------------------------
+!  Local Variables
+!--------------------------------------------------------------------
+!! Blank
+!--------------------------------------------------------------------
+
+    nstart = data%nstart
+
+!--------------------------------------------------------------------
+  end subroutine lkl_start_ext_in_rsp
 !--------------------------------------------------------------------
 
 !--------------------------------------------------------------------

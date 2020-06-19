@@ -15,7 +15,7 @@ program test_libkrylovinterface_real_sp
 !--------------------------------------------------------------------
   use basekinds
   use floatformat
-  use libkrylovinterface
+  use libkrylovinterface_real_sp
 !--------------------------------------------------------------------
 !
   implicit none

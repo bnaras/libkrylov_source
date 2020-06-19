@@ -1,6 +1,6 @@
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
-module libkrylovinterface2
+module libkrylovinterface
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
 !
@@ -13,24 +13,19 @@ module libkrylovinterface2
 !--------------------------------------------------------------------
 ! Modules and Global Varaibles
 !--------------------------------------------------------------------
-  use libkrylovinterface_real_sp , only: &
-  &   quicksort_stl_float => quicksort_stl_float_rsp, &
-  &   lkl_s_elec_gas => lkl_s_elec_gas_rsp, &
-  &   lkl_start_elec_gas => lkl_start_elec_gas_rsp, &
-  &   lkl_s_ext_in => lkl_s_ext_in_rsp, &
-  &   lkl_start_ext_in => lkl_start_ext_in_rsp, &
-  &   lkl_g_unit_vec => lkl_g_unit_vec_rsp, &
-  &   lkl_guess_unit_vec => lkl_guess_unit_vec_rsp, &
-  &   lkl_pc_all => lkl_pc_all_rsp, &
-  &   lkl_precon_all => lkl_precon_all_rsp, &
-  &   lkl_pc_none => lkl_pc_none_rsp, &
-  &   lkl_precon_none => lkl_precon_none_rsp, &
-  &   lkl_pc_approx => lkl_pc_approx_rsp, &
-  &   lkl_precon_approx => lkl_precon_approx_rsp, &
-  &   lkl_pc_davidson => lkl_pc_davidson_rsp, &
-  &   lkl_precon_davidson => lkl_precon_davidson_rsp, &
-  &   lkl_pc_sleijpen => lkl_pc_sleijpen_rsp, &
-  &   lkl_precon_sleijpen => lkl_precon_sleijpen_rsp
+  use libkrylovinterface_cmplx_sp , only: &
+  &   libkrylov_matrix_subroutine => libkrylov_matrix_cmplx_sp, &
+  &   libkrylov_vector_subroutine => libkrylov_vector_cmplx_sp, &
+  &   libkrylov_start_subroutine => libkrylov_start_cmplx_sp, &
+  &   libkrylov_guess_subroutine => libkrylov_guess_cmplx_sp, &
+  &   libkrylov_mvp_subroutine => libkrylov_mvp_cmplx_sp, &
+  &   libkrylov_precon_subroutine => libkrylov_precon_cmplx_sp, &
+  &   libkrylov_problem_a_subroutine => libkrylov_problem_a_cmplx_sp, &
+  &   libkrylov_output_a_subroutine => libkrylov_output_a_cmplx_sp, &
+  &   libkrylov_problem_b_subroutine => libkrylov_problem_b_cmplx_sp, &
+  &   libkrylov_output_b_subroutine => libkrylov_output_b_cmplx_sp, &
+  &   libkrylov_problem_c_subroutine => libkrylov_problem_c_cmplx_sp, &
+  &   libkrylov_output_c_subroutine => libkrylov_output_c_cmplx_sp
 !--------------------------------------------------------------------
 ! Implicit none
 !--------------------------------------------------------------------
@@ -41,6 +36,6 @@ module libkrylovinterface2
 
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
-end module libkrylovinterface2
+end module libkrylovinterface
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
