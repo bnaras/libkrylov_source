@@ -367,7 +367,7 @@ contains
 !  Local Variables
 !--------------------------------------------------------------------
 
-    call gpotrs(trans1,m,n,obj1%element,ld1, &
+    call zpotrs(trans1,m,n,obj1%element,ld1, &
   &   obj2%element,ld2,ierr)
 
 !--------------------------------------------------------------------
