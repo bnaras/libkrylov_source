@@ -4017,7 +4017,14 @@ contains
   &   solutions,nsubspace,zero_kb,&
   &   all_residuals,nbasis)
 !! make residuals = avx-rhs
-    all_residuals = all_residuals - rhs
+    do j = 1, nrhs
+      do k = 1, nbasis
+        all_residuals(k,j) = all_residuals(k,j) &
+  &       +((full_solutions(k,j) &
+  &       * approx_spectra(k)) &
+  &       - rhs(k,j))
+      end do
+    end do
 
 !! get inner product of residual with itself
     do j = 1, nrhs
@@ -4328,6 +4335,7 @@ contains
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !! filled in at matrix vector products
     type(base), allocatable :: mvproduct(:,:)
+    type(base), allocatable :: avproduct(:,:)
 !< AV = matrix vector products = mvproduct
     type(base), allocatable :: proj_rhs(:,:)
 !< (V^T)P = projected rhs = proj_rhs  
@@ -4510,6 +4518,7 @@ contains
 ! Allocate all arrays that exist across iterations
     allocate(basis_vectors(nbasis,maxsubspace)) !maximum
     allocate(mvproduct(nbasis,maxsubspace)) !maximum
+    allocate(avproduct(nbasis,maxsubspace)) !maximum
     allocate(rhs(nbasis,nrhs))
     allocate(proj_rhs(maxsubspace,nrhs)) !maximum
     allocate(rayleigh(maxsubspace,maxsubspace)) !maximum
@@ -4857,8 +4866,14 @@ contains
       end if
     end if
 
+!! NAMBI : construction of avproduct
+    do j = 1, nsubspace
+      avproduct(1:nbasis,j) = mvproduct(1:nbasis,j) &
+  &      + (basis_vectors(1:nbasis,j) * approx_spectra(1:nbasis))
+    end do
+
     call krylov_rayleigh(nbasis,nsubspace,&
-  &     approx_spectra,mvproduct(1:nbasis,1:nsubspace),&
+  &     approx_spectra,avproduct(1:nbasis,1:nsubspace),&
   &     basis_vectors(1:nbasis,1:nsubspace),&
   &     rayleigh(1:nsubspace,1:nsubspace),&
   &     rayleigh_sq(1:nsubspace,1:nsubspace),iverb,ierr)
@@ -5148,11 +5163,17 @@ contains
         end if
       end if
 
+!! NAMBI : construction of avproduct
+      do j = 1, nsubspace
+        avproduct(1:nbasis,j) = mvproduct(1:nbasis,j) &
+  &        + (basis_vectors(1:nbasis,j) * approx_spectra(1:nbasis))
+      end do
+
 
 ! expand rayleigh matrix
       call krylov_expand(nbasis,nsubspace,&
   &     nresiduals,prev_nsubspace,&
-  &     approx_spectra,mvproduct(1:nbasis,1:nsubspace),&
+  &     approx_spectra,avproduct(1:nbasis,1:nsubspace),&
   &     basis_vectors(1:nbasis,1:nsubspace),&
   &     rayleigh(1:nsubspace,1:nsubspace),&
   &     rayleigh_sq(1:nsubspace,1:nsubspace),iverb,ierr)
@@ -5258,6 +5279,7 @@ contains
 
     deallocate(basis_vectors)
     deallocate(mvproduct)
+    deallocate(avproduct)
     deallocate(approx_spectra)
     deallocate(rhs)
     deallocate(proj_rhs)

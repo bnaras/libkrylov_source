@@ -134,9 +134,9 @@ program test_norms
     basis_vectors(j1,j1) = real(1,kind=kind_float)
   end do
   mvproduct = real(0,kind=kind_float)
-  do j1 = 1, n2
-    mvproduct(j1,j1) = real(j1,kind=kind_float)
-  end do
+!  do j1 = 1, n2
+!    mvproduct(j1,j1) = real(j1,kind=kind_float)
+!  end do
   do j1 = 1, n2
     mvproduct(1+n1-j1,j1) = &
   & (real(j1,kind=kind_float)&
