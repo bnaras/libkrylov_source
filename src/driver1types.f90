@@ -255,19 +255,9 @@ contains
       maxstart = floor(0.3*nbasis,kind=kind_integer)
     end if
 
-!! set nroots based on user input
+!! set nroots based on user input if reasonable
     if ((data%nroots.gt.0).and.(data%nroots.lt.maxstart)) then
       nroots = data%nroots
-    else !! set reasonable nroots
-      if (nbasis.lt.16) then
-        nroots = nbasis
-      else if (nbasis.lt.50) then
-        nroots = 2
-      else if (nbasis.lt.200) then
-        nroots = 5
-      else
-        nroots = 10
-      end if
     end if
 
 !! choice based on problem description
