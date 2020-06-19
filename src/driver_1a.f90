@@ -48,7 +48,6 @@ program krylovdriver_1a
   type(lkl_s_ext_in) :: krylov_s_ext_in
   type(lkl_g_unit_vec) :: krylov_g_uv
   type(lkl_pc_all) :: krylov_pc_all
-  type(lkl_mta_all) :: krylov_maket_all
   type(lkl_pc_none) :: krylov_pc_none
   type(lkl_pc_approx) :: krylov_pc_approx
   type(lkl_pc_davidson) :: krylov_pc_davidson
@@ -133,14 +132,13 @@ program krylovdriver_1a
         call problem_a_solver(krylov_approx,krylov_s_eg,&
   &       krylov_problem, &
   &       krylov_g_uv,krylov_mvp,krylov_pc_all, &
-  &       krylov_maket_all,krylov_output,ierr)
+  &       krylov_output,ierr)
         stop
       else if (input.eq.'-precon') then
         k = k + 1
         call get_command_argument(k,value=input2,status=ierr)
         if (ierr.ne.0) stop
         krylov_pc_all%precon_string = input2
-        krylov_maket_all%precon_string = input2
         preconditioner = input2
         print *, 'preconditioner: ',input2
       else if (input.eq.'-irestart') then
@@ -229,12 +227,12 @@ program krylovdriver_1a
     call problem_a_solver(krylov_approx,krylov_s_eg,&
   &   krylov_problem, &
   &   krylov_g_uv,krylov_mvp,krylov_pc_all, &
-  &   krylov_maket_all,krylov_output,ierr)
+  &   krylov_output,ierr)
   else ! call solver with input nstart
     call problem_a_solver(krylov_approx,krylov_s_ext_in,&
   &   krylov_problem, &
   &   krylov_g_uv,krylov_mvp,krylov_pc_all, &
-  &   krylov_maket_all,krylov_output,ierr)
+  &   krylov_output,ierr)
   end if
 
   print *, 'final ierr value = ',ierr

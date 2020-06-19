@@ -2567,7 +2567,7 @@ contains
   subroutine problem_a_solver(krylov_approx,krylov_start,&
     & krylov_problem_a,&
     & krylov_guess,krylov_mvp,krylov_precon,&
-    & krylov_maket_a,krylov_output_a,ierr)
+    & krylov_output_a,ierr)
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
 !
@@ -2613,7 +2613,6 @@ contains
     class(libkrylov_guess_subroutine) ::     krylov_guess
     class(libkrylov_mvp_subroutine) ::       krylov_mvp
     class(libkrylov_precon_subroutine) ::    krylov_precon
-    class(libkrylov_maket_a_subroutine) ::    krylov_maket_a
     class(libkrylov_output_a_subroutine) ::  krylov_output_a
 !--------------------------------------------------------------------
 ! Local Variables
