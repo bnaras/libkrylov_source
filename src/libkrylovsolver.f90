@@ -4281,6 +4281,7 @@ contains
     integer(kind_integer) :: maxiter = 25
 !< maximum number of subspace iterations 
     character(len=22) :: id_string = 'libkrylov_b'
+    character(len=32) :: precon_string = 'approx_spectra'
 !< id = ID of the calculation
 !< used only for dumping output
     integer(kind_integer) :: iverb = 0
@@ -4379,7 +4380,7 @@ contains
   ! USER-DEFINED FUNCTION
     call krylov_problem_b%lkl_problem_b(nbasis,nrhs,&
   &   minstart,maxstart,threshold,maxiter,&
-  &   id_string,iverb,irestart,ierr)
+  &   id_string,precon_string,iverb,irestart,ierr)
     if (ierr.ne.0) then
       if (iverb.ge.0) then
         print *, 'class(user_krylov_b_problem_subroutine) function failed'
@@ -5164,7 +5165,7 @@ contains
       end if
 
 !! NAMBI : construction of avproduct
-      do j = 1, nsubspace
+      do j = (prev_nsubspace+1), nsubspace
         avproduct(1:nbasis,j) = mvproduct(1:nbasis,j) &
   &        + (basis_vectors(1:nbasis,j) * approx_spectra(1:nbasis))
       end do
@@ -5756,32 +5757,35 @@ contains
     if (nroots.eq.nomega) then ! one solution per frequency
       do j = 1, nroots
         if (abs(omega(j)).gt.eps) then
-          xo(1:nsubspace,j) = solutions(1:nsubspace,j)*omega(j)
+          do l = 1, nbasis
+            vxo(l,j) = full_solutions(l,j)*(approx_spectra(l)-omega(j))
+          end do
         else
-          xo(1:nsubspace,j) = real(0,kind=kind_float)
+          do l = 1, nbasis
+            vxo(l,j) = full_solutions(l,j)*(approx_spectra(l))
+          end do
         end if
       end do
     else !more solutions than frequencies
       do j = 1, nomega
         if (abs(omega(j)).gt.eps) then
-          xo(1:nsubspace,(k+1):(k+nrhs)) = &
-  &         solutions(1:nsubspace,(k+1):(k+nrhs))*omega(j)
+          do m = (k+1), (k+nrhs)
+            do l = 1, nbasis
+              vxo(l,m) = full_solutions(l,m)*(approx_spectra(l)-omega(j))
+            end do
+          end do
         else
-          xo(1:nsubspace,(k+1):(k+nrhs)) = real(0,kind=kind_float)
+          do m = (k+1), (k+nrhs)
+            do l = 1, nbasis
+              vxo(l,m) = full_solutions(l,m)*(approx_spectra(l))
+            end do
+          end do
         end if
         k = k + nrhs
      end do
     end if
-!! Set constants required for BLAS
-    one_kb = real(1,kind=kind_float)
-    zero_kb = real(0,kind=kind_float)
-!! calculate scaled eigenvectors on the full space
-    call ggemm('n','n',nbasis,nroots,nsubspace,&
-  &   one_kb,basis_vectors,nbasis,&
-  &   xo,nsubspace,zero_kb,&
-  &   vxo,nbasis)
-!! make residuals = avx-vxo
-    all_residuals = all_residuals - vxo
+!! make residuals = avx+vxo
+    all_residuals = all_residuals + vxo
 !! make residuals = avx-vxo-rhs
     k = 0 ! index for the first rhs per omega
     if (nrhs.eq.nroots) then ! one solution per rhs
@@ -6068,6 +6072,7 @@ contains
     logical :: unique_rhs_omega = .false.
 !< if there is a unique rhs provided for each omega.
     character(len=22) :: id_string = 'libkrylov_c'
+    character(len=32) :: precon_string = 'davidson'
 !< id = ID of the calculation
 !< used only for dumping output
     integer(kind_integer) :: iverb = 0
@@ -6127,6 +6132,7 @@ contains
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !! filled in at matrix vector products
     type(base), allocatable :: mvproduct(:,:)
+    type(base), allocatable :: avproduct(:,:)
 !< AV = matrix vector products = mvproduct
     type(base), allocatable :: proj_rhs(:,:)
 !< (V^T)P = projected rhs = proj_rhs  
@@ -6169,7 +6175,7 @@ contains
   ! USER-DEFINED FUNCTION
     call krylov_problem_c%lkl_problem_c(nbasis,nomega,nrhs,&
   &   minstart,maxstart,threshold,maxiter,unique_rhs_omega,&
-  &   id_string,iverb,irestart,ierr)
+  &   id_string,precon_string,iverb,irestart,ierr)
     if (ierr.ne.0) then
       if (iverb.ge.0) then
         print *, 'class(user_krylov_c_problem_subroutine) function failed'
@@ -6359,6 +6365,7 @@ contains
 ! Allocate all arrays that exist across iterations
     allocate(basis_vectors(nbasis,maxsubspace)) !maximum
     allocate(mvproduct(nbasis,maxsubspace)) !maximum
+    allocate(avproduct(nbasis,maxsubspace)) !maximum
     allocate(rhs(nbasis,nrhs))
     allocate(proj_rhs(maxsubspace,nrhs)) !maximum
     allocate(rayleigh(maxsubspace,maxsubspace)) !maximum
@@ -6653,8 +6660,14 @@ contains
       end if
     end if
 
+!! NAMBI : construction of avproduct
+    do j = 1, nsubspace
+      avproduct(1:nbasis,j) = mvproduct(1:nbasis,j) &
+  &      + (basis_vectors(1:nbasis,j) * approx_spectra(1:nbasis))
+    end do
+
     call krylov_rayleigh(nbasis,nsubspace,&
-  &     approx_spectra,mvproduct(1:nbasis,1:nsubspace),&
+  &     approx_spectra,avproduct(1:nbasis,1:nsubspace),&
   &     basis_vectors(1:nbasis,1:nsubspace),&
   &     rayleigh(1:nsubspace,1:nsubspace),&
   &     rayleigh_sq(1:nsubspace,1:nsubspace),iverb,ierr)
@@ -7013,10 +7026,16 @@ contains
         end if
       end if
 
+!! NAMBI : construction of avproduct
+      do j = (prev_nsubspace+1), nsubspace
+        avproduct(1:nbasis,j) = mvproduct(1:nbasis,j) &
+  &        + (basis_vectors(1:nbasis,j) * approx_spectra(1:nbasis))
+      end do
+
 ! expand rayleigh matrix
       call krylov_expand(nbasis,nsubspace,&
   &     nresiduals,prev_nsubspace,&
-  &     approx_spectra,mvproduct(1:nbasis,1:nsubspace),&
+  &     approx_spectra,avproduct(1:nbasis,1:nsubspace),&
   &     basis_vectors(1:nbasis,1:nsubspace),&
   &     rayleigh(1:nsubspace,1:nsubspace),&
   &     rayleigh_sq(1:nsubspace,1:nsubspace),iverb,ierr)
@@ -7123,6 +7142,7 @@ contains
 
     deallocate(basis_vectors)
     deallocate(mvproduct)
+    deallocate(avproduct)
     deallocate(approx_spectra)
     deallocate(rhs)
     deallocate(proj_rhs)

@@ -53,13 +53,14 @@ program krylovdriver_1b
   type(lkl_pc_approx) :: krylov_pc_approx
   type(lkl_pc_davidson) :: krylov_pc_davidson
   type(lkl_pc_sleijpen) :: krylov_pc_sleijpen
+  type(lkl_pc_all) :: krylov_pc_all
   type(kl_mvp) :: krylov_mvp
   type(kl_output_b) :: krylov_output
 !--------------------------------------------------------------------
 ! Local Variables for Subroutines and reading problem
 !--------------------------------------------------------------------
 ! character string for preconditioner string
-  character(len=32) :: preconditioner = ''
+  character(len=32), target :: preconditioner = ''
 ! contains the matrix of problem, read in from file
   type(base), target, allocatable :: krylov_a(:,:)
   real(kind_float), target, allocatable :: krylov_d(:)
@@ -133,7 +134,7 @@ program krylovdriver_1b
 
   do j = 1, krylov_problem%n_size
     krylov_d(j) = krylov_a(j,j)
-!    krylov_a(j,j) = real(0,kind=kind_float)
+    krylov_a(j,j) = real(0,kind=kind_float)
   end do
 
 
@@ -177,40 +178,17 @@ program krylovdriver_1b
 
 ! set pointers to local variables required for input subroutines
   krylov_problem%problem_string => b1_string
+  krylov_problem%precon_string => preconditioner
+  krylov_pc_all%precon_string = preconditioner
   krylov_approx%krylov_d => krylov_d
   krylov_mvp%krylov_a => krylov_a
   krylov_rhs%krylov_p => krylov_p
 
 ! call solver
-  if (preconditioner.eq.'sleijpen') then
-    call problem_b_solver(krylov_approx,krylov_s_eg,&
+  call problem_b_solver(krylov_approx,krylov_s_eg, &
   &   krylov_rhs, &
-  &   krylov_problem,krylov_g_uv,krylov_mvp,krylov_pc_sleijpen, &
+  &   krylov_problem,krylov_g_uv,krylov_mvp,krylov_pc_all, &
   &   krylov_output,ierr)
-  else if (preconditioner.eq.'davidson') then
-    print *, 'equivalent to approx_spectra'
-    call problem_b_solver(krylov_approx,krylov_s_eg,&
-  &   krylov_rhs, &
-  &   krylov_problem,krylov_g_uv,krylov_mvp,krylov_pc_davidson, &
-  &   krylov_output,ierr)
-  else if (preconditioner.eq.'approx_spectra') then
-    call problem_b_solver(krylov_approx,krylov_s_eg,&
-  &   krylov_rhs, &
-  &   krylov_problem,krylov_g_uv,krylov_mvp,krylov_pc_approx, &
-  &   krylov_output,ierr)
-  else if (preconditioner.eq.'none') then
-    call problem_b_solver(krylov_approx,krylov_s_eg,&
-  &   krylov_rhs, &
-  &   krylov_problem,krylov_g_uv,krylov_mvp,krylov_pc_none, &
-  &   krylov_output,ierr)
-  else
-    print *, 'unrecognised preconditioner string'
-    print *, 'using approx_spectra'
-    call problem_b_solver(krylov_approx,krylov_s_eg, &
-  &   krylov_rhs, &
-  &   krylov_problem,krylov_g_uv,krylov_mvp,krylov_pc_approx, &
-  &   krylov_output,ierr)
-  end if
 
   print *, 'final ierr value = ',ierr
 

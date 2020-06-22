@@ -450,7 +450,7 @@ program test_norms
 !! unique input for krylov_c_norms
   mvproduct = real(0,kind=kind_float)
   do j1 = 1, n2
-    mvproduct(j1,j1) = real(j1+omega(1),kind=kind_float)
+    mvproduct(j1,j1) = real(omega(1),kind=kind_float)
   end do
   do j1 = 1, n2
     mvproduct(1+n1-j1,j1) = &

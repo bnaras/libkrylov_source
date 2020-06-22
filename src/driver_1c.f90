@@ -138,7 +138,7 @@ program krylovdriver_1c
 
   do j = 1, krylov_problem%n_size
     krylov_d(j) = krylov_a(j,j)
-!    krylov_a(j,j) = real(0,kind=kind_float)
+    krylov_a(j,j) = real(0,kind=kind_float)
   end do
 
 !! set the filename_string for the file name of frequencies

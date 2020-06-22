@@ -72,6 +72,10 @@ module driver1types
 ! pointer to target set outside of solver
 ! must be set before calling solver
     character(len=22), pointer :: problem_string => null()
+! character string for preconditioner selection
+! pointer to target set outside of solver
+! must be set before calling solver
+    character(len=32), pointer :: precon_string => null()
 ! size of the matrix problem
 ! must be set before calling solver
     integer(kind_integer) :: n_size
@@ -91,6 +95,10 @@ module driver1types
 ! pointer to target set outside of solver
 ! must be set before calling solver
     character(len=22), pointer :: problem_string => null()
+! character string for preconditioner selection
+! pointer to target set outside of solver
+! must be set before calling solver
+    character(len=32), pointer :: precon_string => null()
 ! size of the matrix problem
 ! must be set before calling solver
     integer(kind_integer) :: n_size
@@ -293,7 +301,7 @@ contains
 !--------------------------------------------------------------------
   subroutine eval_kl_problem_b(data,nbasis,nrhs,&
   &     minstart,maxstart,threshold,maxiter,&
-  &     id_string,iverb,irestart,ierr)
+  &     id_string,precon_string,iverb,irestart,ierr)
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
 !
@@ -336,6 +344,7 @@ contains
     real(kind_float), intent(inout) :: threshold
     integer(kind_integer), intent(inout) :: maxiter
     character(len=22), intent(inout) :: id_string
+    character(len=32), intent(inout) :: precon_string
     integer(kind_integer), intent(inout) :: iverb
     integer(kind_integer), intent(inout) :: irestart
     integer(kind_integer), intent(inout) :: ierr
@@ -395,7 +404,7 @@ contains
 !--------------------------------------------------------------------
   subroutine eval_kl_problem_c(data,nbasis,nomega,nrhs,&
   &     minstart,maxstart,threshold,maxiter,unique_rhs_omega,&
-  &     id_string,iverb,irestart,ierr)
+  &     id_string,precon_string,iverb,irestart,ierr)
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
 !
@@ -440,6 +449,7 @@ contains
     integer(kind_integer), intent(inout) :: maxiter
     logical, intent(inout) :: unique_rhs_omega
     character(len=22), intent(inout) :: id_string
+    character(len=32), intent(inout) :: precon_string
     integer(kind_integer), intent(inout) :: iverb
     integer(kind_integer), intent(inout) :: irestart
     integer(kind_integer), intent(inout) :: ierr
