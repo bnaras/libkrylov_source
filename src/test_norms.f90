@@ -175,7 +175,6 @@ program test_norms
 !! write statement on test
   print *, 'test krylov_a_norms',&
   &', which does the norms step of an eigenvalue problem'
-  print *, 'input preconditioner does no preconditioning'
   print *, 'input approx_spectra are integers'
   print *, 'input basis_vectors is identity'
   print *, 'input mvproduct is a diagonal',&
@@ -185,7 +184,7 @@ program test_norms
   print *, 'input roots are integers'
 !! call normalize subroutine
   call krylov_a_norms(n1,n2,n3,mvproduct,basis_vectors,full_solutions,&
-  & solutions,overlap,roots,approx_spectra,krylov_pc_none,&
+  & solutions,overlap,roots,approx_spectra,&
   & residuals,euc_norm,largest_euc_norm,fro_norm,nresiduals,iverb,ierr)
 !! check ierr value to see whether routine terminated with an error
 !! test if ierr is not equal to 0

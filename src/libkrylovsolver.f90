@@ -1985,7 +1985,7 @@ contains
   subroutine krylov_a_norms(nbasis,nsubspace,nroots,&
   &     mvproduct,basis_vectors,full_solutions,solutions,&
   &     overlap,roots,&
-  &     approx_spectra,krylov_precon,residuals,&
+  &     approx_spectra,residuals,&
   &     euc_norm,largest_euc_norm,fro_norm,&
   &     nresiduals,iverb,ierr)
 !--------------------------------------------------------------------
@@ -2028,7 +2028,6 @@ contains
     type(base), intent(in) :: overlap(nsubspace,nsubspace)
     real(kind_float), intent(in) :: roots(nroots)
     real(kind_float), intent(in) :: approx_spectra(nbasis)
-    class(libkrylov_precon_subroutine) :: krylov_precon
 !--------------------------------------------------------------------
 ! Output Variables
 !--------------------------------------------------------------------
@@ -2064,12 +2063,10 @@ contains
 
 ! Allocate local arrays
     allocate(all_residuals(nbasis,nroots))
-    allocate(all_solutions(nbasis,nroots))
     allocate(eps_converged(nroots))
     allocate(xo(nsubspace,nroots))
     allocate(vxo(nbasis,nroots))
     allocate(euc_sq(nroots))
-    allocate(all_roots(nroots))
 
 !! Set constants required for BLAS
     one_kb = real(1,kind=kind_float)
@@ -2087,20 +2084,6 @@ contains
   &       *(approx_spectra(k)-roots(j))
       end do
     end do
-!! preserving
-!!!! !! calculate scaled eigenvectors on the subspace
-!!!!     do j = 1, nroots
-!!!!       xo(1:nsubspace,j) = solutions(1:nsubspace,j)*roots(j)
-!!!!     end do
-!!!! !! Set constants required for BLAS
-!!!!     one_kb = real(1,kind=kind_float)
-!!!!     zero_kb = real(0,kind=kind_float)
-!!!! !! calculate scaled eigenvectors on the full space
-!!!!     call ggemm('n','n',nbasis,nroots,nsubspace,&
-!!!!   &   one_kb,basis_vectors,nbasis,&
-!!!!   &   xo,nsubspace,zero_kb,&
-!!!!   &   vxo,nbasis)
-!! make residuals = avx-vxo
     all_residuals = all_residuals + vxo
 
     if (iverb .ge. 6) then
@@ -2170,8 +2153,9 @@ contains
       end if
     end do
     if (iverb.ge.3) then
-      print *, 'number of residuals before precondition: ',ntemp
+      print *, 'number of residuals before preconditioning: ',ntemp
     end if
+    nresiduals = ntemp
 
 !! find largest euc_norm
     largest_euc_norm = maxval(euc_norm)
@@ -2197,99 +2181,16 @@ contains
       do k = 1, ntemp
         if (.not.eps_converged(k)) then
           l = l + 1
-          all_residuals(1:nbasis,l) = all_residuals(1:nbasis,k)
-          all_solutions(1:nbasis,l) = full_solutions(1:nbasis,k)
-          all_roots(l) = roots(k)
-        end if
-      end do
-    else
-      all_solutions = full_solutions
-      all_roots = roots
-    end if
-
-!! Precondition with input function!
-    associate(interfacing_fs => all_solutions%element,&
-  &           interfacing_rd => all_residuals%element)
-      call krylov_precon%lkl_precon(nbasis,ntemp,nsubspace,&
-  &     approx_spectra,&
-  &     all_roots(1:ntemp),interfacing_fs,&
-  &     interfacing_rd(1:nbasis,1:ntemp),ierr)
-    end associate
-    if (ierr.ne.0) then
-      if (iverb.ge.0) then
-        print *, 'class(user_krylov_precon_subroutine) function failed'
-        print *, 'error variable = ',ierr
-        print *, 'exit norm step'
-      end if
-      ierr = -40
-      return ! return to solver loop
-    end if 
-
-!! reset eps_converged, check norms of preconditioned residuals
-!! reuse euc_sq,eps_converged, value of euc_sq lost!
-    eps_converged = .false.
-    nresiduals = ntemp
-    do j = 1, ntemp
-!! generate norm squared of preconditioned residual
-      call gdot(nbasis,all_residuals(1:nbasis,j),1,&
-  &     all_residuals(1:nbasis,j),1,euc_sq(j),ierr)
-      if (ierr.ne.0) then
-        if (iverb.ge.0) then
-          print *, '*dot(c) linear algebra error!', ierr
-          print *, 'exit norms step'
-        end if
-        ierr = -40
-        return ! return to solver loop
-      end if
-!! make norm squared real(kind_float)
-      res_temp = euc_sq(j)
-!! check that norm is positive
-      if (res_temp.lt.real(0,kind=kind_float)) then
-        if (iverb.ge.0) then
-          print *, 'square of ',j,' residual norm'
-          print *, 'less than zero after preconditioning'
-          print *, 'exit norm step'
-        end if
-        ierr = -40
-        return ! return to solver loop
-      end if
-!! get norm
-      res_temp = sqrt(res_temp)
-!! check that norm is larger than (logeps+lognbasis)
-      if (log10(res_temp).lt.(logeps)) then
-        eps_converged(j) = .true.
-        nresiduals = nresiduals - 1
-      end if
-      if (iverb.ge.4) then
-        print *, j,' preconditioned residual norm: ',res_temp
-      end if
-    end do
-    if (iverb.ge.3) then
-      print *, 'number of preconditioned residuals: ',nresiduals
-    end if
-
-!! preconditioned residual less than eps even though residual is
-!! not less than eps IS A PRECONDITIONER PROBLEM
-!! ierr = -10
-
-!! store preconditioned residuals on output array
-    l = 0 ! cycle over all not converged preconditioned residuals
-    if(ntemp.eq.nresiduals) then
-      residuals(1:nbasis,1:nresiduals) = &
-  &     all_residuals(1:nbasis,1:nresiduals)
-    else
-      do k = 1, ntemp
-        if (.not.eps_converged(k)) then
-          l = l + 1
           residuals(1:nbasis,l) = all_residuals(1:nbasis,k)
         end if
       end do
-      ierr = -10
+    else
+      residuals = all_residuals
     end if
+
 
 ! Deallocate local arrays
     deallocate(all_residuals)
-    deallocate(all_roots)
     deallocate(eps_converged)
     deallocate(vxo)
     deallocate(xo)
@@ -2528,28 +2429,28 @@ contains
     end do
 
 !!! SVD of residuals to obtain singular values
-!    call krylov_orthogonalize(nbasis,nroots,residuals,&
-!  &       singular_vals,nresiduals,iverb,ierr)
-!    if (ierr.ne.0) then
-!      if (iverb.ge.0) then
-!        print *, 'decomposing new basis vectors failed'
-!        print *, 'error variable = ',ierr 
-!        print *, 'exit residue step'
-!      end if
-!      ierr = -40
-!      return
-!    end if
+    call krylov_orthogonalize(nbasis,nroots,residuals,&
+  &       singular_vals,nresiduals,iverb,ierr)
+    if (ierr.ne.0) then
+      if (iverb.ge.0) then
+        print *, 'decomposing new basis vectors failed'
+        print *, 'error variable = ',ierr 
+        print *, 'exit residue step'
+      end if
+      ierr = -40
+      return
+    end if
 
 !! test for
-!    largest_sv = real(0,kind=kind_float)
-!    if (nresiduals.gt.0) then
-!      largest_sv = singular_vals(1)
-!    end if
+    largest_sv = real(0,kind=kind_float)
+    if (nresiduals.gt.0) then
+      largest_sv = singular_vals(1)
+    end if
 
 
     if (iverb.ge.3) then
       print *, 'number of preconditioned residuals: ',nresiduals
-!      print *, 'largest singular value: ', largest_sv
+      print *, 'largest singular value: ', largest_sv
     end if
 
 ! Deallocate local arrays
@@ -2757,16 +2658,14 @@ contains
       print *, 'describing each input arguments:'
       print *, 'first argument, contains vector subroutine for approximate spectra'
       print *, 'second argument, contains start subroutine for nstart'
-      print *, 'third argument, problem_a subroutine for parametersyy'
+      print *, 'third argument, problem_a subroutine for parameters'
       print *, 'fourth argument, guess subroutine for initial basis vectors'
       print *, 'fifth argument, mvp subroutine for MV product'
       print *, 'sixth argument, output subroutine for transferring output'
       stop
     end if
 
-
 !! Begin solver!
-    ierr = 0
 
   ! Determine details of davidson problem to be solved
   ! USER-DEFINED FUNCTION
@@ -3313,7 +3212,7 @@ contains
   &     basis_vectors(1:nbasis,1:nsubspace),full_solutions,& 
   &     solutions(1:nsubspace,1:nroots),&
   &     overlap(1:nsubspace,1:nsubspace),&
-  &     roots,approx_spectra,krylov_precon,&
+  &     roots,approx_spectra,&
   &     residuals,euc_norm,largest_euc_norm,&
   &     fro_norm,nresiduals,iverb,ierr)
       if (ierr.ne.0) then
@@ -4372,6 +4271,31 @@ contains
     integer(kind_integer) :: prev_nsubspace = 0
 !< u = old q from previous iteration = prev_nsubspace
 !--------------------------------------------------------------------
+
+    if (ierr.ne.0) then
+      print *, 'libkrylov problem_b_solver called'
+      print *, 'with non-zero ierr arguement'
+      print *, ''
+      print *, 'seeing this message indicates that:'
+      print *, " Compiler has accepted the solver's input types,"
+      print *, ' types which contain encapsulated functions'
+      print *, ' with matching interfaces to the solver'
+      print *, ''
+      print *, 'This message does not mean that the input arguments:'
+      print *, '1. have been compiled'
+      print *, '2. have all pointers assigned'
+      print *, '3. do not demand more memory than available'
+      print *, ''
+      print *, 'describing each input arguments:'
+      print *, 'first argument, contains vector subroutine for approximate spectra'
+      print *, 'second argument, contains start subroutine for nstart'
+      print *, 'third argument, contains vector subroutine for rhs'
+      print *, 'fourth argument, problem_b subroutine for parameters'
+      print *, 'fifth argument, guess subroutine for initial basis vectors'
+      print *, 'sixth argument, mvp subroutine for MV product'
+      print *, 'seventh argument, output subroutine for transferring output'
+      stop
+    end if
 
 !! Begin solver!
     ierr = 0
@@ -6168,8 +6092,33 @@ contains
 !< u = old q from previous iteration = prev_nsubspace
 !--------------------------------------------------------------------
 
+    if (ierr.ne.0) then
+      print *, 'libkrylov problem_c_solver called'
+      print *, 'with non-zero ierr arguement'
+      print *, ''
+      print *, 'seeing this message indicates that:'
+      print *, " Compiler has accepted the solver's input types,"
+      print *, ' types which contain encapsulated functions'
+      print *, ' with matching interfaces to the solver'
+      print *, ''
+      print *, 'This message does not mean that the input arguments:'
+      print *, '1. have been compiled'
+      print *, '2. have all pointers assigned'
+      print *, '3. do not demand more memory than available'
+      print *, ''
+      print *, 'describing each input arguments:'
+      print *, 'first argument, contains vector subroutine for approximate spectra'
+      print *, 'second argument, contains start subroutine for nstart'
+      print *, 'third argument, contains vector subroutine for rhs'
+      print *, 'fourth argument, contains vector subroutine for omega'
+      print *, 'fifth argument, problem_c subroutine for parameters'
+      print *, 'sixth argument, guess subroutine for initial basis vectors'
+      print *, 'seventh argument, mvp subroutine for MV product'
+      print *, 'eighth argument, output subroutine for transferring output'
+      stop
+    end if
+
 !! Begin solver!
-    ierr = 0
 
   ! Determine details of davidson problem to be solved
   ! USER-DEFINED FUNCTION

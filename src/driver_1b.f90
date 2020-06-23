@@ -47,6 +47,7 @@ program krylovdriver_1b
   type(kl_problem_b) :: krylov_problem
   type(kl_approx) :: krylov_approx
   type(lkl_s_elec_gas) :: krylov_s_eg
+  type(lkl_s_ext_in) :: krylov_s_ext_in
   type(kl_rhs) :: krylov_rhs
   type(lkl_g_unit_vec) :: krylov_g_uv
   type(lkl_pc_none) :: krylov_pc_none
@@ -59,6 +60,8 @@ program krylovdriver_1b
 !--------------------------------------------------------------------
 ! Local Variables for Subroutines and reading problem
 !--------------------------------------------------------------------
+  integer(kind_integer) :: counter = 0
+  character(len=32) :: input,input2 = ''
 ! character string for preconditioner string
   character(len=32), target :: preconditioner = ''
 ! contains the matrix of problem, read in from file
@@ -79,22 +82,91 @@ program krylovdriver_1b
 ! which becomes the size of rhs
   integer(kind_integer) :: n3 = 0
   integer(kind_integer) :: n4 = 0
-  integer(kind_integer) :: j = 0
+  integer(kind_integer) :: j,k = 0
 !--------------------------------------------------------------------
 ! Error Parameter
 !--------------------------------------------------------------------
   integer(kind_integer) :: ierr = 0
 !--------------------------------------------------------------------
 
-!! setting up the problem before calling solver
-
-!! ask for user input on preconditoner
-  print *, 'Please enter an option for the preconditioner'
-  read (*,*) preconditioner
-  print *, preconditioner,' entered'
-
-!! set irestart
+!! set default options
+  krylov_pc_all%precon_string = 'davidson'
+  preconditioner = 'davidson'
   krylov_problem%irestart = 0
+  krylov_s_ext_in%nstart = 0
+!! checking command line options:
+  counter = command_argument_count()
+!! loop over command line
+  k = 1
+  if (counter.gt.0) then
+    do 
+      call get_command_argument(k,value=input,status=ierr)
+      if (ierr.ne.0) stop
+      if ((input.eq.'-help').or.(input.eq.'--help')) then
+        print *, 'driver for libkrylov problem_a_solver '
+        print *, ' where problem is on file:'
+        print *, ''
+        print *, 'options:'
+        print *, '--help        display this message'
+        print *, ''
+        print *, '-precon       select preconditioner'
+        print *, '               available options:'
+        print *, '                none'
+        print *, '                approx_spectra'
+        print *, '                davidson'
+        print *, '                sleijpen'
+        print *, '               default option: davidson'
+        print *, ''
+        print *, '-irestart     select restart level'
+        print *, '               available options: 0 - 4'
+        print *, '               default option: 0'
+        print *, ''
+        print *, '-nstart       select size of initial subspace'
+        print *, '               default option: estimated'
+        print *, ''
+        print *, '-test         call solver with ierr .ne. 0'
+        print *, '               to see subroutine description'
+        print *, ''
+        stop
+      else if (input.eq.'-test') then
+        ierr = 20
+        call problem_b_solver(krylov_approx,krylov_s_eg, &
+  &       krylov_rhs, &
+  &       krylov_problem,krylov_g_uv,krylov_mvp,krylov_pc_all, &
+  &       krylov_output,ierr)
+        stop
+      else if (input.eq.'-precon') then
+        k = k + 1
+        call get_command_argument(k,value=input2,status=ierr)
+        if (ierr.ne.0) stop
+        krylov_pc_all%precon_string = input2
+        preconditioner = input2
+        print *, 'preconditioner: ',input2
+      else if (input.eq.'-irestart') then
+        k = k + 1
+        call get_command_argument(k,value=input2,status=ierr)
+        if (ierr.ne.0) stop
+        read(input2,*,iostat=ierr) krylov_problem%irestart
+        if (ierr.ne.0) stop
+        print *, 'restart level: ',input2
+      else if (input.eq.'-nstart') then
+        k = k + 1
+        call get_command_argument(k,value=input2,status=ierr)
+        if (ierr.ne.0) stop
+        read(input2,*,iostat=ierr) krylov_s_ext_in%nstart
+        print *, 'starting subspace size: ',input2
+        if (ierr.ne.0) stop
+      else if (input.eq.'>') then
+        exit
+      else if (input.eq.'>>') then
+        exit
+      end if
+      k = k + 1
+      if (k.gt.counter) exit
+    end do
+  end if 
+
+!! setting up the problem before calling solver
 
 !! set a1_string based on basetypes
   b1_string = trim(base_print_string)//'_1b'
@@ -179,16 +251,23 @@ program krylovdriver_1b
 ! set pointers to local variables required for input subroutines
   krylov_problem%problem_string => b1_string
   krylov_problem%precon_string => preconditioner
-  krylov_pc_all%precon_string = preconditioner
   krylov_approx%krylov_d => krylov_d
   krylov_mvp%krylov_a => krylov_a
   krylov_rhs%krylov_p => krylov_p
 
+! call solver with function to calculate nstart based on electron gas
+  if (krylov_s_ext_in%nstart.le.0) then
 ! call solver
-  call problem_b_solver(krylov_approx,krylov_s_eg, &
+    call problem_b_solver(krylov_approx,krylov_s_eg, &
   &   krylov_rhs, &
   &   krylov_problem,krylov_g_uv,krylov_mvp,krylov_pc_all, &
   &   krylov_output,ierr)
+  else
+    call problem_b_solver(krylov_approx,krylov_s_ext_in, &
+  &   krylov_rhs, &
+  &   krylov_problem,krylov_g_uv,krylov_mvp,krylov_pc_all, &
+  &   krylov_output,ierr)
+  end if
 
   print *, 'final ierr value = ',ierr
 
