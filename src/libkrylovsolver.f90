@@ -2216,10 +2216,8 @@ contains
 !--------------------------------------------------------------------
 ! Description:
 !--------------------------------------------------------------------
-!< This subroutine does the norms step of a krylov solve,
-!< producing the residual norms of the approximate solutions.
-!< to save computational power the residuals are passed out 
-!< from this routine as well.
+!< This subroutine does the residual step of a krylov solve,
+!< producing the preconditioned residuals of the iteration.
 !--------------------------------------------------------------------
 !
 !--------------------------------------------------------------------
@@ -4091,6 +4089,255 @@ contains
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
   end subroutine krylov_b_norms
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+  subroutine krylov_b_residue(nbasis,nsubspace,nrhs,&
+  &     mvproduct,full_solutions,solutions,&
+  &     rhs,&
+  &     approx_spectra,precon_string,residuals,&
+  &     largest_sv,&
+  &     nresiduals,iverb,ierr)
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Description:
+!--------------------------------------------------------------------
+!< This subroutine does the residual step of a krylov solve,
+!< producing the preconditioned residuals of the iteration.
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Modules and Global Variables
+!--------------------------------------------------------------------
+! for kind_integer and other precision related parameters
+    use basekinds
+! define real(kind_float) and associated operations
+    use floatformat
+! define type(base) and type(basereal) and associated operations
+    use basetypes
+    use blastypes
+!--------------------------------------------------------------------
+! Implicit None statement
+!--------------------------------------------------------------------
+    implicit none
+!--------------------------------------------------------------------
+! Input Variables
+!--------------------------------------------------------------------
+! Comments in the solver subroutine below
+    integer(kind_integer), intent(in) :: nbasis
+    integer(kind_integer), intent(in) :: nsubspace
+    integer(kind_integer), intent(in) :: nrhs
+    type(base), intent(in) :: mvproduct(nbasis,nsubspace)
+    type(base), intent(in) :: full_solutions(nbasis,nrhs)
+    type(base), intent(in) :: solutions(nsubspace,nrhs)
+    type(base), intent(in) :: rhs(nbasis,nrhs)
+    real(kind_float), intent(in) :: approx_spectra(nbasis)
+    character(len=32), intent(in) :: precon_string
+!--------------------------------------------------------------------
+! Output Variables
+!--------------------------------------------------------------------
+    type(base), intent(inout) :: residuals(nbasis,nrhs)
+    real(kind_float), intent(inout) :: largest_sv
+    integer(kind_integer), intent(inout) :: nresiduals
+!--------------------------------------------------------------------
+! Error Parameter
+!--------------------------------------------------------------------
+    integer(kind_integer), intent(inout) :: iverb   
+    integer(kind_integer), intent(inout) :: ierr   
+!--------------------------------------------------------------------
+! Local Variables
+!--------------------------------------------------------------------
+    type(base) :: one_kb
+    type(base) :: zero_kb
+    type(base) :: euc_sq
+    real(kind_float) :: euc_norm
+    type(base), allocatable :: mvx(:,:)
+    real(kind_float), allocatable :: singular_vals(:)
+    type(base) :: numerator
+    type(base) :: denominator
+    type(base), allocatable :: dmvx(:,:)
+    real(kind_float) :: lognbasis
+    integer(kind_integer) :: ntemp ! n of all_residuals
+    real(kind_float) :: res_temp
+    type(base) :: test_val
+!! integer for loops
+    integer(kind_integer) :: j,k,l = 0
+!--------------------------------------------------------------------
+
+! Allocate local arrays
+    allocate(mvx(nbasis,nrhs))
+    allocate(singular_vals(nrhs))
+
+!! Set constants required for BLAS
+    one_kb = real(1,kind=kind_float)
+    zero_kb = real(0,kind=kind_float)
+!! calculate matrix vector products of the approximate solutions
+!! in the representation of the full basis, aka avx, on residuals
+    call ggemm('n','n',nbasis,nrhs,nsubspace,&
+  &   one_kb,mvproduct,nbasis,&
+  &   solutions,nsubspace,zero_kb,&
+  &   mvx,nbasis)
+
+    mvx = mvx - rhs
+
+
+    if (precon_string.eq.'none') then
+
+      do j = 1, nrhs
+        do k = 1, nbasis
+          residuals(k,j) = mvx(k,j) &
+  &         + (full_solutions(k,j) &
+  &         *(approx_spectra(k)))
+        end do
+      end do
+
+    else if (precon_string.eq.'approx_spectra') then
+
+      do j = 1, nrhs
+        do k = 1, nbasis
+          residuals(k,j) = (mvx(k,j)/approx_spectra(k)) &
+  &         + full_solutions(k,j) 
+        end do
+      end do
+
+    else if (precon_string.eq.'new_sleijpen') then
+
+      allocate(dmvx(nbasis,nrhs))
+
+  !! create scaled mvproduct(solutions) required for epsilon, use dmvx
+      do k = 1, nrhs
+        do j = 1, nbasis
+          dmvx(j,k) = mvx(j,k)/&
+  &         ( approx_spectra(j) )
+        end do
+      end do
+  
+      do k = 1, nrhs
+        call gdot(nbasis,dmvx(1:nbasis,k),1,&
+  &            full_solutions(1:nbasis,k),1,numerator,ierr)
+        call gdot(nbasis,full_solutions(1:nbasis,k),1,&
+  &            full_solutions(1:nbasis,k),1,denominator,ierr)
+        do j = 1, nbasis
+          residuals(j,k) = dmvx(j,k) &
+  &          - (full_solutions(j,k)*numerator/denominator)
+        end do
+      end do
+  
+      deallocate(dmvx)
+
+    else if (precon_string.eq.'sleijpen') then
+
+      do j = 1, nrhs
+        do k = 1, nbasis
+          residuals(k,j) = mvx(k,j) &
+  &         + (full_solutions(k,j) &
+  &         *(approx_spectra(k))) 
+        end do
+      end do
+
+      allocate(dmvx(nbasis,nrhs))
+
+  !! create scaled full solutions required for epsilon, use dmvx
+      do k = 1, nrhs
+        do j = 1, nbasis
+          dmvx(j,k) = full_solutions(j,k)/&
+  &         ( approx_spectra(j) )
+        end do
+      end do
+  
+      do k = 1, nrhs
+        call gdot(nbasis,dmvx(1:nbasis,k),1,&
+  &            full_solutions(1:nbasis,k),1,denominator,ierr)
+        call gdot(nbasis,dmvx(1:nbasis,k),1,&
+  &            residuals(1:nbasis,k),1,numerator,ierr)
+        do j = 1, nbasis
+          residuals(j,k) = &
+  &    (residuals(j,k)/(approx_spectra(j)))&
+  &  - ( ((numerator/denominator)*full_solutions(j,k)) &
+  &   / (approx_spectra(j)) )
+        end do
+      end do
+  
+      deallocate(dmvx)
+
+    else ! default to davidson
+
+      do j = 1, nrhs
+        do k = 1, nbasis
+          residuals(k,j) = (mvx(k,j)&
+  &         /(approx_spectra(k))) &
+  &         + full_solutions(k,j) 
+        end do
+      end do
+
+    end if
+
+
+    nresiduals = nrhs
+
+!! get inner product of residual with itself
+    nresiduals = 0
+    k = 0
+    do j = 1, nrhs
+      call gdot(nbasis,residuals(1:nbasis,j),1,&
+  &     residuals(1:nbasis,j),1,euc_sq,ierr)
+      if (ierr.ne.0) then
+        if (iverb.ge.0) then
+          print *, '*dot linear algebra error!', ierr
+          print *, 'exit residue step'
+        end if
+        ierr = -40
+        return ! return to solver loop
+      end if
+      euc_norm = euc_sq
+      euc_norm = sqrt(euc_norm)
+      if (iverb.ge.4) then
+        print *, j,' preconditioned residual norm: ', euc_norm
+      end if
+      if (euc_norm.gt.eps) then
+        nresiduals = nresiduals + 1
+      else
+        k = k + 1
+      end if
+      residuals(1:nbasis,j-k) = residuals(1:nbasis,j)
+    end do
+
+!!! SVD of residuals to obtain singular values
+    call krylov_orthogonalize(nbasis,nrhs,residuals,&
+  &       singular_vals,nresiduals,iverb,ierr)
+    if (ierr.ne.0) then
+      if (iverb.ge.0) then
+        print *, 'decomposing new basis vectors failed'
+        print *, 'error variable = ',ierr 
+        print *, 'exit residue step'
+      end if
+      ierr = -40
+      return
+    end if
+
+!! test for
+    largest_sv = real(0,kind=kind_float)
+    if (nresiduals.gt.0) then
+      largest_sv = singular_vals(1)
+    end if
+
+
+    if (iverb.ge.3) then
+      print *, 'number of preconditioned residuals: ',nresiduals
+      print *, 'largest singular value: ', largest_sv
+    end if
+
+! Deallocate local arrays
+    deallocate(mvx)
+    deallocate(singular_vals)
+
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+  end subroutine krylov_b_residue
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
 
