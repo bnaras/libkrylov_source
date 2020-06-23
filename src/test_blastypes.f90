@@ -878,6 +878,16 @@ program test_blastypes
         end if
       end do
     end do  
+!! check value of logical check
+    if (check) then
+!! if true, write subroutine ggetrs failed to output and output file
+      write(unit=funit,fmt=*) 'subroutine ggetrf failed'
+      print *, 'subroutine ggetrf failed'
+    else
+!! if false, write subroutine ggetrs tested to output and output file
+      write(unit=funit,fmt=*) 'tested subroutine ggetrf'
+      print *, 'tested subroutine ggetrf'
+    end if
   end if
 
 
