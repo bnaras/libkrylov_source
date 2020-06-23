@@ -262,7 +262,7 @@ program krylovdriver_1b
   &   krylov_rhs, &
   &   krylov_problem,krylov_g_uv,krylov_mvp,krylov_pc_all, &
   &   krylov_output,ierr)
-  else
+  else ! use input nstart
     call problem_b_solver(krylov_approx,krylov_s_ext_in, &
   &   krylov_rhs, &
   &   krylov_problem,krylov_g_uv,krylov_mvp,krylov_pc_all, &
