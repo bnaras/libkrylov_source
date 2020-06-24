@@ -3820,7 +3820,7 @@ contains
   subroutine krylov_b_norms(nbasis,nsubspace,nrhs,&
   &     mvproduct,basis_vectors,full_solutions,solutions,&
   &     overlap,rhs,&
-  &     approx_spectra,krylov_precon,residuals,&
+  &     approx_spectra,residuals,&
   &     euc_norm,largest_euc_norm,fro_norm,&
   &     nresiduals,iverb,ierr)
 !--------------------------------------------------------------------
@@ -3863,7 +3863,6 @@ contains
     type(base), intent(in) :: overlap(nsubspace,nsubspace)
     type(base), intent(in) :: rhs(nbasis,nrhs)
     real(kind_float), intent(in) :: approx_spectra(nbasis)
-    class(libkrylov_precon_subroutine) :: krylov_precon
 !--------------------------------------------------------------------
 ! Output Variables
 !--------------------------------------------------------------------
@@ -3899,10 +3898,8 @@ contains
 
 ! Allocate local arrays
     allocate(all_residuals(nbasis,nrhs))
-    allocate(all_solutions(nbasis,nrhs))
     allocate(eps_converged(nrhs))
     allocate(euc_sq(nrhs))
-    allocate(all_omega(nrhs))
 
 !! Set constants required for BLAS
     one_kb = real(1,kind=kind_float)
@@ -3987,102 +3984,23 @@ contains
       return
     end if
 
+    nresiduals = ntemp
+
 !! eliminate residuals that have reached machine convergence
     if (ntemp.lt.nrhs) then
       l = 0 ! cycle over not converged residuals
       do k = 1, nrhs
         if (.not.eps_converged(k)) then
           l = l + 1
-          all_residuals(1:nbasis,l) = all_residuals(1:nbasis,k)
-          all_solutions(1:nbasis,l) = full_solutions(1:nbasis,k)
-! rhs not needed for preconditioning
-        end if
-      end do
-      all_omega(1:ntemp) = real(0,kind=kind_float)
-    else ! all residuals above machine precision
-      all_omega = real(0,kind=kind_float)
-      all_solutions = full_solutions
-! rhs not needed for preconditioning
-! no shifting for all_residuals' index
-    end if
-
-!! Precondition with input function!
-    associate(interfacing_fs => all_solutions%element,&
-  &            interfacing_rd => all_residuals%element)
-      call krylov_precon%lkl_precon(nbasis,ntemp,nsubspace,&
-  &     approx_spectra,&
-  &     all_omega(1:ntemp),interfacing_fs,&
-  &     interfacing_rd(1:nbasis,1:ntemp),ierr)
-    end associate
-
-    if (ierr.ne.0) then
-      if (iverb.ge.0) then
-        print *, 'class(user_krylov_precon_subroutine) function failed'
-        print *, 'error variable = ',ierr
-        print *, 'exit norm step'
-      end if
-      ierr = -40
-      return ! return to solver loop
-    end if
-
-
-
-!! set log of nbasis
-    lognbasis = log10(real(nbasis,kind=kind_float))
-
-!! reset eps_converged, check norms of preconditioned residuals
-!! reuse euc_sq,eps_converged, value of euc_sq lost!
-    eps_converged = .false.
-    nresiduals = ntemp
-    do j = 1, ntemp
-!! generate norm squared of preconditioned residual
-      call gdot(nbasis,all_residuals(1:nbasis,j),1,&
-  &     all_residuals(1:nbasis,j),1,euc_sq(j),ierr)
-!! make norm squared real(kind_float)
-      res_temp = euc_sq(j)
-!! check that norm is positive
-      if (res_temp.lt.real(0,kind=kind_float)) then
-        if (iverb.ge.0) then
-          print *, 'square of ',j,' residual norm'
-          print *, 'less than zero after preconditioning'
-          print *, 'exit norm step'
-        end if
-        ierr = -40
-        return ! return to solver loop
-      end if
-!! get norm
-      res_temp = sqrt(res_temp)
-!! check that norm is larger than (logeps+lognbasis)
-      if (log10(res_temp).lt.(logeps)) then
-        eps_converged(j) = .true.
-        nresiduals = nresiduals - 1
-      end if
-      if (iverb.ge.4) then
-        print *, j,' preconditioned residual norm: ',res_temp
-      end if
-    end do
-    if (iverb.ge.3) then
-      print *, 'number of preconditioned residuals: ',nresiduals
-    end if
-
-!! store preconditioned residuals on output array
-    l = 0 ! cycle over all not converged preconditioned residuals
-    if(ntemp.eq.nresiduals) then
-      residuals(1:nbasis,1:nresiduals) = &
-  &     all_residuals(1:nbasis,1:nresiduals)
-    else
-      do k = 1, ntemp
-        if (.not.eps_converged(k)) then
-          l = l + 1
           residuals(1:nbasis,l) = all_residuals(1:nbasis,k)
         end if
       end do
-      ierr = -10
+    else ! all residuals above machine precision
+      residuals = all_residuals
     end if
 
 ! Deallocate local arrays
     deallocate(all_residuals)
-    deallocate(all_omega)
     deallocate(eps_converged)
     deallocate(euc_sq)
 
@@ -5159,7 +5077,7 @@ contains
   &     basis_vectors(1:nbasis,1:nsubspace),full_solutions,& 
   &     solutions(1:nsubspace,1:nrhs),&
   &     overlap(1:nsubspace,1:nsubspace),&
-  &     rhs,approx_spectra,krylov_precon,&
+  &     rhs,approx_spectra,&
   &     residuals,euc_norm,largest_euc_norm,&
   &     fro_norm,nresiduals,iverb,ierr)
       if (ierr.ne.0) then
