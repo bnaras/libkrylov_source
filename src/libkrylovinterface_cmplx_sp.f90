@@ -277,7 +277,7 @@ module libkrylovinterface_cmplx_sp
   abstract interface
     subroutine libkrylov_problem_a_interface(data,nbasis,nroots,&
   &   minstart,maxstart,threshold,maxiter,&
-  &   id_string,iverb,irestart,ierr)
+  &   id_string,precon_string,iverb,irestart,ierr)
       import :: lkl_int_csp_k, libkrylov_problem_a_cmplx_sp, lkl_cmplx_sp_k
       class(libkrylov_problem_a_cmplx_sp) :: data
       integer(lkl_int_csp_k), intent(inout) :: nbasis
@@ -287,6 +287,7 @@ module libkrylovinterface_cmplx_sp
       real(lkl_cmplx_sp_k), intent(inout) :: threshold
       integer(lkl_int_csp_k), intent(inout) :: maxiter
       character(len=22), intent(inout) :: id_string
+      character(len=32), intent(inout) :: precon_string
       integer(lkl_int_csp_k), intent(inout) :: iverb
       integer(lkl_int_csp_k), intent(inout) :: irestart
       integer(lkl_int_csp_k), intent(inout) :: ierr
@@ -349,7 +350,7 @@ module libkrylovinterface_cmplx_sp
   abstract interface
     subroutine libkrylov_problem_b_interface(data,nbasis,nrhs,&
   &   minstart,maxstart,threshold,maxiter,&
-  &   id_string,iverb,irestart,ierr)
+  &   id_string,precon_string,iverb,irestart,ierr)
       import :: lkl_int_csp_k, libkrylov_problem_b_cmplx_sp, lkl_cmplx_sp_k
       class(libkrylov_problem_b_cmplx_sp) :: data
       integer(lkl_int_csp_k), intent(inout) :: nbasis
@@ -359,6 +360,7 @@ module libkrylovinterface_cmplx_sp
       real(lkl_cmplx_sp_k), intent(inout) :: threshold
       integer(lkl_int_csp_k), intent(inout) :: maxiter
       character(len=22), intent(inout) :: id_string
+      character(len=32), intent(inout) :: precon_string
       integer(lkl_int_csp_k), intent(inout) :: iverb
       integer(lkl_int_csp_k), intent(inout) :: irestart
       integer(lkl_int_csp_k), intent(inout) :: ierr
@@ -421,7 +423,7 @@ module libkrylovinterface_cmplx_sp
   abstract interface
     subroutine libkrylov_problem_c_interface(data,nbasis,nomega,nrhs,&
   &   minstart,maxstart,threshold,maxiter,unique_rhs_omega,&
-  &   id_string,iverb,irestart,ierr)
+  &   id_string,precon_string,iverb,irestart,ierr)
       import :: lkl_int_csp_k, libkrylov_problem_c_cmplx_sp, lkl_cmplx_sp_k
       class(libkrylov_problem_c_cmplx_sp) :: data
       integer(lkl_int_csp_k), intent(inout) :: nbasis
@@ -433,6 +435,7 @@ module libkrylovinterface_cmplx_sp
       integer(lkl_int_csp_k), intent(inout) :: maxiter
       logical, intent(inout) :: unique_rhs_omega
       character(len=22), intent(inout) :: id_string
+      character(len=32), intent(inout) :: precon_string
       integer(lkl_int_csp_k), intent(inout) :: iverb
       integer(lkl_int_csp_k), intent(inout) :: irestart
       integer(lkl_int_csp_k), intent(inout) :: ierr
