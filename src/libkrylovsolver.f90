@@ -4502,6 +4502,7 @@ contains
     real(kind_float), allocatable :: euc_norm(:)
     real(kind_float) :: fro_norm
     real(kind_float) :: largest_euc_norm
+    real(kind_float) :: largest_sv
     integer(kind_integer) :: nresiduals = 0
 !< residuals = preconditioned residuals of the approximate solutions 
 !< on the full space = \tilde{R}
@@ -5170,6 +5171,26 @@ contains
         exit ! This exits subspace loop
       end if
 
+!! determine residuals
+      call krylov_b_residue(nbasis,nsubspace,nrhs,&
+  &     mvproduct(1:nbasis,1:nsubspace),full_solutions,&
+  &     solutions(1:nsubspace,1:nrhs),&
+  &     rhs,&
+  &     approx_spectra,precon_string,&
+  &     residuals,&
+  &     largest_sv,&
+  &     nresiduals,iverb,ierr)
+      if (ierr.ne.0) then
+        if (iverb.ge.0) then
+          print *, 'determining new basis vectors failed'
+          print *, 'error variable = ',ierr
+          print *, 'using previous subspace solutions for print'
+        end if
+        nsubspace = prev_nsubspace
+        ierr = 0
+        exit ! This exits subspace loop
+      end if
+
 ! determine convergence of solutions based on euclidean norm
       nconverged = 0
       jconverged = .false.
@@ -5258,7 +5279,103 @@ contains
       call krylov_cholesky(nsubspace,overlap(1:nsubspace,1:nsubspace),&
   &     diag_overlap(1:nsubspace),& 
   &     cholesky(1:nsubspace,1:nsubspace),cond,iverb,ierr)
-      if (ierr.ne.0) then
+! Force restart if cond is less than threshold
+      if ((logeps).gt.log10(cond)) then
+        if (iverb.ge.1) then
+          print *, 'Condition number exceed desired convergence'
+        end if
+        ierr = -30
+      end if
+      if (ierr.eq.-30) then !cholesky failed, attempt rescue
+        if (iverb.ge.0) then
+          print *, 'new krylov subspace unstable'
+          print *, 'attempting to stabilize'
+        end if
+!!!!  Drastic restart implementation.
+        ierr = 0
+!! Putting X(full solutions) as new previous V(basis)
+        basis_vectors(1:nbasis,1:nrhs) = &
+  &      full_solutions(1:nbasis,1:nrhs)
+!! set nsubspace to new value
+        nsubspace = nrhs
+        prev_nsubspace = nrhs
+!! Set constants required for BLAS
+        one_kb = real(1,kind=kind_float)
+        zero_kb = real(0,kind=kind_float)
+!! determine overlap
+        call ggemm('c','n',nrhs,nrhs,nbasis,one_kb,&
+  &       basis_vectors(1:nbasis,1:nrhs),nbasis,&
+  &       basis_vectors(1:nbasis,1:nrhs),nbasis,&
+  &       zero_kb,&
+  &       overlap(1:nrhs,1:nrhs),&
+  &       nrhs)
+        do j = 1, nrhs
+          diag_overlap(j) = overlap(j,j)
+        end do
+        call krylov_cholesky(nsubspace,&
+  &       overlap(1:nsubspace,1:nsubspace),&
+  &       diag_overlap(1:nsubspace),& 
+  &       cholesky(1:nsubspace,1:nsubspace),cond,iverb,ierr)
+        if (ierr.eq.0) then !! if rescue worked
+          if (iverb.ge.0) then
+            print *, 'WARNING: internal restart'
+            print *, 'please observe condition number'
+            print *, 'continuing iterations'
+          end if
+        else
+          if (iverb.ge.0) then
+            print *, 'current iteration solutions failed stability check'
+            print *, 'error variable = ',ierr
+            print *, 'using previous subspace solutions for print'
+          end if
+          ierr = 0
+          nsubspace = prev_nsubspace
+          exit ! This exits subspace loop
+        end if
+!! generate fresh proj_RHS as well
+        call ggemm('c','n',nrhs,nrhs,nbasis,one_kb,&
+  &       basis_vectors(1:nbasis,1:nrhs),nbasis,&
+  &       rhs(1:nbasis,1:nrhs),nbasis,&
+  &       zero_kb,&
+  &       proj_rhs(1:nrhs,1:nrhs),&
+  &       nrhs)
+!! generate fresh mvproduct
+! call user defined matrix vector product
+        associate(interfacing_bv => basis_vectors%element,&
+  &             interfacing_mv => mvproduct%element)
+          call krylov_mvp%lkl_mvp(nbasis,nsubspace,&
+  &         interfacing_bv(1:nbasis,1:nsubspace),&
+  &         interfacing_mv(1:nbasis,1:nsubspace),ierr)
+        end associate
+        if (ierr.ne.0) then
+          if (iverb.ge.0) then
+            print *, 'class(libkrylov_mvp_subroutine) function failed'
+            print *, 'error variable = ',ierr
+            print *, 'using previous subspace solutions for print'
+          end if
+          ierr = 0
+          nsubspace = prev_nsubspace
+          exit ! This exits subspace loop
+        end if
+!! NAMBI : construction of fresh  avproduct
+        do j = 1, nsubspace
+          avproduct(1:nbasis,j) = mvproduct(1:nbasis,j) &
+  &       + ( basis_vectors(1:nbasis,j) * approx_spectra(1:nbasis))
+        end do
+        call krylov_rayleigh(nbasis,nsubspace,&
+  &         approx_spectra,avproduct(1:nbasis,1:nsubspace),&
+  &         basis_vectors(1:nbasis,1:nsubspace),&
+  &         rayleigh(1:prev_nsubspace,1:nsubspace),&
+  &         rayleigh_sq(1:prev_nsubspace,1:nsubspace),iverb,ierr)
+        if (ierr.ne.0) then
+          if (iverb.ge.0) then
+            print *, 'initial (re)construction of rayleigh matrix failed' 
+            print *, 'error variable = ',ierr
+          end if
+          ierr = -45
+          return ! abort solver, return to call 
+        end if
+      else if (ierr.ne.0) then !krylov_check failed irrecoverably
         if (iverb.ge.0) then
           print *, 'new krylov subspace failed stability check'
           print *, 'error variable = ',ierr
@@ -5267,6 +5384,53 @@ contains
         nsubspace = prev_nsubspace
         ierr = 0
         exit ! This exits subspace loop
+      else ! cholesky decomposition is stable, expand subspace
+!! need to increase RHS as well
+        call ggemm('c','n',nresiduals,nrhs,nbasis,one_kb,&
+  &       basis_vectors(1:nbasis,(prev_nsubspace+1):nsubspace),nbasis,&
+  &       rhs(1:nbasis,1:nrhs),nbasis,&
+  &       zero_kb,&
+  &       proj_rhs((prev_nsubspace+1):nsubspace,1:nrhs),&
+  &       nresiduals)
+  ! call user defined matrix vector product
+        associate(interfacing_bv => basis_vectors%element,& 
+  &           interfacing_mv => mvproduct%element)
+          call krylov_mvp%lkl_mvp(nbasis,nresiduals,&
+  &         interfacing_bv(1:nbasis,(prev_nsubspace+1):nsubspace),&
+  &         interfacing_mv(1:nbasis,(prev_nsubspace+1):nsubspace),ierr)
+        end associate
+        if (ierr.ne.0) then
+          if (iverb.ge.0) then
+            print *, 'class(libkrylov_mvp_subroutine) function failed'
+            print *, 'error variable = ',ierr
+            print *, 'using previous subspace solutions for print'
+          end if
+          ierr = 0
+          nsubspace = prev_nsubspace
+          exit ! This exits subspace loop
+        end if
+  !! NAMBI : construction of avproduct
+        do j = prev_nsubspace+1 , nsubspace
+          avproduct(1:nbasis,j) = mvproduct(1:nbasis,j)& 
+  &    +  (basis_vectors(1:nbasis,j) * approx_spectra(1:nbasis))
+        end do
+! expand rayleigh matrix
+        call krylov_expand(nbasis,nsubspace,&
+  &       nresiduals,prev_nsubspace,&
+  &       approx_spectra,avproduct(1:nbasis,1:nsubspace),&
+  &       basis_vectors(1:nbasis,1:nsubspace),&
+  &       rayleigh(1:nsubspace,1:nsubspace),&
+  &       rayleigh_sq(1:nsubspace,1:nsubspace),iverb,ierr)
+        if (ierr.ne.0) then
+          if (iverb.ge.0) then
+            print *, 'expanding rayleigh matrix failed'
+            print *, 'error variable = ',ierr
+            print *, 'using previous subspace solutions for print'
+          end if
+          ierr = 0
+          nsubspace = prev_nsubspace
+          exit ! This exits subspace loop
+        end if
       end if
 
 ! print restart basis-vectors if required
@@ -5280,14 +5444,6 @@ contains
           end if
         end if
       end if
-
-!! need to increase RHS as well
-      call ggemm('c','n',nresiduals,nrhs,nbasis,one_kb,&
-  &     basis_vectors(1:nbasis,(prev_nsubspace+1):nsubspace),nbasis,&
-  &     rhs(1:nbasis,1:nrhs),nbasis,&
-  &     zero_kb,&
-  &     proj_rhs((prev_nsubspace+1):nsubspace,1:nrhs),&
-  &     nresiduals)
 
 ! print restart proj_rhs if required
       if (irestart.ge.4) then
@@ -5307,24 +5463,6 @@ contains
         print *, ' '
       end if
 
-! call user defined matrix vector product
-      associate(interfacing_bv => basis_vectors%element,&
-  &             interfacing_mv => mvproduct%element)
-        call krylov_mvp%lkl_mvp(nbasis,nresiduals,&
-  &       interfacing_bv(1:nbasis,(prev_nsubspace+1):nsubspace),&
-  &       interfacing_mv(1:nbasis,(prev_nsubspace+1):nsubspace),ierr)
-      end associate
-      if (ierr.ne.0) then
-        if (iverb.ge.0) then
-          print *, 'class(user_krylov_mvp_subroutine) function failed'
-          print *, 'error variable = ',ierr
-          print *, 'using previous subspace solutions for print'
-        end if
-        ierr = 0
-        nsubspace = prev_nsubspace
-        exit ! This exits subspace loop
-      end if
-
 ! print restart if required
       if (irestart.ge.3) then
         call array_print_rstrt(wname,nbasis,nsubspace,&
@@ -5335,31 +5473,6 @@ contains
             ierr = 0
           end if
         end if
-      end if
-
-!! NAMBI : construction of avproduct
-      do j = (prev_nsubspace+1), nsubspace
-        avproduct(1:nbasis,j) = mvproduct(1:nbasis,j) &
-  &        + (basis_vectors(1:nbasis,j) * approx_spectra(1:nbasis))
-      end do
-
-
-! expand rayleigh matrix
-      call krylov_expand(nbasis,nsubspace,&
-  &     nresiduals,prev_nsubspace,&
-  &     approx_spectra,avproduct(1:nbasis,1:nsubspace),&
-  &     basis_vectors(1:nbasis,1:nsubspace),&
-  &     rayleigh(1:nsubspace,1:nsubspace),&
-  &     rayleigh_sq(1:nsubspace,1:nsubspace),iverb,ierr)
-      if (ierr.ne.0) then
-        if (iverb.ge.0) then
-          print *, 'expanding rayleigh matrix failed'
-          print *, 'error variable = ',ierr
-          print *, 'using previous subspace solutions for print'
-        end if
-        ierr = 0
-        nsubspace = prev_nsubspace
-        exit ! This exits subspace loop
       end if
 
     end do ! krylov subspace loop ends
