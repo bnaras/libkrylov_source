@@ -6067,37 +6067,11 @@ contains
       return
     end if
 
-!! get all omega to precondition every residual
-    n = 0 ! cycle over rhs
-    do k = 1, nomega
-      all_omega((n+1):(n+nrhs)) = omega(k)
-! rhs not needed for preconditioning
-! no shifting for all_residuals' index
-      n = n + nrhs
-    end do
-
-!! Precondition with input function!
-    associate(interfacing_fs => full_solutions%element,&
-  &            interfacing_rd => all_residuals%element)
-    call krylov_precon%lkl_precon(nbasis,nroots,nsubspace,&
-  &     approx_spectra,&
-  &     all_omega(1:nroots),interfacing_fs,&
-  &     interfacing_rd(1:nbasis,1:nroots),ierr)
-    end associate
-    if (ierr.ne.0) then
-      if (iverb.ge.0) then
-        print *, 'class(user_krylov_precon_subroutine) function failed'
-        print *, 'error variable = ',ierr
-        print *, 'exit norm step'
-      end if
-      ierr = -40
-      return ! return to solver loop
-    end if
 
 !! modified gram schmidt for the same rhs, 
     if (nroots.gt.nomega) then
       if (iverb.ge.4) then
-        print *, 'inner product of preconditioned residuals:'
+        print *, 'inner product of residuals:'
       end if
       do n = 1 , nrhs
         do j = n+nrhs , nroots , nrhs
@@ -6757,6 +6731,7 @@ contains
     real(kind_float), allocatable :: euc_norm(:)
     real(kind_float) :: fro_norm
     real(kind_float) :: largest_euc_norm
+    real(kind_float) :: largest_sv
     integer(kind_integer) :: nresiduals = 0
 !< residuals = preconditioned residuals of the approximate solutions 
 !< on the full space = \tilde{R}
@@ -7495,6 +7470,26 @@ contains
           print *, 'error variable = ',ierr
         end if 
         ierr = -40
+        exit ! This exits subspace loop
+      end if
+
+!! determine residuals
+      call krylov_c_residue(nbasis,nsubspace,nomega,nrhs,nroots,&
+  &     mvproduct(1:nbasis,1:nsubspace),full_solutions,&
+  &     solutions(1:nsubspace,1:nroots),&
+  &     omega,rhs,&
+  &     approx_spectra,precon_string,&
+  &     residuals,&
+  &     largest_sv,&
+  &     nresiduals,iverb,ierr)
+      if (ierr.ne.0) then
+        if (iverb.ge.0) then
+          print *, 'determining new basis vectors failed'
+          print *, 'error variable = ',ierr
+          print *, 'using previous subspace solutions for print'
+        end if
+        nsubspace = prev_nsubspace
+        ierr = 0
         exit ! This exits subspace loop
       end if
 
