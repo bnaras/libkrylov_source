@@ -326,7 +326,7 @@ program test_norms
   print *, 'input rhs are diagonal matrix of integers'
 !! call normalize subroutine
   call krylov_b_norms(n1,n2,n3,mvproduct,basis_vectors,full_solutions,&
-  & solutions,overlap,rhs,approx_spectra,krylov_pc_none,&
+  & solutions,overlap,rhs,approx_spectra,&
   & residuals,euc_norm,largest_euc_norm,fro_norm,nresiduals,iverb,ierr)
 !! check ierr value to see whether routine terminated with an error
 !! test if ierr is not equal to 0
