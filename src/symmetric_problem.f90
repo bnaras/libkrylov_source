@@ -55,6 +55,8 @@ program problem_1
   character(len=32) :: tau_string = ''
 ! string indicating which eigenvalue
   character(len=32) :: eigenvalue_string = ''
+! string indicating which eigenvector
+  character(len=32) :: eigenvector_string = ''
 ! integers for the size of the problem
   integer(kind_integer) :: n = 500
   integer(kind_integer) :: m = 1
@@ -100,214 +102,328 @@ program problem_1
 
   print *, 'all allocations successful'
 
-!! creating the (I + B) matrix into obj1
-  do k = 1, n
-    obj1(k, k) = real(1,kind=kind_float)
-  end do
+!! ask for user input on eigenvectors
+  print *, 'Please enter an option for type of eigenvectors'
+  print *, '"cayley_trans" to generate eigenvectors as (I+A)(I-A)' 
+  print *, '"qr_decomp" to generate eigenvectors from QR decomposition' 
 
-  do k = 1, n
-    do j = (k+1), n
-      obj1(j,k) = -(sin(real(j + k,kind=kind_float)))
+  read (*,*) eigenvector_string
+  print *, 'eigenvectors will generated as, ', eigenvector_string
+
+
+  if (eigenvector_string.eq.'cayley_trans') then
+    !! creating the (I + B) matrix into obj1
+    do k = 1, n
+      obj1(k, k) = real(1,kind=kind_float)
     end do
-  end do
+
+    do k = 1, n
+      do j = (k+1), n
+        obj1(j,k) = -(sin(real(j + k,kind=kind_float)))
+      end do
+    end do
   
-  do k = 1, n
-    do j = 1, (k-1)
-      obj1(j,k) = sin(real(j + k,kind=kind_float))
+    do k = 1, n
+      do j = 1, (k-1)
+        obj1(j,k) = sin(real(j + k,kind=kind_float))
+      end do
     end do
-  end do
 
-!! creating the (I - B) matrix into obj2
-  do k = 1, n
-    obj2(k, k) = real(1,kind=kind_float)
-  end do
-
-  do k = 1, n
-    do j = (k+1), n
-      obj2(j,k) = sin(real(j + k,kind=kind_float))
+    !! creating the (I - B) matrix into obj2
+    do k = 1, n
+      obj2(k, k) = real(1,kind=kind_float)
     end do
-  end do
+
+    do k = 1, n
+      do j = (k+1), n
+        obj2(j,k) = sin(real(j + k,kind=kind_float))
+      end do
+    end do
   
-  do k = 1, n
-    do j = 1, (k-1)
-      obj2(j,k) = -(sin(real(j + k,kind=kind_float)))
+    do k = 1, n
+      do j = 1, (k-1)
+        obj2(j,k) = -(sin(real(j + k,kind=kind_float)))
+      end do
     end do
-  end do
 
-!! call ggetrf to invert obj1
-  call ggetrf(n,n,obj1,n,ipiv,ierr)
+    !! call ggetrf to invert obj1
+    call ggetrf(n,n,obj1,n,ipiv,ierr)
 
-  if ( ierr .eq. 0 ) then
-    print *, 'successful exit from ggetrf'
-  else if ( ierr .lt. 0 ) then
-    print *, 'illegal value'
-    stop
-  else
-    print *, 'obj1(j,j) is zero, where j = ', ierr
-    stop
-  end if
+    if ( ierr .eq. 0 ) then
+      print *, 'successful exit from ggetrf'
+    else if ( ierr .lt. 0 ) then
+      print *, 'illegal value'
+      stop
+    else
+      print *, 'obj1(j,j) is zero, where j = ', ierr
+      stop
+    end if
 
-!! call ggetrs to multiply results from ggetrf
-  call ggetrs('n',n,n,obj1,n,ipiv,obj2,n,ierr)
+    !! call ggetrs to multiply results from ggetrf
+    call ggetrs('n',n,n,obj1,n,ipiv,obj2,n,ierr)
   
-  if ( ierr .eq. 0 ) then
-    print *, 'successful exit from ggetrs'
-  else
-    print *, 'illegal value, ierr = ', ierr
-    stop
-  end if
+    if ( ierr .eq. 0 ) then
+      print *, 'successful exit from ggetrs'
+    else
+      print *, 'illegal value, ierr = ', ierr
+      stop
+    end if
 
-!! normalizing obj2
-  do k = 1, n
-    call gdot(n,obj2(1:n,k),1,obj2(1:n,k), &
-  &       1,norm_sq_base,ierr)
-    if (ierr.ne.0) stop
-    norm_real = norm_sq_base
-    norm_real = sqrt(norm_real)
-! normalize
-!    obj2(1:n,k) = obj2(1:n,k)/norm_real
-  end do
+    !! normalizing obj2
+    do k = 1, n
+      call gdot(n,obj2(1:n,k),1,obj2(1:n,k), &
+    &       1,norm_sq_base,ierr)
+      if (ierr.ne.0) stop
+      norm_real = norm_sq_base
+      norm_real = sqrt(norm_real)
+      ! normalize
+      !    obj2(1:n,k) = obj2(1:n,k)/norm_real
+    end do
 
 
-!! obj2 contains the eigenvectors, U matrix
+    !! obj2 contains the eigenvectors, U matrix
 
-  one_kb = real(1,kind=kind_float)
-  zero_kb = real(0,kind=kind_float)
+    one_kb = real(1,kind=kind_float)
+    zero_kb = real(0,kind=kind_float)
 
-  call ggemm('c','n',n,n,n,one_kb,obj2,n,obj2,n,&
-  & zero_kb,obj1,n)
+    call ggemm('c','n',n,n,n,one_kb,obj2,n,obj2,n,&
+    & zero_kb,obj1,n)
 
-  do k = 1, n
-    do j = 1, n
-      rtest = obj1(j,k)
-      rtest = abs(rtest)
-      if (j .eq. k) then
-        rref = real(1,kind=kind_float)
-        if (abs(rtest-rref) .gt. eps) then
-          print *, 'diag problem', j, obj1(j,k)
+    do k = 1, n
+      do j = 1, n
+        rtest = obj1(j,k)
+        rtest = abs(rtest)
+        if (j .eq. k) then
+          rref = real(1,kind=kind_float)
+          if (abs(rtest-rref) .gt. eps) then
+            print *, 'diag problem', j, obj1(j,k)
+          end if
+        else
+          if (abs(rtest) .gt. eps) then
+            print *, 'problem', j,k, obj1(j,k) 
+          end if
         end if
-      else
-        if (abs(rtest) .gt. eps) then
-          print *, 'problem', j,k, obj1(j,k) 
-        end if
-      end if
-    end do
-  end do 
+      end do
+    end do 
 
-  print *, 'transformation matrix okay'
+    print *, 'transformation matrix okay'
 
-!! ask for user input on eigenvalues
-  print *, 'Please enter an option for type of eigenvalue'
-  print *, '"positive_cosine" for positive cosine eigenvalues' 
-  print *, '"positive_even" for positive even eigenvalues' 
-  print *, '"negative_cosine" for negative cosine eigenvalues' 
-  print *, '"negative_even" for negative even eigenvalues' 
-  print *, '"variable_cosine" for both positive and negative cosine eigenvalues' 
-  read (*,*) eigenvalue_string
-  print *, eigenvalue_string,' eigenvalues entered'
+    !! ask for user input on eigenvalues
+    print *, 'Please enter an option for type of eigenvalue'
+    print *, '"positive_cosine" for positive cosine eigenvalues' 
+    print *, '"positive_even" for positive even eigenvalues' 
+    print *, '"negative_cosine" for negative cosine eigenvalues' 
+    print *, '"negative_even" for negative even eigenvalues' 
+    print *, '"variable_cosine" for both positive and negative cosine eigenvalues' 
+    read (*,*) eigenvalue_string
+    print *, eigenvalue_string,' eigenvalues entered'
 
 
-  if (eigenvalue_string.eq.'positive_cosine') then
+    if (eigenvalue_string.eq.'positive_cosine') then
+      do k = 1, n
+        diag(k) = abs(cos(real(k+k,kind=kind_float)))
+      end do
+    else if (eigenvalue_string.eq.'positive_even') then
+      do k = 1, n
+        diag(k) = real(k+k,kind=kind_float)
+      end do
+    else if (eigenvalue_string.eq.'negative_cosine') then
+      do k = 1, n
+        diag(k) = -abs(cos(real(k+k,kind=kind_float)))
+      end do
+    else if (eigenvalue_string.eq.'negative_even') then
+      do k = 1, n
+        diag(k) = -(real(k+k,kind=kind_float))
+      end do
+    else if (eigenvalue_string.eq.'variable_cosine') then
+      do k = 1, n
+        diag(k) = cos(real(k+k,kind=kind_float))
+      end do
+    else
+      print *, 'invalid option'
+      stop
+    end if
+
+  !! set a1_string based on basetypes
+    p1_string = trim(base_print_string)//'_1a'
+
+  !!allocate set the filename_string for the file name 
+    eigenname_string = trim(p1_string)//'_exact_vals'
+
+  !! print exact eigens
+    call array_print_float(eigenname_string,n,&
+    &   diag,ierr)
+
+    if (ierr.ne.0) then
+      print *, 'problem printing exact solutions!'
+      stop
+    end if
+
+  !! Compute D*U matrix into obj1
     do k = 1, n
-      diag(k) = abs(cos(real(k+k,kind=kind_float)))
+      obj1(k, 1:n) = obj2(k, 1:n) * diag(k)
     end do
-  else if (eigenvalue_string.eq.'positive_even') then
-    do k = 1, n
-      diag(k) = real(k+k,kind=kind_float)
-    end do
-  else if (eigenvalue_string.eq.'negative_cosine') then
-    do k = 1, n
-      diag(k) = -abs(cos(real(k+k,kind=kind_float)))
-    end do
-  else if (eigenvalue_string.eq.'negative_even') then
-    do k = 1, n
-      diag(k) = -(real(k+k,kind=kind_float))
-    end do
-  else if (eigenvalue_string.eq.'variable_cosine') then
-    do k = 1, n
-      diag(k) = cos(real(k+k,kind=kind_float))
-    end do
-  else
-    print *, 'invalid option'
-    stop
-  end if
 
-!! set a1_string based on basetypes
-  p1_string = trim(base_print_string)//'_1a'
+  !! assigning constant value
+    one_kb = real(1,kind=kind_float)
+    zero_kb = real(0,kind=kind_float)
 
-!!allocate set the filename_string for the file name 
-  eigenname_string = trim(p1_string)//'_exact_vals'
-
-!! print exact eigens
-  call array_print_float(eigenname_string,n,&
-  &   diag,ierr)
-
-  if (ierr.ne.0) then
-    print *, 'problem printing exact solutions!'
-    stop
-  end if
-
-!! Compute D*U matrix into obj1
-  do k = 1, n
-    obj1(k, 1:n) = obj2(k, 1:n) * diag(k)
-  end do
-
-! assigning constant value
-  one_kb = real(1,kind=kind_float)
-  zero_kb = real(0,kind=kind_float)
-
-  krylov_a = real(0,kind=kind_float)
+    krylov_a = real(0,kind=kind_float)
   
-!! compute Ut*[D*U]
-  call ggemm('c','n',n,n,n,one_kb,obj2,n,obj1,n,&
-  &  zero_kb,krylov_a,n)
+  !! compute Ut*[D*U]
+    call ggemm('c','n',n,n,n,one_kb,obj2,n,obj1,n,&
+    &  zero_kb,krylov_a,n)
 
-  print *, 'matrix A generated'
+    print *, 'matrix A generated'
 
-!! set a1_string based on basetypes
-  p1_string = trim(base_print_string)//'_1a'
+  !! set a1_string based on basetypes
+    p1_string = trim(base_print_string)//'_1a'
 
-!! set the filename_string for the file name 
-  problemname_string = trim(p1_string)//'_prob'
+  !! set the filename_string for the file name 
+    problemname_string = trim(p1_string)//'_prob'
 
-!! print problem array size
-  call array_print_base(problemname_string,n,&
-  &   n,krylov_a,ierr)
+  !! print problem array size
+    call array_print_base(problemname_string,n,&
+    &   n,krylov_a,ierr)
 
-  if (ierr.ne.0) then
-    print *, 'problem printing problem a matrix A!'
-    stop
-  end if
+    if (ierr.ne.0) then
+      print *, 'problem printing problem a matrix A!'
+      stop
+    end if
 
-!! set a1_string based on basetypes
-  p1_string = trim(base_print_string)//'_1b'
+  !! set a1_string based on basetypes
+    p1_string = trim(base_print_string)//'_1b'
 
-!! set the filename_string for the file name 
-  problemname_string = trim(p1_string)//'_prob'
+  !! set the filename_string for the file name 
+    problemname_string = trim(p1_string)//'_prob'
 
-!! print problem array size
-  call array_print_base(problemname_string,n,&
-  &   n,krylov_a,ierr)
+  !! print problem array size
+    call array_print_base(problemname_string,n,&
+    &   n,krylov_a,ierr)
 
-  if (ierr.ne.0) then
-    print *, 'problem printing problem b matrix A!'
-    stop
-  end if
+    if (ierr.ne.0) then
+      print *, 'problem printing problem b matrix A!'
+      stop
+    end if
 
-!! set a1_string based on basetypes
-  p1_string = trim(base_print_string)//'_1c'
+  !! set a1_string based on basetypes
+    p1_string = trim(base_print_string)//'_1c'
 
-!! set the filename_string for the file name 
-  problemname_string = trim(p1_string)//'_prob'
+  !! set the filename_string for the file name 
+    problemname_string = trim(p1_string)//'_prob'
 
-!! print problem array size
-  call array_print_base(problemname_string,n,&
-  &   m,krylov_a,ierr)
+  !! print problem array size
+    call array_print_base(problemname_string,n,&
+    &   m,krylov_a,ierr)
 
-  if (ierr.ne.0) then
-    print *, 'problem printing problem c matrix A!'
-    stop
-  end if
+    if (ierr.ne.0) then
+      print *, 'problem printing problem c matrix A!'
+      stop
+    end if
+
+  else
+    !! creating the (I - B) matrix into obj1
+    do k = 1, n
+      obj1(k, k) = real(1,kind=kind_float)
+    end do
+
+    do k = 1, n
+      do j = (k+1), n
+        obj1(j,k) = -(sin(real(j + k,kind=kind_float)))
+      end do
+    end do
+  
+    do k = 1, n
+      do j = 1, (k-1)
+        obj1(j,k) = sin(real(j + k,kind=kind_float))
+      end do
+    end do
+
+    !! generate q matrix 
+    call ggeqrf(n,n,obj1,n,tau,ierr)
+
+    if ( ierr .eq. 0 ) then
+      print *, 'successful exit from ggeqrf'
+    else
+      print *, 'illegal value'
+      stop
+    end if
+
+    call gungqr(n,n,n,obj1,n,tau,ierr)
+
+    if ( ierr .eq. 0 ) then
+      print *, 'successful exit from gungqr'
+    else
+      print *, 'illegal value'
+      stop
+    end if
+  
+    !! ask for user input on eigenvalues
+    print *, 'Please enter an option for type of eigenvalue'
+    print *, '"positive_cosine" for positive cosine eigenvalues' 
+    print *, '"positive_even" for positive even eigenvalues' 
+    print *, '"negative_cosine" for negative cosine eigenvalues' 
+    print *, '"negative_even" for negative even eigenvalues' 
+    print *, '"variable_cosine" for both positive and negative cosine eigenvalues' 
+    read (*,*) eigenvalue_string
+    print *, eigenvalue_string,' eigenvalues entered'
+
+
+    if (eigenvalue_string.eq.'positive_cosine') then
+      do k = 1, n
+        diag(k) = abs(cos(real(k+k,kind=kind_float)))
+      end do
+    else if (eigenvalue_string.eq.'positive_even') then
+      do k = 1, n
+        diag(k) = real(k+k,kind=kind_float)
+      end do
+    else if (eigenvalue_string.eq.'negative_cosine') then
+      do k = 1, n
+        diag(k) = -abs(cos(real(k+k,kind=kind_float)))
+      end do
+    else if (eigenvalue_string.eq.'negative_even') then
+      do k = 1, n
+        diag(k) = -(real(k+k,kind=kind_float))
+      end do
+    else if (eigenvalue_string.eq.'variable_cosine') then
+      do k = 1, n
+        diag(k) = cos(real(k+k,kind=kind_float))
+      end do
+    else
+      print *, 'invalid option'
+      stop
+    end if
+
+  !! set a1_string based on basetypes
+    p1_string = trim(base_print_string)//'_1a'
+
+  !!allocate set the filename_string for the file name 
+    eigenname_string = trim(p1_string)//'_exact_vals'
+
+  !! print exact eigens
+    call array_print_float(eigenname_string,n,&
+    &   diag,ierr)
+
+    if (ierr.ne.0) then
+      print *, 'problem printing exact solutions!'
+      stop
+    end if
+
+  !! Compute D*Q matrix into obj2
+    do k = 1, n
+      obj2(k, 1:n) = obj1(k, 1:n) * diag(k)
+    end do
+    
+    call gunmqr('l','t',n,n,n,obj1,n,tau,obj2,n,ierr)
+
+    if ( ierr .eq. 0 ) then
+      print *, 'successful exit from gunmqr'
+    else
+      print *, 'illegal value'
+      stop
+    end if
+
+  end if 
 
   obj1 = krylov_a
   call gheev('v','l',n,obj1,n,diag,ierr)
@@ -445,39 +561,6 @@ program problem_1
       stop
     end if 
 
-  obj1 = krylov_a
-!! QR decomposition on krylov_a
-  call ggeqrf(n,n,obj1,n,tau,ierr)
-
-!! set a1_string based on basetypes
-  p1_string = trim(base_print_string)//'_1a'
-
-!!allocate set the filename_string for the file name 
-  qr_matrix_string = trim(p1_string)//'_test_qr'
-
-!! print solutions of Q
-  call array_print_base(qr_matrix_string,n,&
-  &   n,obj1,ierr)
-
-  if (ierr.ne.0) then
-    print *, 'problem printing exact QR solutions!'
-    stop
-  end if
-
-!! set a1_string based on basetypes
-!  p1_string = trim(base_print_string)//'_1a'
-
-!!allocate set the filename_string for the file name 
- ! tau_string = trim(p1_string)//'_test_tau'
-
-!! print solutions of tau
-  !call array_print_base(tau_string,n,&
-  !&   tau,ierr)
-
-  !if (ierr.ne.0) then
-   ! print *, 'problem printing exact tau solutions!'
-   ! stop
-  !end if
 
   deallocate(krylov_a)
   deallocate(obj1)
