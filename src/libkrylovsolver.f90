@@ -6344,9 +6344,9 @@ contains
       if (nroots.eq.nomega) then ! one omega per root
         do j = 1, nroots
           do k = 1, nbasis
-          residuals(k,j) = (mvx(k,j)&
-  &         /(approx_spectra(k)-omega(j))) &
-  &         + full_solutions(k,j) 
+            residuals(k,j) = (mvx(k,j)&
+  &           /(approx_spectra(k)-omega(j))) &
+  &           + full_solutions(k,j) 
           end do
         end do
       else
@@ -6365,11 +6365,27 @@ contains
 
     else if (precon_string.eq.'new_sleijpen') then
 
-      stop
-
       allocate(dmvx(nbasis,nroots))
 
   !! create scaled mvproduct(solutions) required for epsilon, use dmvx
+      if (nroots.eq.nomega) then ! one omega per root
+        do j = 1, nroots
+          do k = 1, nbasis
+            dmvx(k,j) = (mvx(k,j)&
+  &           /(approx_spectra(k)-omega(j))) 
+          end do
+        end do
+      else
+        do j = 1, nomega
+          do k = 1, nrhs
+            do l = 1, nbasis
+              dmvx(l,k+m) = (mvx(l,k+m) &
+  &             /(approx_spectra(l)-omega(j))) 
+            end do
+          end do
+          m = m + nrhs
+        end do
+      end if
       do k = 1, nroots
         do j = 1, nbasis
           dmvx(j,k) = mvx(j,k)/&
@@ -6377,7 +6393,7 @@ contains
         end do
       end do
   
-      do k = 1, nrhs
+      do k = 1, nroots
         call gdot(nbasis,dmvx(1:nbasis,k),1,&
   &            full_solutions(1:nbasis,k),1,numerator,ierr)
         call gdot(nbasis,full_solutions(1:nbasis,k),1,&
@@ -6392,27 +6408,50 @@ contains
 
     else if (precon_string.eq.'sleijpen') then
 
-      stop
-
-      do j = 1, nrhs
-        do k = 1, nbasis
-          residuals(k,j) = mvx(k,j) &
-  &         + (full_solutions(k,j) &
-  &         *(approx_spectra(k))) 
+      if (nroots.eq.nomega) then ! one omega per root
+        do j = 1, nroots
+          do k = 1, nbasis
+            residuals(k,j) = (mvx(k,j)&
+  &           /(approx_spectra(k)-omega(j))) &
+  &           + full_solutions(k,j) 
+          end do
         end do
-      end do
+      else
+        do j = 1, nomega
+          do k = 1, nrhs
+            do l = 1, nbasis
+              residuals(l,k+m) = (mvx(l,k+m) &
+  &             /(approx_spectra(l)-omega(j))) &
+  &             + full_solutions(l,k+m) 
+            end do
+          end do
+          m = m + nrhs
+        end do
+      end if
 
-      allocate(dmvx(nbasis,nrhs))
+      allocate(dmvx(nbasis,nroots))
 
   !! create scaled full solutions required for epsilon, use dmvx
-      do k = 1, nrhs
-        do j = 1, nbasis
-          dmvx(j,k) = full_solutions(j,k)/&
-  &         ( approx_spectra(j) )
+      if (nroots.eq.nomega) then ! one omega per root
+        do j = 1, nroots
+          do k = 1, nbasis
+            dmvx(k,j) = (full_solutions(k,j)&
+  &           /(approx_spectra(k)-omega(j))) 
+          end do
         end do
-      end do
+      else
+        do j = 1, nomega
+          do k = 1, nrhs
+            do l = 1, nbasis
+              dmvx(l,k+m) = (full_solutions(l,k+m) &
+  &             /(approx_spectra(l)-omega(j))) 
+            end do
+          end do
+          m = m + nrhs
+        end do
+      end if
   
-      do k = 1, nrhs
+      do k = 1, nroots
         call gdot(nbasis,dmvx(1:nbasis,k),1,&
   &            full_solutions(1:nbasis,k),1,denominator,ierr)
         call gdot(nbasis,dmvx(1:nbasis,k),1,&
@@ -6424,6 +6463,37 @@ contains
   &   / (approx_spectra(j)) )
         end do
       end do
+
+      if (nroots.eq.nomega) then ! one omega per root
+        do j = 1, nroots
+          call gdot(nbasis,dmvx(1:nbasis,j),1,&
+  &            full_solutions(1:nbasis,j),1,denominator,ierr)
+          call gdot(nbasis,dmvx(1:nbasis,j),1,&
+  &            residuals(1:nbasis,j),1,numerator,ierr)
+          do k = 1, nbasis
+            residuals(k,j) = &
+  &           (residuals(k,j)/(approx_spectra(k)-omega(j)))&
+  &         - ( ((numerator/denominator)*full_solutions(k,j)) &
+  &         / (approx_spectra(k)-omega(j)) )
+          end do
+        end do
+      else
+        do j = 1, nomega
+          do k = 1, nrhs
+            call gdot(nbasis,dmvx(1:nbasis,k+m),1,&
+  &            full_solutions(1:nbasis,k+m),1,denominator,ierr)
+            call gdot(nbasis,dmvx(1:nbasis,k+m),1,&
+  &            residuals(1:nbasis,k+m),1,numerator,ierr)
+            do l = 1, nbasis
+              residuals(l,k+m) = &
+  &             (residuals(l,k+m)/(approx_spectra(l)-omega(j)))&
+  &         -   ( ((numerator/denominator)*full_solutions(l,k+m)) &
+  &           / (approx_spectra(l)-omega(j)) )
+            end do
+          end do
+          m = m + nrhs
+        end do
+      end if
   
       deallocate(dmvx)
 
@@ -6432,9 +6502,9 @@ contains
       if (nroots.eq.nomega) then ! one omega per root
         do j = 1, nroots
           do k = 1, nbasis
-          residuals(k,j) = (mvx(k,j)&
-  &         /(approx_spectra(k)-omega(j))) &
-  &         + full_solutions(k,j) 
+            residuals(k,j) = (mvx(k,j)&
+  &           /(approx_spectra(k)-omega(j))) &
+  &           + full_solutions(k,j) 
           end do
         end do
       else
