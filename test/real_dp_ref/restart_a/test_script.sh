@@ -32,7 +32,7 @@ mv real_dp_a_restart_0.out real_dp_a_restart_0.out.old 2>/dev/null
 echo 'generating save file for' >> ../testing.summary
 echo 'restart level 1' >> ../testing.summary
 echo 'test output in' >> ../testing.summary
-echo 'test/real_dp_testing.results/restart_c/real_dp_a_restart_0.out' >> ../testing.summary
+echo 'test/real_dp_testing.results/restart_a/real_dp_a_restart_0.out' >> ../testing.summary
 ../../../src/real_dp_test/driver1a_real_dp -irestart 1 > real_dp_a_restart_0.out
 echo '' >> ../testing.summary
 rm real_dp_1a_vals.json
