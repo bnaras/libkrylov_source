@@ -110,6 +110,57 @@ program problem_1
   read (*,*) eigenvector_string
   print *, 'eigenvectors will generated as, ', eigenvector_string
 
+  !! ask for user input on eigenvalues
+  print *, 'Please enter an option for type of eigenvalue'
+  print *, '"positive_cosine" for positive cosine eigenvalues' 
+  print *, '"positive_even" for positive even eigenvalues' 
+  print *, '"negative_cosine" for negative cosine eigenvalues' 
+  print *, '"negative_even" for negative even eigenvalues' 
+  print *, '"variable_cosine" for both positive and negative cosine eigenvalues' 
+  read (*,*) eigenvalue_string
+  print *, eigenvalue_string,' eigenvalues entered'
+
+
+  if (eigenvalue_string.eq.'positive_cosine') then
+    do k = 1, n
+      diag(k) = abs(cos(real(k+k,kind=kind_float)))
+    end do
+  else if (eigenvalue_string.eq.'positive_even') then
+    do k = 1, n
+      diag(k) = real(k+k,kind=kind_float)
+    end do
+  else if (eigenvalue_string.eq.'negative_cosine') then
+    do k = 1, n
+      diag(k) = -abs(cos(real(k+k,kind=kind_float)))
+    end do
+  else if (eigenvalue_string.eq.'negative_even') then
+    do k = 1, n
+      diag(k) = -(real(k+k,kind=kind_float))
+    end do
+  else if (eigenvalue_string.eq.'variable_cosine') then
+    do k = 1, n
+      diag(k) = cos(real(k+k,kind=kind_float))
+    end do
+  else
+    print *, 'invalid option'
+    stop
+  end if
+
+!! set a1_string based on basetypes
+  p1_string = trim(base_print_string)//'_1a'
+
+!!allocate set the filename_string for the file name 
+  eigenname_string = trim(p1_string)//'_exact_vals'
+
+!! print exact eigens
+  call array_print_float(eigenname_string,n,&
+  &   diag,ierr)
+
+  if (ierr.ne.0) then
+    print *, 'problem printing exact solutions!'
+    stop
+  end if
+
 
   if (eigenvector_string.eq.'cayley_trans') then
     !! creating the (I + B) matrix into obj1
@@ -208,57 +259,6 @@ program problem_1
 
     print *, 'transformation matrix okay'
 
-    !! ask for user input on eigenvalues
-    print *, 'Please enter an option for type of eigenvalue'
-    print *, '"positive_cosine" for positive cosine eigenvalues' 
-    print *, '"positive_even" for positive even eigenvalues' 
-    print *, '"negative_cosine" for negative cosine eigenvalues' 
-    print *, '"negative_even" for negative even eigenvalues' 
-    print *, '"variable_cosine" for both positive and negative cosine eigenvalues' 
-    read (*,*) eigenvalue_string
-    print *, eigenvalue_string,' eigenvalues entered'
-
-
-    if (eigenvalue_string.eq.'positive_cosine') then
-      do k = 1, n
-        diag(k) = abs(cos(real(k+k,kind=kind_float)))
-      end do
-    else if (eigenvalue_string.eq.'positive_even') then
-      do k = 1, n
-        diag(k) = real(k+k,kind=kind_float)
-      end do
-    else if (eigenvalue_string.eq.'negative_cosine') then
-      do k = 1, n
-        diag(k) = -abs(cos(real(k+k,kind=kind_float)))
-      end do
-    else if (eigenvalue_string.eq.'negative_even') then
-      do k = 1, n
-        diag(k) = -(real(k+k,kind=kind_float))
-      end do
-    else if (eigenvalue_string.eq.'variable_cosine') then
-      do k = 1, n
-        diag(k) = cos(real(k+k,kind=kind_float))
-      end do
-    else
-      print *, 'invalid option'
-      stop
-    end if
-
-  !! set a1_string based on basetypes
-    p1_string = trim(base_print_string)//'_1a'
-
-  !!allocate set the filename_string for the file name 
-    eigenname_string = trim(p1_string)//'_exact_vals'
-
-  !! print exact eigens
-    call array_print_float(eigenname_string,n,&
-    &   diag,ierr)
-
-    if (ierr.ne.0) then
-      print *, 'problem printing exact solutions!'
-      stop
-    end if
-
   !! Compute D*U matrix into obj1
     do k = 1, n
       obj1(k, 1:n) = obj2(k, 1:n) * diag(k)
@@ -321,7 +321,7 @@ program problem_1
       stop
     end if
 
-  else
+  else if (eigenvector_string.eq.'qr_decomp') then
     !! creating the (I - B) matrix into obj1
     do k = 1, n
       obj1(k, k) = real(1,kind=kind_float)
@@ -357,72 +357,65 @@ program problem_1
       print *, 'illegal value'
       stop
     end if
-  
-    !! ask for user input on eigenvalues
-    print *, 'Please enter an option for type of eigenvalue'
-    print *, '"positive_cosine" for positive cosine eigenvalues' 
-    print *, '"positive_even" for positive even eigenvalues' 
-    print *, '"negative_cosine" for negative cosine eigenvalues' 
-    print *, '"negative_even" for negative even eigenvalues' 
-    print *, '"variable_cosine" for both positive and negative cosine eigenvalues' 
-    read (*,*) eigenvalue_string
-    print *, eigenvalue_string,' eigenvalues entered'
-
-
-    if (eigenvalue_string.eq.'positive_cosine') then
-      do k = 1, n
-        diag(k) = abs(cos(real(k+k,kind=kind_float)))
-      end do
-    else if (eigenvalue_string.eq.'positive_even') then
-      do k = 1, n
-        diag(k) = real(k+k,kind=kind_float)
-      end do
-    else if (eigenvalue_string.eq.'negative_cosine') then
-      do k = 1, n
-        diag(k) = -abs(cos(real(k+k,kind=kind_float)))
-      end do
-    else if (eigenvalue_string.eq.'negative_even') then
-      do k = 1, n
-        diag(k) = -(real(k+k,kind=kind_float))
-      end do
-    else if (eigenvalue_string.eq.'variable_cosine') then
-      do k = 1, n
-        diag(k) = cos(real(k+k,kind=kind_float))
-      end do
-    else
-      print *, 'invalid option'
-      stop
-    end if
-
-  !! set a1_string based on basetypes
-    p1_string = trim(base_print_string)//'_1a'
-
-  !!allocate set the filename_string for the file name 
-    eigenname_string = trim(p1_string)//'_exact_vals'
-
-  !! print exact eigens
-    call array_print_float(eigenname_string,n,&
-    &   diag,ierr)
-
-    if (ierr.ne.0) then
-      print *, 'problem printing exact solutions!'
-      stop
-    end if
 
   !! Compute D*Q matrix into obj2
     do k = 1, n
       obj2(k, 1:n) = obj1(k, 1:n) * diag(k)
     end do
     
-    call gunmqr('l','t',n,n,n,obj1,n,tau,obj2,n,ierr)
+  !! compute Qt*[D*Q]
+    call ggemm('c','n',n,n,n,one_kb,obj1,n,obj2,n,&
+    &  zero_kb,krylov_a,n)
 
-    if ( ierr .eq. 0 ) then
-      print *, 'successful exit from gunmqr'
-    else
-      print *, 'illegal value'
+    print *, 'matrix A generated'
+
+  !! set a1_string based on basetypes
+    p1_string = trim(base_print_string)//'_1a'
+
+  !! set the filename_string for the file name 
+    problemname_string = trim(p1_string)//'_prob'
+
+  !! print problem array size
+    call array_print_base(problemname_string,n,&
+    &   n,krylov_a,ierr)
+
+    if (ierr.ne.0) then
+      print *, 'problem printing problem a matrix A!'
       stop
     end if
 
+  !! set a1_string based on basetypes
+    p1_string = trim(base_print_string)//'_1b'
+
+  !! set the filename_string for the file name 
+    problemname_string = trim(p1_string)//'_prob'
+
+  !! print problem array size
+    call array_print_base(problemname_string,n,&
+    &   n,krylov_a,ierr)
+
+    if (ierr.ne.0) then
+      print *, 'problem printing problem b matrix A!'
+      stop
+    end if
+
+  !! set a1_string based on basetypes
+    p1_string = trim(base_print_string)//'_1c'
+
+  !! set the filename_string for the file name 
+    problemname_string = trim(p1_string)//'_prob'
+
+  !! print problem array size
+    call array_print_base(problemname_string,n,&
+    &   m,krylov_a,ierr)
+
+    if (ierr.ne.0) then
+      print *, 'problem printing problem c matrix A!'
+      stop
+    end if
+  else
+    print *, 'invalid option'
+    stop
   end if 
 
   obj1 = krylov_a
