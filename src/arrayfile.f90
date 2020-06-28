@@ -425,6 +425,8 @@ contains
   &       iostat=ierr) '  ]'
     write(unit=funit,fmt='(a1)', &
   &       iostat=ierr) '}'
+    write(unit=funit,fmt='(a1)', &
+  &       iostat=ierr) '}'
 
 !! close file after reading
     close(unit=funit,iostat=ierr,status='keep')
@@ -811,6 +813,8 @@ contains
   &       iostat=ierr) '{ "val":[',0,', null ] }'
     write(unit=funit,fmt='(a3)', &
   &       iostat=ierr) '  ]'
+    write(unit=funit,fmt='(a1)', &
+  &       iostat=ierr) '}'
     write(unit=funit,fmt='(a1)', &
   &       iostat=ierr) '}'
 
