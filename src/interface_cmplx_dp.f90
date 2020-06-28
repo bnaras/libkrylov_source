@@ -20,7 +20,6 @@ module libkrylovinterface
   &   libkrylov_start_subroutine => libkrylov_start_cmplx_dp, &
   &   libkrylov_guess_subroutine => libkrylov_guess_cmplx_dp, &
   &   libkrylov_mvp_subroutine => libkrylov_mvp_cmplx_dp, &
-  &   libkrylov_precon_subroutine => libkrylov_precon_cmplx_dp, &
   &   libkrylov_problem_a_subroutine => libkrylov_problem_a_cmplx_dp, &
   &   libkrylov_output_a_subroutine => libkrylov_output_a_cmplx_dp, &
   &   libkrylov_problem_b_subroutine => libkrylov_problem_b_cmplx_dp, &

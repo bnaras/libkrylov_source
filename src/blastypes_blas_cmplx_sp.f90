@@ -869,7 +869,7 @@ contains
    if (trans .eq. 'c') translate = 't'
 
 !! first call to LAPACK for optimal lwork
-    call cormqr(side,translate,m,n,k,obj1(:,:)%element,ld1,&
+    call cunmqr(side,translate,m,n,k,obj1(:,:)%element,ld1,&
   &     tau(:)%element,obj2(:,:)%element,ld2,lworker,-1,ierr)
 
     if (ierr.ne.0) return
@@ -878,7 +878,7 @@ contains
 !! allocate lwork
     allocate(lwork(lwork_val))
 
-    call cormqr(side,translate,m,n,k,obj1(:,:)%element,ld1,&
+    call cunmqr(side,translate,m,n,k,obj1(:,:)%element,ld1,&
   &     tau(:)%element,obj2(:,:)%element,ld2,lwork,lwork_val,ierr)
 
     deallocate(lwork)
@@ -1013,7 +1013,7 @@ contains
 !--------------------------------------------------------------------
 
 !! first call to LAPACK for optimal lwork
-    call corgqr(m,n,k,obj1(:,:)%element,ld1,tau(:)%element,&
+    call cungqr(m,n,k,obj1(:,:)%element,ld1,tau(:)%element,&
   &     lworker,-1,ierr)
 
     if (ierr.ne.0) return
@@ -1022,7 +1022,7 @@ contains
 !! allocate lwork
     allocate(lwork(lwork_val))
 
-    call corgqr(m,n,k,obj1(:,:)%element,ld1,tau(:)%element,&
+    call cungqr(m,n,k,obj1(:,:)%element,ld1,tau(:)%element,&
   &     lwork,lwork_val,ierr) 
 
     deallocate(lwork)

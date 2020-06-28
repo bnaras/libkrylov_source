@@ -109,7 +109,8 @@ test_ritz_cmplx_sp_LDADD = libkrylov_cmplx_sp.la
 # test of implemented subroutines in interface
 cmplx_sp_krylovintrfcdir = $(PWD)/cmplx_sp_test
 cmplx_sp_krylovintrfc_PROGRAMS = test_libkrylovinterface_cmplx_sp
-test_libkrylovinterface_cmplx_sp_SOURCES = test_libkrylovinterface_cmplx_sp.f90
+test_libkrylovinterface_cmplx_sp_SOURCES = interface2_cmplx_sp.f90 \
+test_libkrylovinterface.f90
 test_libkrylovinterface_cmplx_sp_LDADD = libkrylov_cmplx_sp.la
 # test of solver subroutine norms
 cmplx_sp_normsdir = $(PWD)/cmplx_sp_test
@@ -271,7 +272,8 @@ test_ritz_cmplx_dp_LDADD = libkrylov_cmplx_dp.la
 # test of implemented subroutines in interface
 cmplx_dp_krylovintrfcdir = $(PWD)/cmplx_dp_test
 cmplx_dp_krylovintrfc_PROGRAMS = test_libkrylovinterface_cmplx_dp
-test_libkrylovinterface_cmplx_dp_SOURCES = test_libkrylovinterface_cmplx_dp.f90
+test_libkrylovinterface_cmplx_dp_SOURCES = interface2_cmplx_dp.f90 \
+test_libkrylovinterface.f90
 test_libkrylovinterface_cmplx_dp_LDADD = libkrylov_cmplx_dp.la
 # test of solver subroutine norms
 cmplx_dp_normsdir = $(PWD)/cmplx_dp_test
