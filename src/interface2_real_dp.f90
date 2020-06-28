@@ -20,17 +20,7 @@ module libkrylovinterface2
   &   lkl_s_ext_in => lkl_s_ext_in_rdp, &
   &   lkl_start_ext_in => lkl_start_ext_in_rdp, &
   &   lkl_g_unit_vec => lkl_g_unit_vec_rdp, &
-  &   lkl_guess_unit_vec => lkl_guess_unit_vec_rdp, &
-  &   lkl_pc_all => lkl_pc_all_rdp, &
-  &   lkl_precon_all => lkl_precon_all_rdp, &
-  &   lkl_pc_none => lkl_pc_none_rdp, &
-  &   lkl_precon_none => lkl_precon_none_rdp, &
-  &   lkl_pc_approx => lkl_pc_approx_rdp, &
-  &   lkl_precon_approx => lkl_precon_approx_rdp, &
-  &   lkl_pc_davidson => lkl_pc_davidson_rdp, &
-  &   lkl_precon_davidson => lkl_precon_davidson_rdp, &
-  &   lkl_pc_sleijpen => lkl_pc_sleijpen_rdp, &
-  &   lkl_precon_sleijpen => lkl_precon_sleijpen_rdp
+  &   lkl_guess_unit_vec => lkl_guess_unit_vec_rdp
 !--------------------------------------------------------------------
 ! Implicit none
 !--------------------------------------------------------------------

@@ -27,10 +27,6 @@ program test_norms
 !--------------------------------------------------------------------
 ! Local Variables
 !--------------------------------------------------------------------
-! External types
-  type(lkl_pc_none) :: krylov_pc_none
-  type(lkl_pc_approx) :: krylov_pc_approx
-  type(lkl_pc_davidson) :: krylov_pc_davidson
 ! parameter for array sizes for the test
 ! nbasis
   integer(kind_integer), parameter :: n1 = 10
@@ -479,7 +475,7 @@ program test_norms
 !! call normalize subroutine
   call krylov_c_norms(n1,n2,n4,n3,n5,mvproduct,basis_vectors,&
   & full_solutions,solutions,&
-  & overlap,omega,rhs,approx_spectra,krylov_pc_none,&
+  & overlap,omega,rhs,approx_spectra,&
   & residuals,euc_norm,largest_euc_norm,fro_norm,nresiduals,iverb,ierr)
 !! check ierr value to see whether routine terminated with an error
 !! test if ierr is not equal to 0

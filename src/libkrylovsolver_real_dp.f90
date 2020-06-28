@@ -14,7 +14,6 @@ module libkrylovsolver_real_dp
 ! Modules and Global Varaibles
 !--------------------------------------------------------------------
   use libkrylovinterface_real_dp
-  use libkrylovsolver
 !--------------------------------------------------------------------
 ! Implicit none
 !--------------------------------------------------------------------
@@ -29,7 +28,7 @@ contains
 !--------------------------------------------------------------------
   subroutine problem_a_real_dp(krylov_approx,krylov_start,&
     & krylov_problem_a,&
-    & krylov_guess,krylov_mvp,krylov_precon,&
+    & krylov_guess,krylov_mvp,&
     & krylov_output_a,ierr)
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
@@ -70,7 +69,6 @@ contains
     class(libkrylov_problem_a_real_dp) :: krylov_problem_a
     class(libkrylov_guess_real_dp) ::     krylov_guess
     class(libkrylov_mvp_real_dp) ::       krylov_mvp
-    class(libkrylov_precon_real_dp) ::    krylov_precon
     class(libkrylov_output_a_real_dp) ::  krylov_output_a
 !! variable for error variable
     integer(kind_integer), intent(inout) :: ierr 
@@ -78,7 +76,7 @@ contains
 
     call problem_a_solver(krylov_approx,krylov_start,&
   &  krylov_problem_a,&
-  &  krylov_guess,krylov_mvp,krylov_precon,&
+  &  krylov_guess,krylov_mvp,&
   &  krylov_output_a,ierr)
 
 !--------------------------------------------------------------------

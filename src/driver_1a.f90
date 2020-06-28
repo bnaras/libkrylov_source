@@ -47,11 +47,6 @@ program krylovdriver_1a
   type(lkl_s_elec_gas) :: krylov_s_eg
   type(lkl_s_ext_in) :: krylov_s_ext_in
   type(lkl_g_unit_vec) :: krylov_g_uv
-  type(lkl_pc_all) :: krylov_pc_all
-  type(lkl_pc_none) :: krylov_pc_none
-  type(lkl_pc_approx) :: krylov_pc_approx
-  type(lkl_pc_davidson) :: krylov_pc_davidson
-  type(lkl_pc_sleijpen) :: krylov_pc_sleijpen
   type(kl_mvp) :: krylov_mvp
   type(kl_output_a) :: krylov_output
 !--------------------------------------------------------------------
@@ -84,7 +79,6 @@ program krylovdriver_1a
 !--------------------------------------------------------------------
 
 !! set default options
-  krylov_pc_all%precon_string = 'davidson'
   preconditioner = 'davidson'
   krylov_problem%irestart = 0
   krylov_s_ext_in%nstart = 0
@@ -131,14 +125,13 @@ program krylovdriver_1a
         ierr = 20
         call problem_a_solver(krylov_approx,krylov_s_eg,&
   &       krylov_problem, &
-  &       krylov_g_uv,krylov_mvp,krylov_pc_all, &
+  &       krylov_g_uv,krylov_mvp, &
   &       krylov_output,ierr)
         stop
       else if (input.eq.'-precon') then
         k = k + 1
         call get_command_argument(k,value=input2,status=ierr)
         if (ierr.ne.0) stop
-        krylov_pc_all%precon_string = input2
         preconditioner = input2
         print *, 'preconditioner: ',input2
       else if (input.eq.'-irestart') then
@@ -226,12 +219,12 @@ program krylovdriver_1a
   if (krylov_s_ext_in%nstart.le.0) then
     call problem_a_solver(krylov_approx,krylov_s_eg,&
   &   krylov_problem, &
-  &   krylov_g_uv,krylov_mvp,krylov_pc_all, &
+  &   krylov_g_uv,krylov_mvp, &
   &   krylov_output,ierr)
   else ! call solver with input nstart
     call problem_a_solver(krylov_approx,krylov_s_ext_in,&
   &   krylov_problem, &
-  &   krylov_g_uv,krylov_mvp,krylov_pc_all, &
+  &   krylov_g_uv,krylov_mvp, &
   &   krylov_output,ierr)
   end if
 

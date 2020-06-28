@@ -2465,7 +2465,7 @@ contains
 !--------------------------------------------------------------------
   subroutine problem_a_solver(krylov_approx,krylov_start,&
     & krylov_problem_a,&
-    & krylov_guess,krylov_mvp,krylov_precon,&
+    & krylov_guess,krylov_mvp,&
     & krylov_output_a,ierr)
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
@@ -2484,7 +2484,6 @@ contains
   !< krylov_guess for initializing (more) guess vectors and their
   !< overlap
   !< krylov_mvp for matrix vector products
-  !< krylov_precon for preconditioning
   !< krylov_maket_a for preconditioned residuals
   !< krylov_output for what to do with the eigenvectors and eigenvalues
 !--------------------------------------------------------------------
@@ -2511,7 +2510,6 @@ contains
     class(libkrylov_problem_a_subroutine) :: krylov_problem_a
     class(libkrylov_guess_subroutine) ::     krylov_guess
     class(libkrylov_mvp_subroutine) ::       krylov_mvp
-    class(libkrylov_precon_subroutine) ::    krylov_precon
     class(libkrylov_output_a_subroutine) ::  krylov_output_a
 !--------------------------------------------------------------------
 ! Local Variables
@@ -4263,7 +4261,7 @@ contains
 !--------------------------------------------------------------------
   subroutine problem_b_solver(krylov_approx,krylov_start,krylov_rhs,&
     & krylov_problem_b,krylov_guess,&
-    & krylov_mvp,krylov_precon,krylov_output_b,ierr)
+    & krylov_mvp,krylov_output_b,ierr)
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
 !
@@ -4282,7 +4280,6 @@ contains
   !< krylov_guess for initializing more guess vectors and their
   !< overlap
   !< krylov_mvp for matrix vector products
-  !< krylov_precon for preconditioning
   !< krylov_output for what to do with the eigenvectors
 !--------------------------------------------------------------------
 !
@@ -4310,7 +4307,6 @@ contains
     class(libkrylov_problem_b_subroutine) :: krylov_problem_b
     class(libkrylov_guess_subroutine) ::     krylov_guess
     class(libkrylov_mvp_subroutine) ::       krylov_mvp
-    class(libkrylov_precon_subroutine) ::    krylov_precon
     class(libkrylov_output_b_subroutine) ::  krylov_output_b
 !--------------------------------------------------------------------
 ! Local Variables
@@ -5860,7 +5856,7 @@ contains
   subroutine krylov_c_norms(nbasis,nsubspace,nomega,nrhs,nroots,&
   &     mvproduct,basis_vectors,full_solutions,solutions,&
   &     overlap,omega,rhs,&
-  &     approx_spectra,krylov_precon,residuals,&
+  &     approx_spectra,residuals,&
   &     euc_norm,largest_euc_norm,fro_norm,&
   &     nresiduals,iverb,ierr)
 !--------------------------------------------------------------------
@@ -5906,7 +5902,6 @@ contains
     real(kind_float), intent(in) :: omega(nomega)
     type(base), intent(in) :: rhs(nbasis,nrhs)
     real(kind_float), intent(in) :: approx_spectra(nbasis)
-    class(libkrylov_precon_subroutine) :: krylov_precon
 !--------------------------------------------------------------------
 ! Output Variables
 !--------------------------------------------------------------------
@@ -6566,7 +6561,7 @@ contains
 !--------------------------------------------------------------------
   subroutine problem_c_solver(krylov_approx,krylov_start,krylov_rhs,&
     & krylov_omega,krylov_problem_c,krylov_guess,&
-    & krylov_mvp,krylov_precon,krylov_output_c,ierr)
+    & krylov_mvp,krylov_output_c,ierr)
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
 !
@@ -6586,7 +6581,6 @@ contains
   !< krylov_guess for initializing more guess vectors and their
   !< overlap
   !< krylov_mvp for matrix vector products
-  !< krylov_precon for preconditioning
   !< krylov_output for what to do with the eigenvectors and frequencies
 !--------------------------------------------------------------------
 !
@@ -6614,7 +6608,6 @@ contains
     class(libkrylov_problem_c_subroutine) :: krylov_problem_c
     class(libkrylov_guess_subroutine) ::     krylov_guess
     class(libkrylov_mvp_subroutine) ::       krylov_mvp
-    class(libkrylov_precon_subroutine) ::     krylov_precon
     class(libkrylov_output_c_subroutine) ::  krylov_output_c
 !--------------------------------------------------------------------
 ! Local Variables
@@ -7461,7 +7454,7 @@ contains
   &     basis_vectors(1:nbasis,1:nsubspace),full_solutions,& 
   &     solutions(1:nsubspace,1:nroots),&
   &     overlap(1:nsubspace,1:nsubspace),&
-  &     omega,rhs,approx_spectra,krylov_precon,&
+  &     omega,rhs,approx_spectra,&
   &     residuals,euc_norm,largest_euc_norm,&
   &     fro_norm,nresiduals,iverb,ierr)
       if (ierr.ne.0) then
