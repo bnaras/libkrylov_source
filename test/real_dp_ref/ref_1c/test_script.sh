@@ -28,7 +28,7 @@ mv real_dp_npc_driver1c.out real_dp_npc_driver1c.out.old 2>/dev/null
 echo 'solve reference problem with no preconditioner' >> ../testing.summary
 echo 'test output in' >> ../testing.summary
 echo 'test/real_dp_testing.results/ref_1c/real_dp_npc_driver1c.out' >> ../testing.summary
-echo 'none' | ../../../src/real_dp_test/driver1c_real_dp > real_dp_npc_driver1c.out
+../../../src/real_dp_test/driver1c_real_dp -precon none > real_dp_npc_driver1c.out
 mv real_dp_1c_lagr.json real_dp_1c_npc_lagr.json
 mv real_dp_1c_vecs.json real_dp_1c_npc_vecs.json
 mv real_dp_1c_indx.json real_dp_1c_npc_indx.json
@@ -44,7 +44,7 @@ mv real_dp_apc_driver1c.out real_dp_apc_driver1c.out.old 2>/dev/null
 echo 'solve reference problem with approximate spectra preconditioner' >> ../testing.summary
 echo 'test output in' >> ../testing.summary
 echo 'test/real_dp_testing.results/ref_1c/real_dp_apc_driver1c.out' >> ../testing.summary
-echo 'approx_spectra' | ../../../src/real_dp_test/driver1c_real_dp > real_dp_apc_driver1c.out
+../../../src/real_dp_test/driver1c_real_dp -precon approx_spectra > real_dp_apc_driver1c.out
 mv real_dp_1c_lagr.json real_dp_1c_apc_lagr.json 
 mv real_dp_1c_vecs.json real_dp_1c_apc_vecs.json
 mv real_dp_1c_indx.json real_dp_1c_apc_indx.json
@@ -60,7 +60,7 @@ mv real_dp_dpc_driver1c.out real_dp_dpc_driver1c.out.old 2>/dev/null
 echo 'solve reference problem with davidson preconditioner' >> ../testing.summary
 echo 'test output in' >> ../testing.summary
 echo 'test/real_dp_testing.results/ref_1c/real_dp_dpc_driver1c.out' >> ../testing.summary
-echo 'davidson' | ../../../src/real_dp_test/driver1c_real_dp > real_dp_dpc_driver1c.out
+../../../src/real_dp_test/driver1c_real_dp -precon davidson > real_dp_dpc_driver1c.out
 mv real_dp_1c_lagr.json real_dp_1c_dpc_lagr.json
 mv real_dp_1c_vecs.json real_dp_1c_dpc_vecs.json
 mv real_dp_1c_indx.json real_dp_1c_dpc_indx.json
@@ -76,7 +76,7 @@ mv real_dp_spc_driver1c.out real_dp_spc_driver1c.out.old 2>/dev/null
 echo 'solve reference problem with Jacobi-Davidson preconditioner' >> ../testing.summary
 echo 'test output in' >> ../testing.summary
 echo 'test/real_dp_testing.results/ref_1c/real_dp_spc_driver1c.out' >> ../testing.summary
-echo 'sleijpen' | ../../../src/real_dp_test/driver1c_real_dp > real_dp_spc_driver1c.out
+../../../src/real_dp_test/driver1c_real_dp -precon sleijpen > real_dp_spc_driver1c.out
 mv real_dp_1c_lagr.json real_dp_1c_spc_lagr.json
 mv real_dp_1c_vecs.json real_dp_1c_spc_vecs.json
 mv real_dp_1c_indx.json real_dp_1c_spc_indx.json
