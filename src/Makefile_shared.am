@@ -115,7 +115,7 @@ test_libkrylovinterface_cmplx_sp_LDADD = libkrylov_cmplx_sp.la
 # test of solver subroutine norms
 cmplx_sp_normsdir = $(PWD)/cmplx_sp_test
 cmplx_sp_norms_PROGRAMS = test_norms_cmplx_sp
-test_norms_cmplx_sp_SOURCES = cmplx_sp_srcs/test_norms_cmplx_sp.f90
+test_norms_cmplx_sp_SOURCES = test_norms.f90
 test_norms_cmplx_sp_LDADD = libkrylov_cmplx_sp.la
 # check of quality for restart files
 cmplx_sp_restartdir = $(PWD)/cmplx_sp_lib
@@ -278,7 +278,7 @@ test_libkrylovinterface_cmplx_dp_LDADD = libkrylov_cmplx_dp.la
 # test of solver subroutine norms
 cmplx_dp_normsdir = $(PWD)/cmplx_dp_test
 cmplx_dp_norms_PROGRAMS = test_norms_cmplx_dp
-test_norms_cmplx_dp_SOURCES = cmplx_dp_srcs/test_norms_cmplx_dp.f90
+test_norms_cmplx_dp_SOURCES = test_norms.f90
 test_norms_cmplx_dp_LDADD = libkrylov_cmplx_dp.la
 # check of quality for restart files
 cmplx_dp_restartdir = $(PWD)/cmplx_dp_lib

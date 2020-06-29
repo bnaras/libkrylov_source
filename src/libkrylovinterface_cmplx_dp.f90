@@ -234,7 +234,7 @@ module libkrylovinterface_cmplx_dp
   abstract interface
     subroutine libkrylov_problem_a_interface(data,nbasis,nroots,&
   &   minstart,maxstart,threshold,maxiter,&
-  &   id_string,iverb,irestart,ierr)
+  &   id_string,precon_string,iverb,irestart,ierr)
       import :: lkl_int_cdp_k, libkrylov_problem_a_cmplx_dp, lkl_cmplx_dp_k
       class(libkrylov_problem_a_cmplx_dp) :: data
       integer(lkl_int_cdp_k), intent(inout) :: nbasis
@@ -244,6 +244,7 @@ module libkrylovinterface_cmplx_dp
       real(lkl_cmplx_dp_k), intent(inout) :: threshold
       integer(lkl_int_cdp_k), intent(inout) :: maxiter
       character(len=22), intent(inout) :: id_string
+      character(len=32), intent(inout) :: precon_string
       integer(lkl_int_cdp_k), intent(inout) :: iverb
       integer(lkl_int_cdp_k), intent(inout) :: irestart
       integer(lkl_int_cdp_k), intent(inout) :: ierr
@@ -306,7 +307,7 @@ module libkrylovinterface_cmplx_dp
   abstract interface
     subroutine libkrylov_problem_b_interface(data,nbasis,nrhs,&
   &   minstart,maxstart,threshold,maxiter,&
-  &   id_string,iverb,irestart,ierr)
+  &   id_string,precon_string,iverb,irestart,ierr)
       import :: lkl_int_cdp_k, libkrylov_problem_b_cmplx_dp, lkl_cmplx_dp_k
       class(libkrylov_problem_b_cmplx_dp) :: data
       integer(lkl_int_cdp_k), intent(inout) :: nbasis
@@ -316,6 +317,7 @@ module libkrylovinterface_cmplx_dp
       real(lkl_cmplx_dp_k), intent(inout) :: threshold
       integer(lkl_int_cdp_k), intent(inout) :: maxiter
       character(len=22), intent(inout) :: id_string
+      character(len=32), intent(inout) :: precon_string
       integer(lkl_int_cdp_k), intent(inout) :: iverb
       integer(lkl_int_cdp_k), intent(inout) :: irestart
       integer(lkl_int_cdp_k), intent(inout) :: ierr
@@ -378,7 +380,7 @@ module libkrylovinterface_cmplx_dp
   abstract interface
     subroutine libkrylov_problem_c_interface(data,nbasis,nomega,nrhs,&
   &   minstart,maxstart,threshold,maxiter,unique_rhs_omega,&
-  &   id_string,iverb,irestart,ierr)
+  &   id_string,precon_string,iverb,irestart,ierr)
       import :: lkl_int_cdp_k, libkrylov_problem_c_cmplx_dp, lkl_cmplx_dp_k
       class(libkrylov_problem_c_cmplx_dp) :: data
       integer(lkl_int_cdp_k), intent(inout) :: nbasis
@@ -390,6 +392,7 @@ module libkrylovinterface_cmplx_dp
       integer(lkl_int_cdp_k), intent(inout) :: maxiter
       logical, intent(inout) :: unique_rhs_omega
       character(len=22), intent(inout) :: id_string
+      character(len=32), intent(inout) :: precon_string
       integer(lkl_int_cdp_k), intent(inout) :: iverb
       integer(lkl_int_cdp_k), intent(inout) :: irestart
       integer(lkl_int_cdp_k), intent(inout) :: ierr
@@ -666,6 +669,62 @@ contains
 !--------------------------------------------------------------------
   end subroutine lkl_start_elec_gas_cdp
 !--------------------------------------------------------------------
+
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+  subroutine lkl_start_ext_in_cdp(data,n1,n2,approx_spectra,&
+   &   nstart,ierr)
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Description:
+!--------------------------------------------------------------------
+!! subroutine to determine the number of initial guess vectors
+!! by external data input
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Modules and Global Variables
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+!
+    implicit none
+!
+!--------------------------------------------------------------------
+! External data (IDEALLY EMPTY)
+!--------------------------------------------------------------------
+    class(lkl_s_ext_in_cdp) :: data
+!--------------------------------------------------------------------
+! Input Parameters
+!--------------------------------------------------------------------
+!!   nbasis
+    integer(lkl_int_cdp_k), intent(in) :: n1
+!!   nroots
+    integer(lkl_int_cdp_k), intent(in) :: n2
+!!    approximate spectra
+    real(lkl_cmplx_dp_k), intent(in) :: approx_spectra(n1)
+!--------------------------------------------------------------------
+! Output Parameters
+!--------------------------------------------------------------------
+!! nstart
+    integer(lkl_int_cdp_k), intent(inout) :: nstart
+!--------------------------------------------------------------------
+! Error Parameter
+!--------------------------------------------------------------------
+    integer(lkl_int_cdp_k), intent(inout) :: ierr
+!--------------------------------------------------------------------
+!  Local Variables
+!--------------------------------------------------------------------
+!! Blank
+!--------------------------------------------------------------------
+
+    nstart = data%nstart
+
+!--------------------------------------------------------------------
+  end subroutine lkl_start_ext_in_cdp
+!--------------------------------------------------------------------
+
 
 !--------------------------------------------------------------------
 ! Example guess functions
