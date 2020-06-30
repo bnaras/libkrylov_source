@@ -23,7 +23,7 @@ mv real_sp_npc_driver1a.out real_sp_npc_driver1a.out.old 2>/dev/null
 echo 'solve reference problem with no preconditioner' >> ../testing.summary
 echo 'test output in' >> ../testing.summary
 echo 'test/real_sp_testing.results/ref_1a/real_sp_npc_driver1a.out' >> ../testing.summary
-echo 'none' | ../../../src/real_sp_test/driver1a_real_sp > real_sp_npc_driver1a.out
+../../../src/real_sp_test/driver1a_real_sp -precon none > real_sp_npc_driver1a.out
 mv real_sp_1a_vals.json real_sp_1a_npc_vals.json
 mv real_sp_1a_vecs.json real_sp_1a_npc_vecs.json
 grep 'Converged' real_sp_npc_driver1a.out >> ../testing.summary
@@ -36,7 +36,7 @@ mv real_sp_apc_driver1a.out real_sp_apc_driver1a.out.old 2>/dev/null
 echo 'solve reference problem with approximate spectra preconditioner' >> ../testing.summary
 echo 'test output in' >> ../testing.summary
 echo 'test/real_sp_testing.results/ref_1a/real_sp_apc_driver1a.out' >> ../testing.summary
-echo 'approx_spectra' | ../../../src/real_sp_test/driver1a_real_sp > real_sp_apc_driver1a.out
+../../../src/real_sp_test/driver1a_real_sp -precon approx_spectra > real_sp_apc_driver1a.out
 mv real_sp_1a_vals.json real_sp_1a_apc_vals.json
 mv real_sp_1a_vecs.json real_sp_1a_apc_vecs.json
 grep 'Converged' real_sp_apc_driver1a.out >> ../testing.summary
@@ -49,7 +49,7 @@ mv real_sp_dpc_driver1a.out real_sp_dpc_driver1a.out.old 2>/dev/null
 echo 'solve reference problem with davidson preconditioner' >> ../testing.summary
 echo 'test output in' >> ../testing.summary
 echo 'test/real_sp_testing.results/ref_1a/real_sp_dpc_driver1a.out' >> ../testing.summary
-echo 'davidson' | ../../../src/real_sp_test/driver1a_real_sp > real_sp_dpc_driver1a.out
+../../../src/real_sp_test/driver1a_real_sp -precon davidson > real_sp_dpc_driver1a.out
 mv real_sp_1a_vals.json real_sp_1a_dpc_vals.json
 mv real_sp_1a_vecs.json real_sp_1a_dpc_vecs.json
 grep 'Converged' real_sp_dpc_driver1a.out >> ../testing.summary
@@ -62,7 +62,7 @@ mv real_sp_spc_driver1a.out real_sp_spc_driver1a.out.old 2>/dev/null
 echo 'solve reference problem with Jacobi-Davidson preconditioner' >> ../testing.summary
 echo 'test output in' >> ../testing.summary
 echo 'test/real_sp_testing.results/ref_1a/real_sp_spc_driver1a.out' >> ../testing.summary
-echo 'sleijpen' | ../../../src/real_sp_test/driver1a_real_sp > real_sp_spc_driver1a.out
+../../../src/real_sp_test/driver1a_real_sp -precon sleijpen > real_sp_spc_driver1a.out
 mv real_sp_1a_vals.json real_sp_1a_spc_vals.json
 mv real_sp_1a_vecs.json real_sp_1a_spc_vecs.json
 grep 'Converged' real_sp_spc_driver1a.out >> ../testing.summary
