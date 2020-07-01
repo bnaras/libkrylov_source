@@ -270,11 +270,12 @@ contains
 
 !! choice based on problem description
 !! threshold
-    if (floattype_string.eq.'dp') then
-      threshold = real(8,kind=kind_float)
-    else if (floattype_string.eq.'sp') then
-      threshold = real(4,kind=kind_float)
-    end if
+    threshold = (-logeps)/2
+!    if (floattype_string.eq.'dp') then
+!      threshold = real(8,kind=kind_float)
+!    else if (floattype_string.eq.'sp') then
+!      threshold = real(4,kind=kind_float)
+!    end if
 
 !! reasonable number of iterations before things go bad
     maxiter = 25
@@ -360,11 +361,12 @@ contains
 
 !! choice based on problem description
 !! threshold
-    if (floattype_string.eq.'dp') then
-      threshold = real(8,kind=kind_float)
-    else if (floattype_string.eq.'sp') then
-      threshold = real(4,kind=kind_float)
-    end if
+    threshold = (-logeps)/2
+!    if (floattype_string.eq.'dp') then
+!      threshold = real(8,kind=kind_float)
+!    else if (floattype_string.eq.'sp') then
+!      threshold = real(4,kind=kind_float)
+!    end if
 
 !! reasonable number of iterations before things go bad
     maxiter = 25
@@ -467,11 +469,12 @@ contains
 
 !! choice based on problem description
 !! threshold
-    if (floattype_string.eq.'dp') then
-      threshold = real(8,kind=kind_float)
-    else if (floattype_string.eq.'sp') then
-      threshold = real(4,kind=kind_float)
-    end if
+    threshold = (-logeps)/2
+!    if (floattype_string.eq.'dp') then
+!      threshold = real(8,kind=kind_float)
+!    else if (floattype_string.eq.'sp') then
+!      threshold = real(4,kind=kind_float)
+!    end if
 
 !! reasonable number of iterations before things go bad
     maxiter = 25
