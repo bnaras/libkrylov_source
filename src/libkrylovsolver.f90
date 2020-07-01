@@ -2915,6 +2915,7 @@ contains
         ierr = -50
         return ! abort solver, return to call
       end if
+!! ORTHO VECS NOT NEEDED AS SOLUTIONS SHOULD BE ORTHOGONAL
       if (k4.eq.nstart) then ! no new initial vectors needed
         if (iverb.ge.2) then
           print *, ' with no new vectors needed!'
@@ -4726,6 +4727,21 @@ contains
         end if
         ierr = -50
         return ! abort solver, return to call
+      end if
+!!! ORTHO START VECS HERE
+!!! SVD of saved vectors to improve condition number
+      nresiduals = k4
+      call krylov_orthogonalize(nbasis,nresiduals,&
+  &       basis_vectors(1:nbasis,1:nresiduals),&
+  &       diag_overlap(1:nresiduals),k4,iverb,ierr)
+      if (ierr.ne.0) then
+        if (iverb.ge.0) then
+          print *, 'orthogonalizing basis vectors failed'
+          print *, 'error variable = ',ierr 
+          print *, 'suggestion: delete v.save'
+        end if
+        ierr = -50
+        return
       end if
       if (k4.eq.nstart) then ! no new initial vectors needed
         if (iverb.ge.2) then
@@ -7102,6 +7118,20 @@ contains
         end if
         ierr = -50
         return ! abort solver, return to call
+      end if
+!!! SVD of saved vectors to improve condition number
+      nresiduals = k4
+      call krylov_orthogonalize(nbasis,nresiduals,&
+  &       basis_vectors(1:nbasis,1:nresiduals),&
+  &       diag_overlap(1:nresiduals),k4,iverb,ierr)
+      if (ierr.ne.0) then
+        if (iverb.ge.0) then
+          print *, 'orthogonalizing basis vectors failed'
+          print *, 'error variable = ',ierr 
+          print *, 'suggestion: delete v.save'
+        end if
+        ierr = -50
+        return
       end if
       if (k4.eq.nstart) then ! no new initial vectors needed
         if (iverb.ge.2) then
