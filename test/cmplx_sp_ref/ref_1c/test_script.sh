@@ -28,7 +28,7 @@ mv cmplx_sp_npc_driver1c.out cmplx_sp_npc_driver1c.out.old 2>/dev/null
 echo 'solve reference problem with no preconditioner' >> ../testing.summary
 echo 'test output in' >> ../testing.summary
 echo 'test/cmplx_sp_testing.results/ref_1c/cmplx_sp_npc_driver1c.out' >> ../testing.summary
-echo 'none' | ../../../src/cmplx_sp_test/driver1c_cmplx_sp > cmplx_sp_npc_driver1c.out
+../../../src/cmplx_sp_test/driver1c_cmplx_sp -precon none > cmplx_sp_npc_driver1c.out
 mv cmplx_sp_1c_lagr.json cmplx_sp_1c_npc_lagr.json
 mv cmplx_sp_1c_vecs.json cmplx_sp_1c_npc_vecs.json
 mv cmplx_sp_1c_indx.json cmplx_sp_1c_npc_indx.json
@@ -44,7 +44,7 @@ mv cmplx_sp_apc_driver1c.out cmplx_sp_apc_driver1c.out.old 2>/dev/null
 echo 'solve reference problem with approximate spectra preconditioner' >> ../testing.summary
 echo 'test output in' >> ../testing.summary
 echo 'test/cmplx_sp_testing.results/ref_1c/cmplx_sp_apc_driver1c.out' >> ../testing.summary
-echo 'approx_spectra' | ../../../src/cmplx_sp_test/driver1c_cmplx_sp > cmplx_sp_apc_driver1c.out
+../../../src/cmplx_sp_test/driver1c_cmplx_sp -precon approx_spectra > cmplx_sp_apc_driver1c.out
 mv cmplx_sp_1c_lagr.json cmplx_sp_1c_apc_lagr.json
 mv cmplx_sp_1c_vecs.json cmplx_sp_1c_apc_vecs.json
 mv cmplx_sp_1c_indx.json cmplx_sp_1c_apc_indx.json
@@ -60,7 +60,7 @@ mv cmplx_sp_dpc_driver1c.out cmplx_sp_dpc_driver1c.out.old 2>/dev/null
 echo 'solve reference problem with davidson preconditioner' >> ../testing.summary
 echo 'test output in' >> ../testing.summary
 echo 'test/cmplx_sp_testing.results/ref_1c/cmplx_sp_dpc_driver1c.out' >> ../testing.summary
-echo 'davidson' | ../../../src/cmplx_sp_test/driver1c_cmplx_sp > cmplx_sp_dpc_driver1c.out
+../../../src/cmplx_sp_test/driver1c_cmplx_sp -precon davidson > cmplx_sp_dpc_driver1c.out
 mv cmplx_sp_1c_lagr.json cmplx_sp_1c_dpc_lagr.json
 mv cmplx_sp_1c_vecs.json cmplx_sp_1c_dpc_vecs.json
 mv cmplx_sp_1c_indx.json cmplx_sp_1c_dpc_indx.json
@@ -76,7 +76,7 @@ mv cmplx_sp_spc_driver1c.out cmplx_sp_spc_driver1c.out.old 2>/dev/null
 echo 'solve reference problem with Jacobi-Davidson preconditioner' >> ../testing.summary
 echo 'test output in' >> ../testing.summary
 echo 'test/cmplx_sp_testing.results/ref_1c/cmplx_sp_spc_driver1c.out' >> ../testing.summary
-echo 'sleijpen' | ../../../src/cmplx_sp_test/driver1c_cmplx_sp > cmplx_sp_spc_driver1c.out
+../../../src/cmplx_sp_test/driver1c_cmplx_sp -precon sleijpen > cmplx_sp_spc_driver1c.out
 mv cmplx_sp_1c_lagr.json cmplx_sp_1c_spc_lagr.json
 mv cmplx_sp_1c_vecs.json cmplx_sp_1c_spc_vecs.json
 mv cmplx_sp_1c_indx.json cmplx_sp_1c_spc_indx.json
