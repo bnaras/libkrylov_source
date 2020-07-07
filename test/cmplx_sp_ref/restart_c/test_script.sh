@@ -28,7 +28,7 @@ echo 'restart levels' >> ../testing.summary
 echo 'test output in' >> ../testing.summary
 echo 'test/cmplx_sp_testing.results/restart_c/cmplx_sp_c_restart_k.out' >> ../testing.summary
 touch kill.libkrylov
-../../../src/cmplx_sp_test/test_restart_c_cmplx_sp > cmplx_sp_c_restart_k.out
+../../../src/cmplx_sp_test/driver1c_cmplx_sp -irestart 4 > cmplx_sp_c_restart_k.out
 echo '' >> ../testing.summary
 rm kill.libkrylov
 mv cmplx_sp_c_restart_0.out cmplx_sp_c_restart_0.out.old 2>/dev/null

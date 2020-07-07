@@ -78,7 +78,7 @@ echo 'test output in' >> ../testing.summary
 echo 'test/cmplx_sp_testing.results/restart_a/cmplx_sp_a_restart_k.out' >> ../testing.summary
 touch kill.libkrylov
 rm *.save
-../../../src/cmplx_sp_test/test_restart_a_cmplx_sp -irestart 4 > cmplx_sp_a_restart_k.out
+../../../src/cmplx_sp_test/driver1a_cmplx_sp -irestart 4 > cmplx_sp_a_restart_k.out
 echo '' >> ../testing.summary
 rm kill.libkrylov
 mv cmplx_sp_a_restart_3.out cmplx_sp_a_restart_3.out.old 2>/dev/null

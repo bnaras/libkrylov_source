@@ -23,7 +23,7 @@ mv cmplx_dp_npc_driver1a.out cmplx_dp_npc_driver1a.out.old 2>/dev/null
 echo 'solve reference problem with no preconditioner' >> ../testing.summary
 echo 'test output in' >> ../testing.summary
 echo 'test/cmplx_dp_testing.results/ref_1a/cmplx_dp_npc_driver1a.out' >> ../testing.summary
-echo 'none' | ../../../src/cmplx_dp_test/driver1a_cmplx_dp > cmplx_dp_npc_driver1a.out
+../../../src/cmplx_dp_test/driver1a_cmplx_dp -precon none > cmplx_dp_npc_driver1a.out
 mv cmplx_dp_1a_vals.json cmplx_dp_1a_npc_vals.json
 mv cmplx_dp_1a_vecs.json cmplx_dp_1a_npc_vecs.json
 grep 'Converged' cmplx_dp_npc_driver1a.out >> ../testing.summary
@@ -36,7 +36,7 @@ mv cmplx_dp_apc_driver1a.out cmplx_dp_apc_driver1a.out.old 2>/dev/null
 echo 'solve reference problem with approximate spectra preconditioner' >> ../testing.summary
 echo 'test output in' >> ../testing.summary
 echo 'test/cmplx_dp_testing.results/ref_1a/cmplx_dp_apc_driver1a.out' >> ../testing.summary
-echo 'approx_spectra' | ../../../src/cmplx_dp_test/driver1a_cmplx_dp > cmplx_dp_apc_driver1a.out
+../../../src/cmplx_dp_test/driver1a_cmplx_dp -precon approx_spectra > cmplx_dp_apc_driver1a.out
 mv cmplx_dp_1a_vals.json cmplx_dp_1a_apc_vals.json
 mv cmplx_dp_1a_vecs.json cmplx_dp_1a_apc_vecs.json
 grep 'Converged' cmplx_dp_apc_driver1a.out >> ../testing.summary
@@ -49,7 +49,7 @@ mv cmplx_dp_dpc_driver1a.out cmplx_dp_dpc_driver1a.out.old 2>/dev/null
 echo 'solve reference problem with davidson preconditioner' >> ../testing.summary
 echo 'test output in' >> ../testing.summary
 echo 'test/cmplx_dp_testing.results/ref_1a/cmplx_dp_dpc_driver1a.out' >> ../testing.summary
-echo 'davidson' | ../../../src/cmplx_dp_test/driver1a_cmplx_dp > cmplx_dp_dpc_driver1a.out
+../../../src/cmplx_dp_test/driver1a_cmplx_dp -precon davidson > cmplx_dp_dpc_driver1a.out
 mv cmplx_dp_1a_vals.json cmplx_dp_1a_dpc_vals.json
 mv cmplx_dp_1a_vecs.json cmplx_dp_1a_dpc_vecs.json
 grep 'Converged' cmplx_dp_dpc_driver1a.out >> ../testing.summary
@@ -62,7 +62,7 @@ mv cmplx_dp_spc_driver1a.out cmplx_dp_spc_driver1a.out.old 2>/dev/null
 echo 'solve reference problem with Jacobi-Davidson preconditioner' >> ../testing.summary
 echo 'test output in' >> ../testing.summary
 echo 'test/cmplx_dp_testing.results/ref_1a/cmplx_dp_spc_driver1a.out' >> ../testing.summary
-echo 'sleijpen' | ../../../src/cmplx_dp_test/driver1a_cmplx_dp > cmplx_dp_spc_driver1a.out
+../../../src/cmplx_dp_test/driver1a_cmplx_dp -precon sleijpen> cmplx_dp_spc_driver1a.out
 mv cmplx_dp_1a_vals.json cmplx_dp_1a_spc_vals.json
 mv cmplx_dp_1a_vecs.json cmplx_dp_1a_spc_vecs.json
 grep 'Converged' cmplx_dp_spc_driver1a.out >> ../testing.summary
