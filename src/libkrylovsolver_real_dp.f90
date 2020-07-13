@@ -71,7 +71,7 @@ contains
     class(libkrylov_mvp_real_dp) ::       krylov_mvp
     class(libkrylov_output_a_real_dp) ::  krylov_output_a
 !! variable for error variable
-    integer(kind_integer), intent(inout) :: ierr 
+    integer(lkl_int_rdp_k), intent(inout) :: ierr 
 !--------------------------------------------------------------------
 
     call problem_a_solver(krylov_approx,krylov_start,&
