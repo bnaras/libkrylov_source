@@ -283,7 +283,7 @@ contains
 !! set id_string based on basetypes
     id_string = data%problem_string
 
-!! set id_string based on basetypes
+!! set precon_string based on basetypes
     precon_string = data%precon_string
 
 !! set iverb to most verbose operation

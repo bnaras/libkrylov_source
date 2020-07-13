@@ -1039,8 +1039,9 @@ contains
 !--------------------------------------------------------------------
 !< Description:
 !< wrapper for
-!< BLAS solve for Q of QR decomposition
+!< BLAS solve for SV decomposition
 !< calculates optimized lwork
+!< assumes n is smaller -TODO fix
 !--------------------------------------------------------------------
 !
 !--------------------------------------------------------------------
@@ -1095,15 +1096,18 @@ contains
 !!  integer variable to store optimal WORK size
     integer(kind_integer) :: lwork_val = 1
 !!  array for optimal lwork (work in first call of LAPACK)
-    real(kind_float) :: lworker
+    complex(kind_float) :: lworker
 !!  array for lwork
-    real(kind_float), allocatable :: lwork(:)
+    complex(kind_float), allocatable :: lwork(:)
+    real(kind_float), allocatable :: rwork(:)
 !--------------------------------------------------------------------
+
+    allocate(rwork(5*n))
 
 !! first call to LAPACK for optimal lwork
     call cgesvd(jobu,jobvt,m,n,obj1(:,:)%element,ld1,s(:),&
   &     obj2(:,:)%element,ld2,obj3(:,:)%element,ld3,&
-  &     lworker,-1,ierr)
+  &     lworker,-1,rwork,ierr)
 
     if (ierr.ne.0) return
 
@@ -1113,13 +1117,16 @@ contains
 
     call cgesvd(jobu,jobvt,m,n,obj1(:,:)%element,ld1,s(:),&
   &     obj2(:,:)%element,ld2,obj3(:,:)%element,ld3,&
-  &     lwork,lwork_val,ierr) 
+  &     lwork,lwork_val,rwork,ierr) 
 
     deallocate(lwork)
+    deallocate(rwork)
 
 !--------------------------------------------------------------------
   end subroutine ggesvd
-!
+!--------------------------------------------------------------------
+
+
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
 end module blastypes

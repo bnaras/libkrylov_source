@@ -47,10 +47,10 @@ module libkrylovinterface_real_sp
 !! interacts with a real array with two dimensions
   type, abstract :: libkrylov_matrix_real_sp
   contains
-    procedure(libkrylov_matrix_interface), deferred :: matrix_fill
+    procedure(libkrylov_matrix_intrfc_rsp), deferred :: matrix_fill
   end type libkrylov_matrix_real_sp
   abstract interface
-    subroutine libkrylov_matrix_interface(data,n1,n2,obj,ierr)
+    subroutine libkrylov_matrix_intrfc_rsp(data,n1,n2,obj,ierr)
       import :: lkl_real_sp_k, lkl_int_rsp_k,libkrylov_matrix_real_sp
       class(libkrylov_matrix_real_sp) :: data
 !!    rows of obj
@@ -60,17 +60,17 @@ module libkrylovinterface_real_sp
 !!    obj to be interacted with
       real(lkl_real_sp_k), intent(inout) :: obj(n1,n2)
       integer(lkl_int_rsp_k), intent(inout) :: ierr
-    end subroutine libkrylov_matrix_interface
+    end subroutine libkrylov_matrix_intrfc_rsp
   end interface
 
 !! abstract type for a function that
 !! interacts with a real vector with one dimensions
   type, abstract :: libkrylov_vector_real_sp
   contains
-    procedure(libkrylov_vector_interface), deferred :: vector_fill
+    procedure(libkrylov_vector_intrfc_rsp), deferred :: vector_fill
   end type libkrylov_vector_real_sp
   abstract interface
-    subroutine libkrylov_vector_interface(data,n1,obj,ierr)
+    subroutine libkrylov_vector_intrfc_rsp(data,n1,obj,ierr)
       import :: lkl_real_sp_k, lkl_int_rsp_k,libkrylov_vector_real_sp
       class(libkrylov_vector_real_sp) :: data
 !!    rows of obj
@@ -78,7 +78,7 @@ module libkrylovinterface_real_sp
 !!    obj to be interacted with
       real(lkl_real_sp_k), intent(inout) :: obj(n1)
       integer(lkl_int_rsp_k), intent(inout) :: ierr
-    end subroutine libkrylov_vector_interface
+    end subroutine libkrylov_vector_intrfc_rsp
   end interface
 
 !--------------------------------------------------------------------
@@ -92,10 +92,10 @@ module libkrylovinterface_real_sp
 !! using minstart, maxstart and an approximate spectra as input
   type, abstract :: libkrylov_start_real_sp
   contains
-    procedure(libkrylov_start_interface), deferred :: lkl_start
+    procedure(libkrylov_start_intrfc_rsp), deferred :: lkl_start
   end type libkrylov_start_real_sp
   abstract interface
-    subroutine libkrylov_start_interface(data,n1,n2,approx_spectra,&
+    subroutine libkrylov_start_intrfc_rsp(data,n1,n2,approx_spectra,&
   &   nstart,ierr)
       import :: lkl_int_rsp_k, lkl_real_sp_k , libkrylov_start_real_sp
       class(libkrylov_start_real_sp) :: data
@@ -109,7 +109,7 @@ module libkrylovinterface_real_sp
       integer(lkl_int_rsp_k), intent(inout) :: nstart
 !!    error variable
       integer(lkl_int_rsp_k), intent(inout) :: ierr
-    end subroutine libkrylov_start_interface
+    end subroutine libkrylov_start_intrfc_rsp
   end interface
 
 !! abstract type for krylov_guess function
@@ -120,10 +120,10 @@ module libkrylovinterface_real_sp
 !! entire overlap
   type, abstract :: libkrylov_guess_real_sp
   contains
-    procedure(libkrylov_guess_interface), deferred :: lkl_guess
+    procedure(libkrylov_guess_intrfc_rsp), deferred :: lkl_guess
   end type libkrylov_guess_real_sp
   abstract interface
-    subroutine libkrylov_guess_interface(data,n1,n2,n3,approx_spectra,&
+    subroutine libkrylov_guess_intrfc_rsp(data,n1,n2,n3,approx_spectra,&
   &   basis_vectors,ierr)
       import :: lkl_int_rsp_k, lkl_real_sp_k , libkrylov_guess_real_sp
       class(libkrylov_guess_real_sp) :: data
@@ -139,7 +139,7 @@ module libkrylovinterface_real_sp
       real(lkl_real_sp_k), intent(inout) :: basis_vectors(n1,n2)
 !!    error variable
       integer(lkl_int_rsp_k), intent(inout) :: ierr
-    end subroutine libkrylov_guess_interface
+    end subroutine libkrylov_guess_intrfc_rsp
   end interface
 
 

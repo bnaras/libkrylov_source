@@ -70,9 +70,7 @@ echo '--------------------------------------------------'
 echo 'Build all libraries?'
 echo ' Please enter >yes< or >no<'
 echo ' (Default: >no<)'
-echo no
-answer2="no"
-#read answer2
+read answer2
 for (( ; ; ))
 do
 # set default to making with all libraries to be no
@@ -82,18 +80,7 @@ do
   fi
   if [[ $answer2 == yes ]];
   then
-# build all the libraries
-# note that instructions on linking libkrylov are printed 
-# herein
-    ./libkrylov_make_all.sh
-# leave src directory and go to test directory
-    cd ../test
-# clean old tests
-    ./remove_test.sh
-# test all libraries
-    ./test_script_all.sh
-# return to libkrylov directory
-    cd ..
+# goes past all $answer2 == no loop to THIS PLACE
     break
   fi
   if [[ $answer2 == no ]];
@@ -104,6 +91,8 @@ do
   echo 'please enter an available option'
   read answer2
 done
+# write to config file, overwriting past
+echo $answer2 > userlibraryconfig
 if [[ $answer2 == no ]];
 then
 # continuing for HERE
@@ -131,7 +120,7 @@ then
     read precision
   done
 # write to userlibraryconfig file to be used later
-  echo $precision > userlibraryconfig
+  echo $precision >> userlibraryconfig
   echo 'Select element type of desired library'
   echo ' Please enter >real< or >complex<'
   echo ' (Default: >real<)'
@@ -156,17 +145,18 @@ then
   done
 # write to file to be used later
   echo $element_type >> userlibraryconfig
-# use userinput to make a library
-  ./libkrylov_make.sh
-# leave src directory and go to test directory 
-  cd ../test/
-# clean old tests
-  ./remove_test.sh
-# run specified test on library made
-  ./test_script.sh
-# return to libkrylov directory
-  cd ..
 fi
+# THIS PLACE
+# use userinput to make a library
+./libkrylov_make.sh
+# leave src directory and go to test directory 
+cd ../test/
+# clean old tests
+./remove_test.sh
+# run specified test on library made
+./test_script.sh
+# return to libkrylov directory
+cd ..
 echo 'Congratulations on installing libkrylov!'
 echo 'The printout above is a summary of testing results,' 
 echo 'please see '

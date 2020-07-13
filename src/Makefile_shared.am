@@ -49,31 +49,25 @@ problem1_sym_real_sp_LDADD = libkrylov_real_sp.la
 # driver1a - program for calling solver on a problem on file
 real_sp_driver1adir = $(PWD)/real_sp_test
 real_sp_driver1a_PROGRAMS = driver1a_real_sp
-driver1a_real_sp_SOURCES = driver1types.f90\
+driver1a_real_sp_SOURCES = driver1types_real_sp.f90\
 driver_1a.f90
 driver1a_real_sp_LDADD = libkrylov_real_sp.la
 # driver1b - program for calling b_solver on a problem on file
 real_sp_driver1bdir = $(PWD)/real_sp_test
 real_sp_driver1b_PROGRAMS = driver1b_real_sp
-driver1b_real_sp_SOURCES = driver1types.f90\
+driver1b_real_sp_SOURCES = driver1types_real_sp.f90\
 driver_1b.f90
 driver1b_real_sp_LDADD = libkrylov_real_sp.la
 # driver1c - program for calling c_solver on a problem on file
 real_sp_driver1cdir = $(PWD)/real_sp_test
 real_sp_driver1c_PROGRAMS = driver1c_real_sp
-driver1c_real_sp_SOURCES = driver1types.f90\
+driver1c_real_sp_SOURCES = driver1types_real_sp.f90\
 driver_1c.f90
 driver1c_real_sp_LDADD = libkrylov_real_sp.la
 # test restart a - program for calling a_solver on a problem on file
 # real_sp_test_restart_adir = $(PWD)/real_sp_test
 # real_sp_test_restart_a_PROGRAMS = test_restart_a_real_sp
 # test_restart_a_real_sp_SOURCES = real_sp_srcs/test_restart_a_real_sp.f90\
-# real_sp_srcs/driver1types_real_sp.f90
-# test_restart_a_real_sp_LDADD = libkrylov_real_sp.la
-# test restart b - program for calling b_solver on a problem on file
-# real_sp_test_restart_bdir = $(PWD)/real_sp_test
-# real_sp_test_restart_b_PROGRAMS = test_restart_b_real_sp
-# test_restart_b_real_sp_SOURCES = real_sp_srcs/test_restart_b_real_sp.f90\
 # real_sp_srcs/driver1types_real_sp.f90
 # test_restart_b_real_sp_LDADD = libkrylov_real_sp.la
 # test restart c - program for calling c_solver on a problem on file
@@ -130,19 +124,19 @@ problem1_sym_cmplx_sp_LDADD = libkrylov_cmplx_sp.la
 # driver1a - program for calling solver on a problem on file
 cmplx_sp_driver1adir = $(PWD)/cmplx_sp_test
 cmplx_sp_driver1a_PROGRAMS = driver1a_cmplx_sp
-driver1a_cmplx_sp_SOURCES = driver1types.f90\
+driver1a_cmplx_sp_SOURCES = driver1types_cmplx_sp.f90\
 driver_1a.f90
 driver1a_cmplx_sp_LDADD = libkrylov_cmplx_sp.la
 # driver1b - program for calling b_solver on a problem on file
 cmplx_sp_driver1bdir = $(PWD)/cmplx_sp_test
 cmplx_sp_driver1b_PROGRAMS = driver1b_cmplx_sp
-driver1b_cmplx_sp_SOURCES = driver1types.f90\
+driver1b_cmplx_sp_SOURCES = driver1types_cmplx_sp.f90\
 driver_1b.f90
 driver1b_cmplx_sp_LDADD = libkrylov_cmplx_sp.la
 # driver1c - program for calling c_solver on a problem on file
 cmplx_sp_driver1cdir = $(PWD)/cmplx_sp_test
 cmplx_sp_driver1c_PROGRAMS = driver1c_cmplx_sp
-driver1c_cmplx_sp_SOURCES = driver1types.f90\
+driver1c_cmplx_sp_SOURCES = driver1types_cmplx_sp.f90\
 driver_1c.f90
 driver1c_cmplx_sp_LDADD = libkrylov_cmplx_sp.la
 # test restart a - program for calling a_solver on a problem on file
@@ -211,19 +205,19 @@ problem1_sym_real_dp_LDADD = libkrylov_real_dp.la
 # driver1a - program for calling solver on a problem on file
 real_dp_driver1adir = $(PWD)/real_dp_test
 real_dp_driver1a_PROGRAMS = driver1a_real_dp
-driver1a_real_dp_SOURCES = driver1types.f90\
+driver1a_real_dp_SOURCES = driver1types_real_dp.f90\
 driver_1a.f90
 driver1a_real_dp_LDADD = libkrylov_real_dp.la
 # driver1b - program for calling b_solver on a problem on file
 real_dp_driver1bdir = $(PWD)/real_dp_test
 real_dp_driver1b_PROGRAMS = driver1b_real_dp
-driver1b_real_dp_SOURCES = driver1types.f90\
+driver1b_real_dp_SOURCES = driver1types_real_dp.f90\
 driver_1b.f90
 driver1b_real_dp_LDADD = libkrylov_real_dp.la
 # driver1c - program for calling c_solver on a problem on file
 real_dp_driver1cdir = $(PWD)/real_dp_test
 real_dp_driver1c_PROGRAMS = driver1c_real_dp
-driver1c_real_dp_SOURCES = driver1types.f90\
+driver1c_real_dp_SOURCES = driver1types_real_dp.f90\
 driver_1c.f90
 driver1c_real_dp_LDADD = libkrylov_real_dp.la
 # test restart a - program for calling a_solver on a problem on file
@@ -293,19 +287,19 @@ problem1_sym_cmplx_dp_LDADD = libkrylov_cmplx_dp.la
 # driver1a - program for calling solver on a problem on file
 cmplx_dp_driver1adir = $(PWD)/cmplx_dp_test
 cmplx_dp_driver1a_PROGRAMS = driver1a_cmplx_dp
-driver1a_cmplx_dp_SOURCES = driver1types.f90\
+driver1a_cmplx_dp_SOURCES = driver1types_cmplx_dp.f90\
 driver_1a.f90
 driver1a_cmplx_dp_LDADD = libkrylov_cmplx_dp.la
 # driver1b - program for calling b_solver on a problem on file
 cmplx_dp_driver1bdir = $(PWD)/cmplx_dp_test
 cmplx_dp_driver1b_PROGRAMS = driver1b_cmplx_dp
-driver1b_cmplx_dp_SOURCES = driver1types.f90\
+driver1b_cmplx_dp_SOURCES = driver1types_cmplx_dp.f90\
 driver_1b.f90
 driver1b_cmplx_dp_LDADD = libkrylov_cmplx_dp.la
 # driver1c - program for calling c_solver on a problem on file
 cmplx_dp_driver1cdir = $(PWD)/cmplx_dp_test
 cmplx_dp_driver1c_PROGRAMS = driver1c_cmplx_dp
-driver1c_cmplx_dp_SOURCES = driver1types.f90\
+driver1c_cmplx_dp_SOURCES = driver1types_cmplx_dp.f90\
 driver_1c.f90
 driver1c_cmplx_dp_LDADD = libkrylov_cmplx_dp.la
 # test restart a - program for calling a_solver on a problem on file
