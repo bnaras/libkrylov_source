@@ -47,10 +47,10 @@ module libkrylovinterface_cmplx_sp
 !! interacts with a real array with two dimensions
   type, abstract :: libkrylov_matrix_cmplx_sp
   contains
-    procedure(libkrylov_matrix_interface), deferred :: matrix_fill
+    procedure(libkrylov_matrix_intrfc_csp), deferred :: matrix_fill
   end type libkrylov_matrix_cmplx_sp
   abstract interface
-    subroutine libkrylov_matrix_interface(data,n1,n2,obj,ierr)
+    subroutine libkrylov_matrix_intrfc_csp(data,n1,n2,obj,ierr)
       import :: lkl_cmplx_sp_k, lkl_int_csp_k,libkrylov_matrix_cmplx_sp
       class(libkrylov_matrix_cmplx_sp) :: data
 !!    rows of obj
@@ -60,17 +60,17 @@ module libkrylovinterface_cmplx_sp
 !!    obj to be interacted with
       complex(lkl_cmplx_sp_k), intent(inout) :: obj(n1,n2)
       integer(lkl_int_csp_k), intent(inout) :: ierr
-    end subroutine libkrylov_matrix_interface
+    end subroutine libkrylov_matrix_intrfc_csp
   end interface
 
 !! abstract type for a function that
 !! interacts with a real vector with one dimensions
   type, abstract :: libkrylov_vector_cmplx_sp
   contains
-    procedure(libkrylov_vector_interface), deferred :: vector_fill
+    procedure(libkrylov_vector_intrfc_csp), deferred :: vector_fill
   end type libkrylov_vector_cmplx_sp
   abstract interface
-    subroutine libkrylov_vector_interface(data,n1,obj,ierr)
+    subroutine libkrylov_vector_intrfc_csp(data,n1,obj,ierr)
       import :: lkl_cmplx_sp_k, lkl_int_csp_k,libkrylov_vector_cmplx_sp
       class(libkrylov_vector_cmplx_sp) :: data
 !!    rows of obj
@@ -78,7 +78,7 @@ module libkrylovinterface_cmplx_sp
 !!    obj to be interacted with
       real(lkl_cmplx_sp_k), intent(inout) :: obj(n1)
       integer(lkl_int_csp_k), intent(inout) :: ierr
-    end subroutine libkrylov_vector_interface
+    end subroutine libkrylov_vector_intrfc_csp
   end interface
 
 !--------------------------------------------------------------------
@@ -92,10 +92,10 @@ module libkrylovinterface_cmplx_sp
 !! using minstart, maxstart and an approximate spectra as input
   type, abstract :: libkrylov_start_cmplx_sp
   contains
-    procedure(libkrylov_start_interface), deferred :: lkl_start
+    procedure(libkrylov_start_intrfc_csp), deferred :: lkl_start
   end type libkrylov_start_cmplx_sp
   abstract interface
-    subroutine libkrylov_start_interface(data,n1,n2,approx_spectra,&
+    subroutine libkrylov_start_intrfc_csp(data,n1,n2,approx_spectra,&
   &   nstart,ierr)
       import :: lkl_int_csp_k, lkl_cmplx_sp_k , libkrylov_start_cmplx_sp
       class(libkrylov_start_cmplx_sp) :: data
@@ -109,7 +109,7 @@ module libkrylovinterface_cmplx_sp
       integer(lkl_int_csp_k), intent(inout) :: nstart
 !!    error variable
       integer(lkl_int_csp_k), intent(inout) :: ierr
-    end subroutine libkrylov_start_interface
+    end subroutine libkrylov_start_intrfc_csp
   end interface
 
 !! abstract type for krylov_guess function
@@ -120,10 +120,10 @@ module libkrylovinterface_cmplx_sp
 !! entire overlap
   type, abstract :: libkrylov_guess_cmplx_sp
   contains
-    procedure(libkrylov_guess_interface), deferred :: lkl_guess
+    procedure(libkrylov_guess_intrfc_csp), deferred :: lkl_guess
   end type libkrylov_guess_cmplx_sp
   abstract interface
-    subroutine libkrylov_guess_interface(data,n1,n2,n3,approx_spectra,&
+    subroutine libkrylov_guess_intrfc_csp(data,n1,n2,n3,approx_spectra,&
   &   basis_vectors,ierr)
       import :: lkl_int_csp_k, lkl_cmplx_sp_k , libkrylov_guess_cmplx_sp
       class(libkrylov_guess_cmplx_sp) :: data
@@ -139,7 +139,7 @@ module libkrylovinterface_cmplx_sp
       complex(lkl_cmplx_sp_k), intent(inout) :: basis_vectors(n1,n2)
 !!    error variable
       integer(lkl_int_csp_k), intent(inout) :: ierr
-    end subroutine libkrylov_guess_interface
+    end subroutine libkrylov_guess_intrfc_csp
   end interface
 
 
@@ -148,10 +148,10 @@ module libkrylovinterface_cmplx_sp
 !! the products of a problem matrix with a set of basis vectors
   type, abstract :: libkrylov_mvp_cmplx_sp
   contains
-    procedure(libkrylov_mvp_interface), deferred :: lkl_mvp
+    procedure(libkrylov_mvp_intrfc_csp), deferred :: lkl_mvp
   end type libkrylov_mvp_cmplx_sp
   abstract interface
-    subroutine libkrylov_mvp_interface(data,n1,n2,basis_vectors,&
+    subroutine libkrylov_mvp_intrfc_csp(data,n1,n2,basis_vectors,&
   &   mvproduct,ierr)
       import :: lkl_int_csp_k, libkrylov_mvp_cmplx_sp, lkl_cmplx_sp_k
       class(libkrylov_mvp_cmplx_sp) :: data
@@ -165,7 +165,7 @@ module libkrylovinterface_cmplx_sp
       complex(lkl_cmplx_sp_k), intent(inout) :: mvproduct(n1,n2)
 !!    error variable
       integer(lkl_int_csp_k), intent(inout) :: ierr
-    end subroutine libkrylov_mvp_interface
+    end subroutine libkrylov_mvp_intrfc_csp
   end interface
 
 !--------------------------------------------------------------------
@@ -208,10 +208,10 @@ module libkrylovinterface_cmplx_sp
 !! function to determining parameters of the problem to be solved
   type, abstract :: libkrylov_problem_a_cmplx_sp
   contains
-    procedure(libkrylov_problem_a_interface), deferred :: lkl_problem_a
+    procedure(libkrylov_problem_a_intrfc_csp), deferred :: lkl_problem_a
   end type libkrylov_problem_a_cmplx_sp
   abstract interface
-    subroutine libkrylov_problem_a_interface(data,nbasis,nroots,&
+    subroutine libkrylov_problem_a_intrfc_csp(data,nbasis,nroots,&
   &   minstart,maxstart,threshold,maxiter,&
   &   id_string,precon_string,iverb,irestart,ierr)
       import :: lkl_int_csp_k, libkrylov_problem_a_cmplx_sp, lkl_cmplx_sp_k
@@ -227,7 +227,7 @@ module libkrylovinterface_cmplx_sp
       integer(lkl_int_csp_k), intent(inout) :: iverb
       integer(lkl_int_csp_k), intent(inout) :: irestart
       integer(lkl_int_csp_k), intent(inout) :: ierr
-    end subroutine libkrylov_problem_a_interface
+    end subroutine libkrylov_problem_a_intrfc_csp
   end interface
 
 !! abstract type for krylov_output function of problem_a
@@ -236,10 +236,10 @@ module libkrylovinterface_cmplx_sp
 !! wheter printing or passing out of the solver
   type, abstract :: libkrylov_output_a_cmplx_sp
   contains
-    procedure(libkrylov_output_a_interface), deferred :: lkl_output_a
+    procedure(libkrylov_output_a_intrfc_csp), deferred :: lkl_output_a
   end type libkrylov_output_a_cmplx_sp
   abstract interface
-    subroutine libkrylov_output_a_interface(data,n1,n2,n3,n4,&
+    subroutine libkrylov_output_a_intrfc_csp(data,n1,n2,n3,n4,&
   &   jconverged,roots,lagrangian,solutions,&
   &   euc_norm,fro_norm,id_string,ierr)
       import :: lkl_int_csp_k, libkrylov_output_a_cmplx_sp, lkl_cmplx_sp_k
@@ -268,7 +268,7 @@ module libkrylovinterface_cmplx_sp
       character(len=22), intent(in) :: id_string
 !!    error variable
       integer(lkl_int_csp_k), intent(inout) :: ierr
-    end subroutine libkrylov_output_a_interface
+    end subroutine libkrylov_output_a_intrfc_csp
   end interface
 
 !--------------------------------------------------------------------
@@ -281,10 +281,10 @@ module libkrylovinterface_cmplx_sp
 !! function to determining parameters of the problem to be solved
   type, abstract :: libkrylov_problem_b_cmplx_sp
   contains
-    procedure(libkrylov_problem_b_interface), deferred :: lkl_problem_b
+    procedure(libkrylov_problem_b_intrfc_csp), deferred :: lkl_problem_b
   end type libkrylov_problem_b_cmplx_sp
   abstract interface
-    subroutine libkrylov_problem_b_interface(data,nbasis,nrhs,&
+    subroutine libkrylov_problem_b_intrfc_csp(data,nbasis,nrhs,&
   &   minstart,maxstart,threshold,maxiter,&
   &   id_string,precon_string,iverb,irestart,ierr)
       import :: lkl_int_csp_k, libkrylov_problem_b_cmplx_sp, lkl_cmplx_sp_k
@@ -300,7 +300,7 @@ module libkrylovinterface_cmplx_sp
       integer(lkl_int_csp_k), intent(inout) :: iverb
       integer(lkl_int_csp_k), intent(inout) :: irestart
       integer(lkl_int_csp_k), intent(inout) :: ierr
-    end subroutine libkrylov_problem_b_interface
+    end subroutine libkrylov_problem_b_intrfc_csp
   end interface
 
 !! abstract type for krylov_output function of problem_b
@@ -309,10 +309,10 @@ module libkrylovinterface_cmplx_sp
 !! wheter printing or passing out of the solver
   type, abstract :: libkrylov_output_b_cmplx_sp
   contains
-    procedure(libkrylov_output_b_interface), deferred :: lkl_output_b
+    procedure(libkrylov_output_b_intrfc_csp), deferred :: lkl_output_b
   end type libkrylov_output_b_cmplx_sp
   abstract interface
-    subroutine libkrylov_output_b_interface(data,n1,n2,n3,n4,&
+    subroutine libkrylov_output_b_intrfc_csp(data,n1,n2,n3,n4,&
   &   jconverged,rhs,lagrangian,solutions,&
   &   euc_norm,fro_norm,id_string,ierr)
       import :: lkl_int_csp_k, libkrylov_output_b_cmplx_sp, lkl_cmplx_sp_k
@@ -341,7 +341,7 @@ module libkrylovinterface_cmplx_sp
       character(len=22), intent(in) :: id_string
 !!    error variable
       integer(lkl_int_csp_k), intent(inout) :: ierr
-    end subroutine libkrylov_output_b_interface
+    end subroutine libkrylov_output_b_intrfc_csp
   end interface
 
 !--------------------------------------------------------------------
@@ -354,10 +354,10 @@ module libkrylovinterface_cmplx_sp
 !! function to determining parameters of the problem to be solved
   type, abstract :: libkrylov_problem_c_cmplx_sp
   contains
-    procedure(libkrylov_problem_c_interface), deferred :: lkl_problem_c
+    procedure(libkrylov_problem_c_intrfc_csp), deferred :: lkl_problem_c
   end type libkrylov_problem_c_cmplx_sp
   abstract interface
-    subroutine libkrylov_problem_c_interface(data,nbasis,nomega,nrhs,&
+    subroutine libkrylov_problem_c_intrfc_csp(data,nbasis,nomega,nrhs,&
   &   minstart,maxstart,threshold,maxiter,unique_rhs_omega,&
   &   id_string,precon_string,iverb,irestart,ierr)
       import :: lkl_int_csp_k, libkrylov_problem_c_cmplx_sp, lkl_cmplx_sp_k
@@ -375,7 +375,7 @@ module libkrylovinterface_cmplx_sp
       integer(lkl_int_csp_k), intent(inout) :: iverb
       integer(lkl_int_csp_k), intent(inout) :: irestart
       integer(lkl_int_csp_k), intent(inout) :: ierr
-    end subroutine libkrylov_problem_c_interface
+    end subroutine libkrylov_problem_c_intrfc_csp
   end interface
 
 !! abstract type for krylov_output function of problem_c
@@ -384,10 +384,10 @@ module libkrylovinterface_cmplx_sp
 !! wheter printing or passing out of the solver
   type, abstract :: libkrylov_output_c_cmplx_sp
   contains
-    procedure(libkrylov_output_c_interface), deferred :: lkl_output_c
+    procedure(libkrylov_output_c_intrfc_csp), deferred :: lkl_output_c
   end type libkrylov_output_c_cmplx_sp
   abstract interface
-    subroutine libkrylov_output_c_interface(data,n1,n2,n3,n4,n5,n6,&
+    subroutine libkrylov_output_c_intrfc_csp(data,n1,n2,n3,n4,n5,n6,&
   &   jconverged,omega,rhs,lagrangian,solutions,&
   &   euc_norm,fro_norm,id_string,ierr)
       import :: lkl_int_csp_k, libkrylov_output_c_cmplx_sp, lkl_cmplx_sp_k
@@ -422,7 +422,7 @@ module libkrylovinterface_cmplx_sp
       character(len=22), intent(in) :: id_string
 !!    error variable
       integer(lkl_int_csp_k), intent(inout) :: ierr
-    end subroutine libkrylov_output_c_interface
+    end subroutine libkrylov_output_c_intrfc_csp
   end interface
 
 !--------------------------------------------------------------------

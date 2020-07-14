@@ -148,10 +148,10 @@ module libkrylovinterface_real_sp
 !! the products of a problem matrix with a set of basis vectors
   type, abstract :: libkrylov_mvp_real_sp
   contains
-    procedure(libkrylov_mvp_interface), deferred :: lkl_mvp
+    procedure(libkrylov_mvp_intrfc_rsp), deferred :: lkl_mvp
   end type libkrylov_mvp_real_sp
   abstract interface
-    subroutine libkrylov_mvp_interface(data,n1,n2,basis_vectors,&
+    subroutine libkrylov_mvp_intrfc_rsp(data,n1,n2,basis_vectors,&
   &   mvproduct,ierr)
       import :: lkl_int_rsp_k, libkrylov_mvp_real_sp, lkl_real_sp_k
       class(libkrylov_mvp_real_sp) :: data
@@ -165,7 +165,7 @@ module libkrylovinterface_real_sp
       real(lkl_real_sp_k), intent(inout) :: mvproduct(n1,n2)
 !!    error variable
       integer(lkl_int_rsp_k), intent(inout) :: ierr
-    end subroutine libkrylov_mvp_interface
+    end subroutine libkrylov_mvp_intrfc_rsp
   end interface
 
 !--------------------------------------------------------------------
@@ -208,10 +208,10 @@ module libkrylovinterface_real_sp
 !! function to determining parameters of the problem to be solved
   type, abstract :: libkrylov_problem_a_real_sp
   contains
-    procedure(libkrylov_problem_a_interface), deferred :: lkl_problem_a
+    procedure(libkrylov_problem_a_intrfc_rsp), deferred :: lkl_problem_a
   end type libkrylov_problem_a_real_sp
   abstract interface
-    subroutine libkrylov_problem_a_interface(data,nbasis,nroots,&
+    subroutine libkrylov_problem_a_intrfc_rsp(data,nbasis,nroots,&
   &   minstart,maxstart,threshold,maxiter,&
   &   id_string,precon_string,iverb,irestart,ierr)
       import :: lkl_int_rsp_k, libkrylov_problem_a_real_sp, lkl_real_sp_k
@@ -227,7 +227,7 @@ module libkrylovinterface_real_sp
       integer(lkl_int_rsp_k), intent(inout) :: iverb
       integer(lkl_int_rsp_k), intent(inout) :: irestart
       integer(lkl_int_rsp_k), intent(inout) :: ierr
-    end subroutine libkrylov_problem_a_interface
+    end subroutine libkrylov_problem_a_intrfc_rsp
   end interface
 
 !! abstract type for krylov_output function of problem_a
@@ -236,10 +236,10 @@ module libkrylovinterface_real_sp
 !! wheter printing or passing out of the solver
   type, abstract :: libkrylov_output_a_real_sp
   contains
-    procedure(libkrylov_output_a_interface), deferred :: lkl_output_a
+    procedure(libkrylov_output_a_intrfc_rsp), deferred :: lkl_output_a
   end type libkrylov_output_a_real_sp
   abstract interface
-    subroutine libkrylov_output_a_interface(data,n1,n2,n3,n4,&
+    subroutine libkrylov_output_a_intrfc_rsp(data,n1,n2,n3,n4,&
   &   jconverged,roots,lagrangian,solutions,&
   &   euc_norm,fro_norm,id_string,ierr)
       import :: lkl_int_rsp_k, libkrylov_output_a_real_sp, lkl_real_sp_k
@@ -268,7 +268,7 @@ module libkrylovinterface_real_sp
       character(len=22), intent(in) :: id_string
 !!    error variable
       integer(lkl_int_rsp_k), intent(inout) :: ierr
-    end subroutine libkrylov_output_a_interface
+    end subroutine libkrylov_output_a_intrfc_rsp
   end interface
 
 !--------------------------------------------------------------------
@@ -281,10 +281,10 @@ module libkrylovinterface_real_sp
 !! function to determining parameters of the problem to be solved
   type, abstract :: libkrylov_problem_b_real_sp
   contains
-    procedure(libkrylov_problem_b_interface), deferred :: lkl_problem_b
+    procedure(libkrylov_problem_b_intrfc_rsp), deferred :: lkl_problem_b
   end type libkrylov_problem_b_real_sp
   abstract interface
-    subroutine libkrylov_problem_b_interface(data,nbasis,nrhs,&
+    subroutine libkrylov_problem_b_intrfc_rsp(data,nbasis,nrhs,&
   &   minstart,maxstart,threshold,maxiter,&
   &   id_string,precon_string,iverb,irestart,ierr)
       import :: lkl_int_rsp_k, libkrylov_problem_b_real_sp, lkl_real_sp_k
@@ -300,7 +300,7 @@ module libkrylovinterface_real_sp
       integer(lkl_int_rsp_k), intent(inout) :: iverb
       integer(lkl_int_rsp_k), intent(inout) :: irestart
       integer(lkl_int_rsp_k), intent(inout) :: ierr
-    end subroutine libkrylov_problem_b_interface
+    end subroutine libkrylov_problem_b_intrfc_rsp
   end interface
 
 !! abstract type for krylov_output function of problem_b
@@ -309,10 +309,10 @@ module libkrylovinterface_real_sp
 !! wheter printing or passing out of the solver
   type, abstract :: libkrylov_output_b_real_sp
   contains
-    procedure(libkrylov_output_b_interface), deferred :: lkl_output_b
+    procedure(libkrylov_output_b_intrfc_rsp), deferred :: lkl_output_b
   end type libkrylov_output_b_real_sp
   abstract interface
-    subroutine libkrylov_output_b_interface(data,n1,n2,n3,n4,&
+    subroutine libkrylov_output_b_intrfc_rsp(data,n1,n2,n3,n4,&
   &   jconverged,rhs,lagrangian,solutions,&
   &   euc_norm,fro_norm,id_string,ierr)
       import :: lkl_int_rsp_k, libkrylov_output_b_real_sp, lkl_real_sp_k
@@ -341,7 +341,7 @@ module libkrylovinterface_real_sp
       character(len=22), intent(in) :: id_string
 !!    error variable
       integer(lkl_int_rsp_k), intent(inout) :: ierr
-    end subroutine libkrylov_output_b_interface
+    end subroutine libkrylov_output_b_intrfc_rsp
   end interface
 
 !--------------------------------------------------------------------
@@ -354,10 +354,10 @@ module libkrylovinterface_real_sp
 !! function to determining parameters of the problem to be solved
   type, abstract :: libkrylov_problem_c_real_sp
   contains
-    procedure(libkrylov_problem_c_interface), deferred :: lkl_problem_c
+    procedure(libkrylov_problem_c_intrfc_rsp), deferred :: lkl_problem_c
   end type libkrylov_problem_c_real_sp
   abstract interface
-    subroutine libkrylov_problem_c_interface(data,nbasis,nomega,nrhs,&
+    subroutine libkrylov_problem_c_intrfc_rsp(data,nbasis,nomega,nrhs,&
   &   minstart,maxstart,threshold,maxiter,unique_rhs_omega,&
   &   id_string,precon_string,iverb,irestart,ierr)
       import :: lkl_int_rsp_k, libkrylov_problem_c_real_sp, lkl_real_sp_k
@@ -375,7 +375,7 @@ module libkrylovinterface_real_sp
       integer(lkl_int_rsp_k), intent(inout) :: iverb
       integer(lkl_int_rsp_k), intent(inout) :: irestart
       integer(lkl_int_rsp_k), intent(inout) :: ierr
-    end subroutine libkrylov_problem_c_interface
+    end subroutine libkrylov_problem_c_intrfc_rsp
   end interface
 
 !! abstract type for krylov_output function of problem_c
@@ -384,10 +384,10 @@ module libkrylovinterface_real_sp
 !! wheter printing or passing out of the solver
   type, abstract :: libkrylov_output_c_real_sp
   contains
-    procedure(libkrylov_output_c_interface), deferred :: lkl_output_c
+    procedure(libkrylov_output_c_intrfc_rsp), deferred :: lkl_output_c
   end type libkrylov_output_c_real_sp
   abstract interface
-    subroutine libkrylov_output_c_interface(data,n1,n2,n3,n4,n5,n6,&
+    subroutine libkrylov_output_c_intrfc_rsp(data,n1,n2,n3,n4,n5,n6,&
   &   jconverged,omega,rhs,lagrangian,solutions,&
   &   euc_norm,fro_norm,id_string,ierr)
       import :: lkl_int_rsp_k, libkrylov_output_c_real_sp, lkl_real_sp_k
@@ -422,7 +422,7 @@ module libkrylovinterface_real_sp
       character(len=22), intent(in) :: id_string
 !!    error variable
       integer(lkl_int_rsp_k), intent(inout) :: ierr
-    end subroutine libkrylov_output_c_interface
+    end subroutine libkrylov_output_c_intrfc_rsp
   end interface
 
 !--------------------------------------------------------------------
