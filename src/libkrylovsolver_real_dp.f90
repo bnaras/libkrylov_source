@@ -124,13 +124,13 @@ contains
 !--------------------------------------------------------------------
 ! Input functions
 !--------------------------------------------------------------------
-    class(libkrylov_vector_subroutine) ::    krylov_approx
-    class(libkrylov_start_subroutine) ::     krylov_start
-    class(libkrylov_matrix_subroutine) ::    krylov_rhs
-    class(libkrylov_problem_b_subroutine) :: krylov_problem_b
-    class(libkrylov_guess_subroutine) ::     krylov_guess
-    class(libkrylov_mvp_subroutine) ::       krylov_mvp
-    class(libkrylov_output_b_subroutine) ::  krylov_output_b
+    class(libkrylov_vector_real_dp) ::    krylov_approx
+    class(libkrylov_start_real_dp) ::     krylov_start
+    class(libkrylov_matrix_real_dp) ::    krylov_rhs
+    class(libkrylov_problem_b_real_dp) :: krylov_problem_b
+    class(libkrylov_guess_real_dp) ::     krylov_guess
+    class(libkrylov_mvp_real_dp) ::       krylov_mvp
+    class(libkrylov_output_b_real_dp) ::  krylov_output_b
 !! variable for error variable
     integer(lkl_int_rdp_k), intent(inout) :: ierr
 !--------------------------------------------------------------------
@@ -183,14 +183,14 @@ contains
 !--------------------------------------------------------------------
 ! Input functions
 !--------------------------------------------------------------------
-    class(libkrylov_vector_subroutine) ::    krylov_approx
-    class(libkrylov_start_subroutine) ::     krylov_start
-    class(libkrylov_matrix_subroutine) ::    krylov_rhs
-    class(libkrylov_vector_subroutine) ::    krylov_omega
-    class(libkrylov_problem_c_subroutine) :: krylov_problem_c
-    class(libkrylov_guess_subroutine) ::     krylov_guess
-    class(libkrylov_mvp_subroutine) ::       krylov_mvp
-    class(libkrylov_output_c_subroutine) ::  krylov_output_c
+    class(libkrylov_vector_real_dp) ::    krylov_approx
+    class(libkrylov_start_real_dp) ::     krylov_start
+    class(libkrylov_matrix_real_dp) ::    krylov_rhs
+    class(libkrylov_vector_real_dp) ::    krylov_omega
+    class(libkrylov_problem_c_real_dp) :: krylov_problem_c
+    class(libkrylov_guess_real_dp) ::     krylov_guess
+    class(libkrylov_mvp_real_dp) ::       krylov_mvp
+    class(libkrylov_output_c_real_dp) ::  krylov_output_c
 !! variable for error variable
     integer(lkl_int_rdp_k), intent(inout) :: ierr
 !--------------------------------------------------------------------
