@@ -7,7 +7,8 @@ module arrayfile
 !--------------------------------------------------------------------
 !< Description:
 !< This module defines the printing and reading 
-!< of arrays with type(base) or real(kind_float)
+!< of JSON dictionaries containing
+!< arrays with type(base) or real(kind_float)
 !< defined in basetypes.
 !--------------------------------------------------------------------
 !
@@ -41,7 +42,6 @@ contains
 !< Description:
 !< This routine reads in the dimensions of 
 !< an array from file, to prepare for reading in an array
-!< Incomplete
 !--------------------------------------------------------------------
 !
 !--------------------------------------------------------------------
@@ -310,7 +310,6 @@ contains
       read(unit=funit,&
   &     fmt='(13x,i10,1x,i10,2x,'//base_format_string//',6x)', &
   &       iostat=ierr) k1,k2,dummy
-!      call read_base(funit,k1,k2,dummy,read_err)
       if (read_err.gt.0) then
         ierr = read_err
       else if (read_err.lt.0) then
@@ -338,7 +337,7 @@ contains
 !
 !--------------------------------------------------------------------
 !< Description:
-!< This routine prints an array to file from type(base)
+!< This routine prints an array to file from a type(base) obj
 !--------------------------------------------------------------------
 !
 !--------------------------------------------------------------------
@@ -388,7 +387,7 @@ contains
 !! define fname
     fname = trim(name_string)//'.json'
 
-!! no inquiry if file exists since overwriting
+!! no inquiry if file exists since overwriting of old files is default
 !    inquire(file=fname,exist=file_exists)
 
 !! open file
@@ -734,7 +733,7 @@ contains
 !
 !--------------------------------------------------------------------
 !< Description:
-!< This routine prints an array to file from type(base)
+!< This routine prints an array to file from a real float obj vector
 !--------------------------------------------------------------------
 !
 !--------------------------------------------------------------------

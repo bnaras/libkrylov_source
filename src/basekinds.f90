@@ -7,8 +7,12 @@ module basekinds
 !--------------------------------------------------------------------
 !< Description:
 !< This module defines the parameters used 
-!< by basetypes_*.f90 
-!< and file unit number related operations.
+!< by basetypes_*.f90,
+!< intended to match most blas/LApack definition
+!< of single and double precision.
+!< and a reasonably sized kind parameter for integers.
+!< Lastly, there are also subroutines to define
+!< file unit numbers.
 !--------------------------------------------------------------------
 !
 !--------------------------------------------------------------------
@@ -22,8 +26,7 @@ module basekinds
 !--------------------------------------------------------------------
 
 !--------------------------------------------------------------------
-! Fixed Kind parameters for floating point precision 
-! are available in basekinds.f90
+! Fixed Kind parameters
 !--------------------------------------------------------------------
 
 !! single precision parameter
@@ -69,13 +72,20 @@ contains
     logical :: already_used = .true. 
 !-------------------------------------------------------------------- 
  
+! Assume file unit number 0 to 14 are reserved for other output files
+!! INCREASE THIS NUMBER TO RESERVE MORE FILE UNIT NUMBERS
     j = 14 
+
+
     already_used = .true. 
     ierr = -1
     do  
       j = j + 1 
       inquire(unit=j,opened=already_used) 
-      ! automatically stop if more than 256 funits are used
+      !! Example of how to skip a file unit number if you so choose
+     ! if (j.eq.10) cycle 
+      !!! automatically stop if more than 256 funits are used. 
+      !!! Think carefully before increasing this number
       if (j.gt.256) exit
       if(.not.already_used) then 
         funit = j

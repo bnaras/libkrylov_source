@@ -6,11 +6,14 @@ module basetypes
 !
 !--------------------------------------------------------------------
 !< Description:
-!< This module defines the base type for the elements of arrays
-!< [((1))]
-!< for arrayoperations.f90 and krylovtypes_*.f90
-!< which includes elemental operations on the base type,[((2))]
-!< This is the complex number version
+!< This module defines 
+!< the base type for the elements of arrays, which is 
+!< how compile time polymorphism is achieved.
+!< There are strings defined to help debug the solver and
+!< format output.
+!< A selected range elemental operations on the base type,
+!< are implemented.
+!< This is the real version.
 !--------------------------------------------------------------------
 !
 !--------------------------------------------------------------------
@@ -37,7 +40,7 @@ module basetypes
 ! Character legend string for base type, for testing purposes
 !--------------------------------------------------------------------
   character(len=32), parameter :: &
-  & base_legend_string = trim('real             imaginary')
+  & base_legend_string = trim('real imaginary')
 !--------------------------------------------------------------------
 
 !--------------------------------------------------------------------
@@ -111,7 +114,6 @@ module basetypes
 !--------------------------------------------------------------------
 contains
 !--------------------------------------------------------------------
-![((2))]
 ! Overloaded operators
 !--------------------------------------------------------------------
 
@@ -247,143 +249,6 @@ contains
     base_by_real%element = z%element/x
 
   end function base_by_real
-
-!--------------------------------------------------------------------
-
-!--------------------------------------------------------------------
-![((5))]
-! Format statements for reading/printing from files
-!--------------------------------------------------------------------
-
-!--------------------------------------------------------------------
-  subroutine read_base(funit,k1,k2,obj,ierr)
-!--------------------------------------------------------------------
-!
-!--------------------------------------------------------------------
-!< Description:
-!< wrapper for
-!< read statement for one line from file funit
-!--------------------------------------------------------------------
-!
-!--------------------------------------------------------------------
-! Modules
-!--------------------------------------------------------------------
-    use basekinds
-    use floatformat
-!--------------------------------------------------------------------
-!
-    implicit none
-!
-!--------------------------------------------------------------------
-! Input Parameters
-!--------------------------------------------------------------------
-!! file unit
-    integer(kind_integer), intent(in) :: funit
-!--------------------------------------------------------------------
-! Output Parameters
-!--------------------------------------------------------------------
-!! position of value
-    integer(kind_integer), intent(out) :: k1,k2
-!! value to be read in
-    type(base), intent(out) :: obj
-!--------------------------------------------------------------------
-! Error Parameter
-!--------------------------------------------------------------------
-    integer(kind_integer), intent(inout) :: ierr
-!--------------------------------------------------------------------
-
-    read(unit=funit,&
-  & fmt='(13x,i10,1x,i10,2x,'//base_format_string//',6x)', &
-  &       iostat=ierr) k1,k2,obj%element
-
-!--------------------------------------------------------------------
-  end subroutine read_base
-!--------------------------------------------------------------------
- 
-!--------------------------------------------------------------------
-  subroutine print_base_format(funit,ierr)
-!--------------------------------------------------------------------
-!
-!--------------------------------------------------------------------
-!< Description:
-!< wrapper for
-!< print format statement to file funit for readability
-!< may be left blank
-!--------------------------------------------------------------------
-!
-!--------------------------------------------------------------------
-! Modules
-!--------------------------------------------------------------------
-    use basekinds
-    use floatformat
-!--------------------------------------------------------------------
-!
-    implicit none
-!
-!--------------------------------------------------------------------
-! Input Parameters
-!--------------------------------------------------------------------
-!! file unit
-    integer(kind_integer), intent(in) :: funit
-!--------------------------------------------------------------------
-! Error Parameter
-!--------------------------------------------------------------------
-    integer(kind_integer), intent(inout) :: ierr
-!--------------------------------------------------------------------
-
-    if (kind_float.eq.kind_double) then
-      write(unit=funit,fmt='(a2,5x,a3,5x,a6,6x,a4,20x,a9)', &
-  &     iostat=ierr) '//','row','column','real','imaginary'
-    else if (kind_float.eq.kind_single) then
-      write(unit=funit,fmt='(a2,5x,a3,5x,a6,6x,a4,12x,a9)', &
-  &     iostat=ierr) '//','row','column','real','imaginary'
-    end if
-
-!--------------------------------------------------------------------
-  end subroutine print_base_format
-!--------------------------------------------------------------------
-!
-!--------------------------------------------------------------------
-  subroutine print_base(funit,k1,k2,obj,ierr)
-!--------------------------------------------------------------------
-!
-!--------------------------------------------------------------------
-!< Description:
-!< wrapper for
-!< print statement for one line to file funit
-!--------------------------------------------------------------------
-!
-!--------------------------------------------------------------------
-! Modules
-!--------------------------------------------------------------------
-    use basekinds
-    use floatformat
-!--------------------------------------------------------------------
-!
-    implicit none
-!
-!--------------------------------------------------------------------
-! Input Parameters
-!--------------------------------------------------------------------
-!! file unit
-    integer(kind_integer), intent(in) :: funit
-!! position of obj in rows and columns
-    integer(kind_integer), intent(in) :: k1,k2
-!! value to be printed
-    type(base), intent(in) :: obj
-!--------------------------------------------------------------------
-! Error Parameter
-!--------------------------------------------------------------------
-    integer(kind_integer), intent(inout) :: ierr
-!--------------------------------------------------------------------
-
-    write(unit=funit,&
-  & fmt='(4x,a9,i10,a1,i10,a2,'//base_format_string//',a6)', &
-  &       iostat=ierr) '{ "ele":[',k1,',',k2,',"',obj%element,'" ] },'
-
-!--------------------------------------------------------------------
-  end subroutine print_base
-!--------------------------------------------------------------------
 
 !--------------------------------------------------------------------
 
