@@ -79,11 +79,74 @@ program problem_1
 !! variables for normalization
   type(base) :: norm_sq_base
   real(kind_float) :: norm_real
+! string for command line options
+  character(len=32) :: input, input2 = ''
+  integer(kind_integer) :: counter = 0
 !--------------------------------------------------------------------
 ! Error Parameter
 !--------------------------------------------------------------------
   integer(kind_integer) :: ierr = 0
 !--------------------------------------------------------------------
+
+  n = 100
+  eigenvector_string = "cayley_trans"
+  eigenvalue_string = "positive_even"
+
+!! checking command line options:
+  counter = command_argument_count()
+!! loop over command line
+  k = 1
+  if (counter.gt.0) then
+    do
+      call get_command_argument(k,value=input,status=ierr)
+      if (ierr.ne.0) stop
+      if ((input.eq.'-help').or.(input.eq.'--help')) then
+        print *, 'problem generator for libkrylov test drivers '
+        print *, ' making a problem on file:'
+        print *, ''
+        print *, 'options:'
+        print *, ''
+        print *, '-vectors'
+        print *, '"cayley_trans" to generate eigenvectors as (I+A)(I-A)' 
+        print *, '"qr_decomp" to generate eigenvectors from QR decomposition' 
+        print *, ''
+        print *, '-values'
+        print *, '"positive_cosine" for positive cosine eigenvalues' 
+        print *, '"positive_even" for positive even eigenvalues' 
+        print *, '"negative_cosine" for negative cosine eigenvalues' 
+        print *, '"negative_even" for negative even eigenvalues' 
+        print *, '"variable_cosine" for both positive and negative cosine eigenvalues' 
+        print *, ''
+        stop
+      else if (input.eq.'-vectors') then
+        k = k + 1
+        call get_command_argument(k,value=input2,status=ierr)
+        if (ierr.ne.0) stop
+        eigenvector_string = input2
+        print *, 'eigenvectors: ',input2
+      else if (input.eq.'-values') then
+        k = k + 1
+        call get_command_argument(k,value=input2,status=ierr)
+        if (ierr.ne.0) stop
+        eigenvalue_string = input2
+        print *, 'eigenvalues: ',input2
+      else if (input.eq.'-n') then
+        k = k + 1
+        call get_command_argument(k,value=input2,status=ierr)
+        if (ierr.ne.0) stop
+        read(input2,*,iostat=ierr) n
+        if (ierr.ne.0) stop
+        print *, 'size of problem: ',input2
+      else if (input.eq.'>') then
+        exit
+      else if (input.eq.'>>') then
+        exit
+      end if
+      k = k + 1
+      if (k.gt.counter) exit
+    end do
+  end if
+
 
 
 !! allocate array to contain problem, diagonal used to 
@@ -101,24 +164,6 @@ program problem_1
   allocate(tau(n))
 
   print *, 'all allocations successful'
-
-!! ask for user input on eigenvectors
-  print *, 'Please enter an option for type of eigenvectors'
-  print *, '"cayley_trans" to generate eigenvectors as (I+A)(I-A)' 
-  print *, '"qr_decomp" to generate eigenvectors from QR decomposition' 
-
-  read (*,*) eigenvector_string
-  print *, 'eigenvectors will generated as, ', eigenvector_string
-
-  !! ask for user input on eigenvalues
-  print *, 'Please enter an option for type of eigenvalue'
-  print *, '"positive_cosine" for positive cosine eigenvalues' 
-  print *, '"positive_even" for positive even eigenvalues' 
-  print *, '"negative_cosine" for negative cosine eigenvalues' 
-  print *, '"negative_even" for negative even eigenvalues' 
-  print *, '"variable_cosine" for both positive and negative cosine eigenvalues' 
-  read (*,*) eigenvalue_string
-  print *, eigenvalue_string,' eigenvalues entered'
 
 
   if (eigenvalue_string.eq.'positive_cosine') then
@@ -142,8 +187,10 @@ program problem_1
       diag(k) = cos(real(k+k,kind=kind_float))
     end do
   else
-    print *, 'invalid option'
-    stop
+    print *, 'default option'
+    do k = 1, n
+      diag(k) = abs(cos(real(k+k,kind=kind_float)))
+    end do
   end if
 
 !! set a1_string based on basetypes
@@ -240,22 +287,22 @@ program problem_1
     call ggemm('c','n',n,n,n,one_kb,obj2,n,obj2,n,&
     & zero_kb,obj1,n)
 
-    do k = 1, n
-      do j = 1, n
-        rtest = obj1(j,k)
-        rtest = abs(rtest)
-        if (j .eq. k) then
-          rref = real(1,kind=kind_float)
-          if (abs(rtest-rref) .gt. eps) then
-            print *, 'diag problem', j, obj1(j,k)
-          end if
-        else
-          if (abs(rtest) .gt. eps) then
-            print *, 'problem', j,k, obj1(j,k) 
-          end if
-        end if
-      end do
-    end do 
+!    do k = 1, n
+!      do j = 1, n
+!        rtest = obj1(j,k)
+!        rtest = abs(rtest)
+!        if (j .eq. k) then
+!          rref = real(1,kind=kind_float)
+!          if (abs(rtest-rref) .gt. eps) then
+!            print *, 'diag problem', j, obj1(j,k)
+!          end if
+!        else
+!          if (abs(rtest) .gt. eps) then
+!            print *, 'problem', j,k, obj1(j,k) 
+!          end if
+!        end if
+!      end do
+!    end do 
 
     print *, 'transformation matrix okay'
 

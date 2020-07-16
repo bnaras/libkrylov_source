@@ -14,7 +14,6 @@ module libkrylovinterface
 ! Modules and Global Varaibles
 !--------------------------------------------------------------------
   use libkrylovinterface_real_dp , only: &
-  &   libkrylov_scalar_subroutine => libkrylov_scalar_real_dp, &
   &   libkrylov_matrix_subroutine => libkrylov_matrix_real_dp, &
   &   libkrylov_vector_subroutine => libkrylov_vector_real_dp, &
   &   libkrylov_start_subroutine => libkrylov_start_real_dp, &

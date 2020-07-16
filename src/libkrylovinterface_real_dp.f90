@@ -14,7 +14,7 @@ module libkrylovinterface_real_dp
 ! Modules and Global Varaibles
 !--------------------------------------------------------------------
 !! This module is self-contained to ease interfacing with external
-!! modules - This module is required 
+!! modules - The contents are required
 !! for writing input/output functions
 !--------------------------------------------------------------------
 ! Implicit none
@@ -39,29 +39,9 @@ module libkrylovinterface_real_dp
 !--------------------------------------------------------------------
 
 !--------------------------------------------------------------------
-! type and interface for interacting 
-! with real(double_precision) vectors and matrices
+! abstract type and interface for interacting 
+! with vectors and matrices
 !--------------------------------------------------------------------
-
-!! abstract type for a function that
-!! interacts with a real element in an array of the two indexes selected
-  type, abstract :: libkrylov_scalar_real_dp
-  contains
-    procedure(libkrylov_scalar_intrfc_rdp), deferred :: scalar_fill
-  end type libkrylov_scalar_real_dp
-  abstract interface
-    subroutine libkrylov_scalar_intrfc_rdp(data,n1,n2,obj,ierr)
-      import :: lkl_real_dp_k, lkl_int_rdp_k,libkrylov_scalar_real_dp
-      class(libkrylov_scalar_real_dp) :: data
-!!    rows of obj
-      integer(lkl_int_rdp_k), intent(in) :: n1
-!!    columns of obj
-      integer(lkl_int_rdp_k), intent(in) :: n2
-!!    obj to be interacted with
-      real(lkl_real_dp_k), intent(inout) :: obj
-      integer(lkl_int_rdp_k), intent(inout) :: ierr
-    end subroutine libkrylov_scalar_intrfc_rdp
-  end interface
 
 !! abstract type for a function that
 !! interacts with a real array with two dimensions
@@ -104,7 +84,7 @@ module libkrylovinterface_real_dp
 !--------------------------------------------------------------------
 
 !--------------------------------------------------------------------
-! Abstract interface for all solvers
+! Abstract types and interface shared by solvers
 !--------------------------------------------------------------------
 
 !! abstract type for krylov_start function
@@ -191,13 +171,11 @@ module libkrylovinterface_real_dp
 !--------------------------------------------------------------------
 
 !--------------------------------------------------------------------
-! extend type for example input functions 
+! type extensions for example input functions 
 !--------------------------------------------------------------------
 
 !! defining input function for number of starting basis vectors
   type, extends(libkrylov_start_real_dp) :: lkl_s_elec_gas_rdp
-! external data required for the function
-!! IDEALLY, NO EXTERNAL DATA
   contains
     procedure :: lkl_start => lkl_start_elec_gas_rdp
   end type lkl_s_elec_gas_rdp
@@ -205,6 +183,7 @@ module libkrylovinterface_real_dp
 !! defining input function for number of starting basis vectors
   type, extends(libkrylov_start_real_dp) :: lkl_s_ext_in_rdp
 ! external data required for the function
+! value of number of starting basis vectors
     integer(lkl_int_rdp_k) :: nstart = 0
   contains
     procedure :: lkl_start => lkl_start_ext_in_rdp
@@ -212,8 +191,6 @@ module libkrylovinterface_real_dp
 
 !! defining input function for initial basis vectors
   type, extends(libkrylov_guess_real_dp) :: lkl_g_unit_vec_rdp
-! external data required for the function
-!! IDEALLY, NO EXTERNAL DATA
   contains
     procedure :: lkl_guess => lkl_guess_unit_vec_rdp
   end type lkl_g_unit_vec_rdp
@@ -221,7 +198,7 @@ module libkrylovinterface_real_dp
 !--------------------------------------------------------------------
 
 !--------------------------------------------------------------------
-! Abstract interface for input functions of solver_a
+! Abstract types for functions specific to solvers
 !--------------------------------------------------------------------
 
 !! abstract type for krylov_problem function for problem_a
@@ -291,11 +268,6 @@ module libkrylovinterface_real_dp
     end subroutine libkrylov_output_a_intrfc_rdp
   end interface
 
-!--------------------------------------------------------------------
-
-!--------------------------------------------------------------------
-! Abstract interface for input functions of solver_b
-!--------------------------------------------------------------------
 
 !! abstract type for krylov_problem function for problem_b
 !! function to determining parameters of the problem to be solved
@@ -363,12 +335,6 @@ module libkrylovinterface_real_dp
       integer(lkl_int_rdp_k), intent(inout) :: ierr
     end subroutine libkrylov_output_b_intrfc_rdp
   end interface
-
-!--------------------------------------------------------------------
-
-!--------------------------------------------------------------------
-! Abstract interface for input functions of solver_c
-!--------------------------------------------------------------------
 
 !! abstract type for krylov_problem function for problem_c
 !! function to determining parameters of the problem to be solved

@@ -115,6 +115,7 @@ program krylovdriver_1c
         print *, '                approx_spectra'
         print *, '                davidson'
         print *, '                sleijpen'
+        print *, '                half_sleijpen'
         print *, '               default option: davidson'
         print *, ''
         print *, '-irestart     select restart level'

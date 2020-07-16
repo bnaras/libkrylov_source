@@ -14,7 +14,7 @@ module libkrylovinterface_real_sp
 ! Modules and Global Varaibles
 !--------------------------------------------------------------------
 !! This module is self-contained to ease interfacing with external
-!! modules - This module is required 
+!! modules - The contents are required 
 !! for writing input/output functions
 !--------------------------------------------------------------------
 ! Implicit none
@@ -39,8 +39,8 @@ module libkrylovinterface_real_sp
 !--------------------------------------------------------------------
 
 !--------------------------------------------------------------------
-! type and interface for interacting 
-! with real(single_precision) vectors and matrices
+! abstract type and interface for interacting 
+! with vectors and matrices
 !--------------------------------------------------------------------
 
 !! abstract type for a function that
@@ -84,7 +84,7 @@ module libkrylovinterface_real_sp
 !--------------------------------------------------------------------
 
 !--------------------------------------------------------------------
-! Abstract interface for all solvers
+! Abstract types and interface shared by solvers
 !--------------------------------------------------------------------
 
 !! abstract type for krylov_start function
@@ -116,8 +116,7 @@ module libkrylovinterface_real_sp
 !! function to determine initial basis vectors, basis_vectors
 !! and overlap of the basis_vectors
 !! using an approximate spectra as input
-!! preserving the first n3 basis_vectors, but recalculating 
-!! entire overlap
+!! preserving the first n3 basis_vectors
   type, abstract :: libkrylov_guess_real_sp
   contains
     procedure(libkrylov_guess_intrfc_rsp), deferred :: lkl_guess
@@ -145,7 +144,7 @@ module libkrylovinterface_real_sp
 
 !! abstract type for krylov_mvp function
 !! function to determine matrix-vector products, mvproducts
-!! the products of a problem matrix with a set of basis vectors
+!! the products of a part of the problem matrix with a set of basis vectors
   type, abstract :: libkrylov_mvp_real_sp
   contains
     procedure(libkrylov_mvp_intrfc_rsp), deferred :: lkl_mvp
@@ -171,29 +170,27 @@ module libkrylovinterface_real_sp
 !--------------------------------------------------------------------
 
 !--------------------------------------------------------------------
-! extend type for example input functions 
+! type extensions for example input functions 
 !--------------------------------------------------------------------
 
-!! defining input function for number of starting basis vectors
+!! input type for number of starting basis vectors based on
+!! an electron gas
   type, extends(libkrylov_start_real_sp) :: lkl_s_elec_gas_rsp
-! external data required for the function
-!! IDEALLY, NO EXTERNAL DATA
   contains
     procedure :: lkl_start => lkl_start_elec_gas_rsp
   end type lkl_s_elec_gas_rsp
 
-!! defining input function for number of starting basis vectors
+!! input type for number of starting basis vectors passed in
   type, extends(libkrylov_start_real_sp) :: lkl_s_ext_in_rsp
 ! external data required for the function
+! value of number of starting basis vectors
     integer(lkl_int_rsp_k) :: nstart = 0
   contains
     procedure :: lkl_start => lkl_start_ext_in_rsp
   end type lkl_s_ext_in_rsp
 
-!! defining input function for initial basis vectors
+!! input type for initial basis vectors as unit vectors
   type, extends(libkrylov_guess_real_sp) :: lkl_g_unit_vec_rsp
-! external data required for the function
-!! IDEALLY, NO EXTERNAL DATA
   contains
     procedure :: lkl_guess => lkl_guess_unit_vec_rsp
   end type lkl_g_unit_vec_rsp
@@ -201,7 +198,7 @@ module libkrylovinterface_real_sp
 !--------------------------------------------------------------------
 
 !--------------------------------------------------------------------
-! Abstract interface for input functions of solver_a
+! Abstract types for functions specific to solvers
 !--------------------------------------------------------------------
 
 !! abstract type for krylov_problem function for problem_a
@@ -271,12 +268,6 @@ module libkrylovinterface_real_sp
     end subroutine libkrylov_output_a_intrfc_rsp
   end interface
 
-!--------------------------------------------------------------------
-
-!--------------------------------------------------------------------
-! Abstract interface for input functions of solver_b
-!--------------------------------------------------------------------
-
 !! abstract type for krylov_problem function for problem_b
 !! function to determining parameters of the problem to be solved
   type, abstract :: libkrylov_problem_b_real_sp
@@ -343,12 +334,6 @@ module libkrylovinterface_real_sp
       integer(lkl_int_rsp_k), intent(inout) :: ierr
     end subroutine libkrylov_output_b_intrfc_rsp
   end interface
-
-!--------------------------------------------------------------------
-
-!--------------------------------------------------------------------
-! Abstract interface for input functions of solver_c
-!--------------------------------------------------------------------
 
 !! abstract type for krylov_problem function for problem_c
 !! function to determining parameters of the problem to be solved

@@ -14,7 +14,7 @@ module libkrylovinterface_cmplx_sp
 ! Modules and Global Varaibles
 !--------------------------------------------------------------------
 !! This module is self-contained to ease interfacing with external
-!! modules - This module is required 
+!! modules - The contents are required
 !! for writing input/output functions
 !--------------------------------------------------------------------
 ! Implicit none
@@ -39,12 +39,12 @@ module libkrylovinterface_cmplx_sp
 !--------------------------------------------------------------------
 
 !--------------------------------------------------------------------
-! type and interface for interacting 
-! with real(single_precision) vectors and matrices
+! abstract type and interface for interacting 
+! with vectors and matrices
 !--------------------------------------------------------------------
 
 !! abstract type for a function that
-!! interacts with a real array with two dimensions
+!! interacts with a complex array with two dimensions
   type, abstract :: libkrylov_matrix_cmplx_sp
   contains
     procedure(libkrylov_matrix_intrfc_csp), deferred :: matrix_fill
@@ -84,7 +84,7 @@ module libkrylovinterface_cmplx_sp
 !--------------------------------------------------------------------
 
 !--------------------------------------------------------------------
-! Abstract interface for all solvers
+! Abstract types and interface shared by solvers
 !--------------------------------------------------------------------
 
 !! abstract type for krylov_start function
@@ -171,7 +171,7 @@ module libkrylovinterface_cmplx_sp
 !--------------------------------------------------------------------
 
 !--------------------------------------------------------------------
-! extend type for example input functions 
+! type extension for example input functions 
 !--------------------------------------------------------------------
 
 !! defining input function for number of starting basis vectors
@@ -201,7 +201,7 @@ module libkrylovinterface_cmplx_sp
 !--------------------------------------------------------------------
 
 !--------------------------------------------------------------------
-! Abstract interface for input functions of solver_a
+! Abstract types for functions specific to solvers
 !--------------------------------------------------------------------
 
 !! abstract type for krylov_problem function for problem_a
@@ -271,12 +271,6 @@ module libkrylovinterface_cmplx_sp
     end subroutine libkrylov_output_a_intrfc_csp
   end interface
 
-!--------------------------------------------------------------------
-
-!--------------------------------------------------------------------
-! Abstract interface for input functions of solver_b
-!--------------------------------------------------------------------
-
 !! abstract type for krylov_problem function for problem_b
 !! function to determining parameters of the problem to be solved
   type, abstract :: libkrylov_problem_b_cmplx_sp
@@ -343,12 +337,6 @@ module libkrylovinterface_cmplx_sp
       integer(lkl_int_csp_k), intent(inout) :: ierr
     end subroutine libkrylov_output_b_intrfc_csp
   end interface
-
-!--------------------------------------------------------------------
-
-!--------------------------------------------------------------------
-! Abstract interface for input functions of solver_c
-!--------------------------------------------------------------------
 
 !! abstract type for krylov_problem function for problem_c
 !! function to determining parameters of the problem to be solved
