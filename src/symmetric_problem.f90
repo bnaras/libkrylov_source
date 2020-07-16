@@ -117,6 +117,9 @@ program problem_1
         print *, '"negative_even" for negative even eigenvalues' 
         print *, '"variable_cosine" for both positive and negative cosine eigenvalues' 
         print *, ''
+        print *, '-n'
+        print *, 'positive integer for size of problem'
+        print *, ''
         stop
       else if (input.eq.'-vectors') then
         k = k + 1
