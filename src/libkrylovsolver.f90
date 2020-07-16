@@ -8,6 +8,7 @@ module libkrylovsolver
 !< Description:
 !< This module defines a krylov subspace solver for
 !< a hermitian or symmetric eigenvalue problem
+!< using type(base)
 !--------------------------------------------------------------------
 !
 !--------------------------------------------------------------------
@@ -60,7 +61,6 @@ contains
 ! Description:
 !--------------------------------------------------------------------
 !! subroutine for normalizing vectors
-!! this does nothing
 !--------------------------------------------------------------------
 !
 !--------------------------------------------------------------------
@@ -123,6 +123,7 @@ contains
 ! Description:
 !--------------------------------------------------------------------
 !! subroutine for orthogonalizing vectors
+!! with modified Gram-Schmidt
 !--------------------------------------------------------------------
 !
 !--------------------------------------------------------------------
@@ -717,7 +718,6 @@ contains
 !--------------------------------------------------------------------
 !< This subroutine does the expand step of a krylov solve,
 !< expanding the rayleigh matrix with new matrix vector products.
-!< THIS WOULD BE A GOOD PLACE TO INCLUDE SYMMETRIZATION
 !--------------------------------------------------------------------
 !
 !--------------------------------------------------------------------
@@ -816,14 +816,6 @@ contains
         rayleigh_sq(k,j) = conjg(rayleigh_sq(j,k))
       end do
     end do
-!!! !! fourth ggemm to get full (rayleigh sq)
-!!!     call ggemm('c','n',nsubspace,nresiduals,nbasis,one_kb,&
-!!!   &   avproduct(1:nbasis,1:nsubspace),nbasis,&
-!!!   &   avproduct(1:nbasis,1:(nsubspace)),nbasis,&
-!!!   &   zero_kb,&
-!!!   &   rayleigh_sq(1:nsubspace,&
-!!!   &    1:nsubspace),&
-!!!   &   nsubspace)
 
 
 !--------------------------------------------------------------------
@@ -1111,174 +1103,9 @@ contains
   end subroutine krylov_cholesky
 !--------------------------------------------------------------------
 
-!!!!! !--------------------------------------------------------------------
-!!!!!   subroutine krylov_check(nsubspace,overlap,diag_overlap,iverb,ierr)
-!!!!! !--------------------------------------------------------------------
-!!!!! !
-!!!!! !--------------------------------------------------------------------
-!!!!! ! Description:
-!!!!! !--------------------------------------------------------------------
-!!!!! !< This subroutine checks the stability of the subspace
-!!!!! !< by finding eigenvalues of the scaled overlap matrix
-!!!!! !< and doing a cholesky decomposition
-!!!!! !--------------------------------------------------------------------
-!!!!! !
-!!!!! !--------------------------------------------------------------------
-!!!!! ! Modules and Global Variables
-!!!!! !--------------------------------------------------------------------
-!!!!! ! for kind_integer and other precision related parameters
-!!!!!     use basekinds
-!!!!! ! define real(kind_float) and associated operations
-!!!!!     use floatformat
-!!!!! ! define type(base) and associated operations
-!!!!!     use basetypes
-!!!!!     use blastypes
-!!!!! !--------------------------------------------------------------------
-!!!!! ! Implicit None statement
-!!!!! !--------------------------------------------------------------------
-!!!!!     implicit none
-!!!!! !--------------------------------------------------------------------
-!!!!! ! Input Variables
-!!!!! !--------------------------------------------------------------------
-!!!!! ! Comments in the solver subroutine below
-!!!!!     integer(kind_integer), intent(in) :: nsubspace ! new subspace!
-!!!!!     type(base), intent(in) :: overlap(nsubspace,nsubspace)
-!!!!!     real(kind_float), intent(in) :: diag_overlap(nsubspace)
-!!!!! !--------------------------------------------------------------------
-!!!!! ! Error Variables
-!!!!! !--------------------------------------------------------------------
-!!!!!     integer(kind_integer), intent(inout) :: iverb
-!!!!!     integer(kind_integer), intent(inout) :: ierr
-!!!!! !--------------------------------------------------------------------
-!!!!! ! Local Variables
-!!!!! !--------------------------------------------------------------------
-!!!!! !! integer for loops
-!!!!!     integer(kind_integer) :: j, k = 0
-!!!!! !! decomposition new of overlap
-!!!!!     type(base), allocatable :: ortho_overlap(:,:)
-!!!!!     type(base), allocatable :: cholesky(:,:)
-!!!!! !! sqrt of diagonal
-!!!!!     real(kind_float), allocatable :: d_o_sqrt(:)
-!!!!! !! roots of overlap matrix
-!!!!!     real(kind_float), allocatable :: overlap_roots(:)
-!!!!!     real(kind_float) :: onorm
-!!!!!     real(kind_float) :: rcond
-!!!!! !--------------------------------------------------------------------
-!!!!! 
-!!!!!     allocate(ortho_overlap(nsubspace,nsubspace))
-!!!!!     allocate(cholesky(nsubspace,nsubspace))
-!!!!!     allocate(d_o_sqrt(nsubspace))
-!!!!!     allocate(overlap_roots(nsubspace))
-!!!!! 
-!!!!! !! assign d_o_sqrt
-!!!!!     d_o_sqrt = sqrt(diag_overlap)
-!!!!! !! assign scaled overlap to ortho_overlap for solving
-!!!!!     do k = 1, nsubspace
-!!!!!       do j = 1, nsubspace
-!!!!!         if (j.eq.k) then
-!!!!!           ortho_overlap(j,j) = overlap(j,j)/diag_overlap(j)
-!!!!!           cholesky(j,j) = overlap(j,j)/diag_overlap(j)
-!!!!!         else
-!!!!!           ortho_overlap(j,k) = overlap(j,k)/(d_o_sqrt(j)*d_o_sqrt(k))
-!!!!!           cholesky(j,k) = overlap(j,k)/(d_o_sqrt(j)*d_o_sqrt(k))
-!!!!!         end if
-!!!!!       end do
-!!!!!     end do
-!!!!! !    print *, 'significant overlap'
-!!!!! !    do k = 1, nsubspace
-!!!!! !      do j = 1, nsubspace
-!!!!! !        onorm = overlap(j,k)
-!!!!! !        if (onorm.gt.(real(10.0,kind=kind_float)**(-8))) then
-!!!!! !          print *, j,k,overlap(j,k)
-!!!!! !        end if
-!!!!! !      end do
-!!!!! !    end do
-!!!!! !! Check condition of overlap matrix by diagonalizing
-!!!!!     call gheev('v','l',nsubspace,ortho_overlap,nsubspace,&
-!!!!!     &     overlap_roots,ierr)
-!!!!!     if (ierr.ne.0) then
-!!!!!       if (iverb.ge.0) then
-!!!!!         print *, 'new overlap matrix cannot be solved after scaling.'
-!!!!!         print *, '*heev ierr value = ', ierr
-!!!!!       end if
-!!!!!       ierr = -25
-!!!!!       return ! return to solver loop
-!!!!!     end if
-!!!!! !! Print overlap matrix roots and check for small/negative values
-!!!!!     if (iverb.ge.3) then
-!!!!!       print *, 'eigenvalues of new scaled overlap matrix'
-!!!!!     end if
-!!!!!     do j = 1, nsubspace
-!!!!!       if (iverb.ge.3) then
-!!!!!         print *, 'eigenvalue ',j,' ',overlap_roots(j)
-!!!!!       end if
-!!!!!       if (overlap_roots(j).le.eps) then
-!!!!!         if (iverb.ge.0) then
-!!!!!           print *, 'new scaled overlap matrix is linearly dependent!'
-!!!!!           print *, 'eigenvalue ',j,' is less than machine precision.'
-!!!!!         end if
-!!!!!         ierr = -30
-!!!!!       end if
-!!!!!     end do
-!!!!! 
-!!!!! !! cholesky decomposition
-!!!!! !! lower triangular is more precise due to above multiplication
-!!!!!     call gpotrf('l',nsubspace,cholesky,nsubspace,ierr)
-!!!!!     if (ierr.ne.0) then
-!!!!!       if (iverb.ge.0) then
-!!!!!         print *, '*potrf linear algebra error!', ierr
-!!!!!         print *, 'new scaled overlap matrix could be unstable'
-!!!!!       end if
-!!!!!       ierr = -30
-!!!!!       return ! return to solver loop
-!!!!!     end if 
-!!!!! !!! May be the cholesky matrix can be printed. 
-!!!!! 
-!!!!! !! Condition number calculation and check
-!!!!! !! one norm calculation on onorm
-!!!!!     call glanhe('1','l',nsubspace,cholesky,nsubspace,onorm,ierr)
-!!!!!     if (ierr.ne.0) then
-!!!!!       if (iverb.ge.0) then
-!!!!!         print *, '*lanhe/*lansy linear algebra error!', ierr
-!!!!!         print *, 'this error should be impossible with BLAS'
-!!!!!         print *, 'new scaled overlap matrix is unstable'
-!!!!!       end if
-!!!!!       ierr = -25
-!!!!!       return ! return to solver loop
-!!!!!     end if 
-!!!!!     if (iverb.ge.2) then
-!!!!!       print *, 'one norm of new scaled overlap matrix: ',onorm
-!!!!!     end if
-!!!!! !! reciprocal of condition number on rcond
-!!!!!     call gpocon('l',nsubspace,cholesky,nsubspace,onorm,rcond,ierr)
-!!!!!     if (ierr.ne.0) then
-!!!!!       if (iverb.ge.0) then
-!!!!!         print *, '*pocon linear algebra error!', ierr
-!!!!!         print *, 'new scaled overlap matrix could be unstable'
-!!!!!       end if
-!!!!!       ierr = -30
-!!!!!       return ! return to solver loop
-!!!!!     end if 
-!!!!!     if (iverb.ge.2) then
-!!!!!       print *, 'Reciprocal of scaled overlap matrix'
-!!!!!       print *, ' condition number: ',rcond
-!!!!!     end if
-!!!!! !! check condition number
-!!!!! !    if (log10(rcond).lt.(logeps)) then
-!!!!! !      if (iverb.ge.0) then
-!!!!! !        print *, 'new scaled overlap is ill-conditioned'
-!!!!! !      end if
-!!!!! !      ierr = -30
-!!!!! !      return ! return to solver loop
-!!!!! !    end if
-!!!!! 
-!!!!!     deallocate(ortho_overlap)
-!!!!!     deallocate(d_o_sqrt)
-!!!!!     deallocate(overlap_roots)
-!!!!! 
-!!!!! !--------------------------------------------------------------------
-!!!!!   end subroutine krylov_check
-!!!!! !--------------------------------------------------------------------
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+!!! RESTART FILE DEFINITIONS
 
 !--------------------------------------------------------------------
   subroutine array_read_rstrt_size(fname,val1,val2,iverb,ierr)
@@ -1696,6 +1523,10 @@ contains
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
   end subroutine array_del_rstrt
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+
+!!!END RESTART FILE DEFINITIONS
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
 
@@ -2324,7 +2155,7 @@ contains
         end do
       end do
 
-    else if (precon_string.eq.'new_sleijpen') then
+    else if (precon_string.eq.'half_sleijpen') then
 
       allocate(dmvx(nbasis,nroots))
 
@@ -2658,7 +2489,8 @@ contains
       print *, 'fourth argument, guess subroutine for initial basis vectors'
       print *, 'fifth argument, mvp subroutine for MV product'
       print *, 'sixth argument, output subroutine for transferring output'
-      stop
+      ierr = -1200
+      return
     end if
 
 !! Begin solver!
@@ -2673,7 +2505,7 @@ contains
         print *, 'class(user_krylov_a_problem_subroutine) function failed'
         print *, 'error variable = ',ierr
       end if  
-      ierr = -65
+      ierr = -70
       return ! abort solver, return to call
     end if
 
@@ -2699,7 +2531,7 @@ contains
       if (iverb.ge.0) then
         print *, 'threshold below machine precision, solving failed'
       end if
-      ierr = -60
+      ierr = -1001
       return ! abort solver, return to call
     end if
 
@@ -2716,7 +2548,7 @@ contains
       if (iverb.ge.4) then
         print *, 'desired roots more than basis, solving failed'
       end if
-      ierr = -60
+      ierr = -1002
       return ! abort solver, return to call
     end if
 
@@ -2750,7 +2582,7 @@ contains
         print *, 'class(user_float_subroutine)function for approx failed'
         print *, 'error variable = ',ierr
       end if
-      ierr = -50
+      ierr = -65
       return ! abort solver, return to call
     end if
 
@@ -2761,7 +2593,7 @@ contains
         print *, 'class(user_krylov_start_subroutine) function failed'
         print *, 'error variable = ',ierr
       end if
-      ierr = -50
+      ierr = -60
       return ! abort solver, return to call!
     end if
 
@@ -2804,7 +2636,7 @@ contains
           irestart = -abs(irestart)
         else if (k2.le.0) then ! not possible number of vectors
           irestart = -abs(irestart)
-        else if (k2.ne.nstart) then ! vfile from different iter ! vfile pass all checks
+        else if (k2.ne.nstart) then ! vfile from different iter
             nstart = k2
         end if ! vfile pass all checks
       else !no restart available or possible
@@ -2897,7 +2729,7 @@ contains
           print *, 'error variable = ',ierr
           print *, 'suggestion: delete v.rstrt'
         end if
-        ierr = -50
+        ierr = -150
         return ! abort solver, return to call
       end if
     else if (check) then !! USE CHECK
@@ -2912,10 +2744,10 @@ contains
           print *, 'error variable = ',ierr
           print *, 'suggestion: delete v.save'
         end if
-        ierr = -50
+        ierr = -150
         return ! abort solver, return to call
       end if
-!! ORTHO VECS NOT NEEDED AS SOLUTIONS SHOULD BE ORTHOGONAL
+!! ORTHOGONALIZATION NOT NEEDED AS SOLUTIONS SHOULD BE ORTHOGONAL
       if (k4.eq.nstart) then ! no new initial vectors needed
         if (iverb.ge.2) then
           print *, ' with no new vectors needed!'
@@ -2935,14 +2767,14 @@ contains
             print *, 'for extending current subspace' 
             print *, 'error variable = ',ierr
           end if
-          ierr = -45
+          ierr = -50
           return ! abort solver, return to call
         end if
       end if
     else ! have to start from scratch
 !! Fresh starting basis vectors generated if 
 !! conditions are met.
-      irestart = -abs(irestart) ! may be redundant!!! NAMBI
+      irestart = -abs(irestart) ! may be redundant, included anyway.
       if (iverb.ge.2) then
         print *, 'Calculation starting from scratch!'
       end if
@@ -2956,7 +2788,7 @@ contains
           print *, 'class(user_krylov_guess_subroutine) function failed' 
           print *, 'error variable = ',ierr
         end if
-        ierr = -45
+        ierr = -55
         return ! abort solver, return to call 
       end if
     end if
@@ -3032,7 +2864,7 @@ contains
           print *, 'before the first iteration'
           print *, 'error variable = ',ierr
         end if
-        ierr = -45
+        ierr = -40
         return ! abort solver, return to call
       end if
 ! print restart matrix-vector products if required
@@ -3053,7 +2885,7 @@ contains
           print *, 'error variable = ',ierr
           print *, 'suggestion: delete w.rstrt'
         end if
-        ierr = -50
+        ierr = -150
         return ! abort solver, return to call
       end if
       if (k2.lt.nstart) then
@@ -3072,7 +2904,7 @@ contains
             print *, 'before the first iteration'
             print *, 'error variable = ',ierr
           end if
-          ierr = -45
+          ierr = -40
           return ! abort solver, return to call
         end if
         call array_print_rstrt(wname,nbasis,nsubspace,&
@@ -3082,7 +2914,6 @@ contains
     end if
 
 
-!! NAMBI : construction of avproduct
     do j = 1, nsubspace
       avproduct(1:nbasis,j) = mvproduct(1:nbasis,j) &
   &      + (basis_vectors(1:nbasis,j) * approx_spectra(1:nbasis))
@@ -3098,7 +2929,7 @@ contains
         print *, 'initial construction of rayleigh matrix failed' 
         print *, 'error variable = ',ierr
       end if
-      ierr = -45
+      ierr = -35
       return ! abort solver, return to call 
     end if
 
@@ -3132,11 +2963,12 @@ contains
             print *, 'kill file is ',kill_file_string
           end if
         end if  
-        ierr = -40
+        ierr = -10
         return ! abort solver, return to call
       end if
 
       jter = jter + 1
+      kter = kter + 1
 
       if (iverb.ge.0) then
         print *, '~~~~~Iteration (',iter,')~~~~~'
@@ -3152,25 +2984,12 @@ contains
   &     cholesky(1:nsubspace,1:nsubspace),&
   &     overlap(1:nsubspace,1:nsubspace),diag_overlap(1:nsubspace),&
   &     roots,lagrangian,solutions(1:nsubspace,1:nroots),iverb,ierr)
-      if (ierr.eq.-35) then ! error variable for ill-conditioned overlap
-        nsubspace = prev_nsubspace
-        if (iverb.ge.0) then
-          print *, 'preparation for krylov ritz(subspace solve) failed'
-          print *, 'error variable = ',ierr
-        end if
-        if (iter.gt.1) then
-          if (iverb.ge.0) then
-            print *, 'using previous subspace solutions for print'
-          end if
-          ierr = 0
-        end if
-        exit ! This exits subspace loop
-      else if (ierr.ne.0) then
+      if (ierr.ne.0) then
         if (iverb.ge.0) then
           print *, 'krylov ritz(subspace solve) calculation failed'
           print *, 'error variable = ',ierr
         end if
-        ierr = -40
+        ierr = -30
         exit ! This exits subspace loop
       end if
 
@@ -3217,7 +3036,7 @@ contains
           print *, 'krylov norms calculation failed'
           print *, 'error variable = ',ierr
         end if 
-        ierr = -40
+        ierr = -25
         exit ! This exits subspace loop
       end if
 
@@ -3339,8 +3158,8 @@ contains
         end do
       end if
 
-! call for diagonalization of copy of overlap matrix as a check,
-! if it passes proceed to expand subspace properly
+! call for cholesky decomposition of overlap matrix as a check,
+! if it passes proceed to expand other subspace objects
       call krylov_cholesky(nsubspace,&
   &      overlap(1:nsubspace,1:nsubspace),&
   &      diag_overlap(1:nsubspace),& 
@@ -3348,16 +3167,15 @@ contains
 ! Force restart if cond is less than threshold
       if ((logeps).gt.log10(cond)) then
         if (iverb.ge.1) then
-          print *, 'Condition number exceed desired convergence'
+          print *, 'Condition number exceeds inverse machine precision'
         end if
-        ierr = -30
+        ierr = -24
       end if
-      if (ierr.eq.-30) then !cholesky failed, attempt rescue
+      if (ierr.ne.0) then !cholesky failed, attempt rescue
         if (iverb.ge.0) then
           print *, 'new krylov subspace unstable'
           print *, 'attempting to stabilize'
         end if
-        kter = kter + 1
 !!!!  Drastic restart implementation.
         ierr = 0
 !! Putting X(full solutions) as new previous V(basis)
@@ -3389,6 +3207,7 @@ contains
             print *, 'please observe condition number'
             print *, 'continuing iterations'
           end if
+          kter = 0
         else
           if (iverb.ge.0) then
             print *, 'current iteration solutions failed stability check'
@@ -3417,7 +3236,6 @@ contains
           nsubspace = prev_nsubspace
           exit ! This exits subspace loop
         end if
-!! NAMBI : construction of fresh  avproduct
         do j = 1, nsubspace
           avproduct(1:nbasis,j) = mvproduct(1:nbasis,j) &
   &       + ( basis_vectors(1:nbasis,j) * approx_spectra(1:nbasis))
@@ -3431,8 +3249,10 @@ contains
           if (iverb.ge.0) then
             print *, 'initial (re)construction of rayleigh matrix failed' 
             print *, 'error variable = ',ierr
+            print *, 'using previous subspace solutions for print'
           end if
-          ierr = -45
+          nsubspace = prev_nsubspace
+          ierr = 0
           return ! abort solver, return to call 
         end if
       else if (ierr.ne.0) then !krylov_check failed irrecoverably
@@ -3462,7 +3282,6 @@ contains
           nsubspace = prev_nsubspace
           exit ! This exits subspace loop
         end if
-  !! NAMBI : construction of avproduct
         do j = prev_nsubspace+1 , nsubspace
           avproduct(1:nbasis,j) = mvproduct(1:nbasis,j)& 
   &    +  (basis_vectors(1:nbasis,j) * approx_spectra(1:nbasis))
@@ -3516,7 +3335,7 @@ contains
       print *, ' '
         if (iverb.ge.2) then
           print *, 'number of iterations: ',jter
-          print *, 'number of restarts: ',kter
+          print *, 'number of iterations since restart: ',kter
           print *, ' '
         end if
     end if
@@ -3530,7 +3349,7 @@ contains
           print *, 'kill file is ',kill_file_string
         end if
       end if  
-      ierr = -40
+      ierr = -10
       return ! abort solver, return to call
     end if
 
@@ -4121,7 +3940,7 @@ contains
         end do
       end do
 
-    else if (precon_string.eq.'new_sleijpen') then
+    else if (precon_string.eq.'half_sleijpen') then
 
       allocate(dmvx(nbasis,nrhs))
 
@@ -4294,7 +4113,7 @@ contains
 ! define type(base) and type(basereal) and associated operations
     use basetypes
     use blastypes
-    use libkrylovinterface !! Nambi?
+    use libkrylovinterface
 !--------------------------------------------------------------------
 ! Implicit None statement
 !--------------------------------------------------------------------
@@ -4321,7 +4140,7 @@ contains
 !! integer for restart files
     integer(kind_integer) :: k1,k2,k3,k4 = 0
 !! integer for iteration counting
-    integer(kind_integer) :: jter = 0
+    integer(kind_integer) :: jter,kter = 0
 !! logical to pass a logic check as an argument
     logical :: check = .false.
 !! constants of type base
@@ -4473,7 +4292,7 @@ contains
         print *, 'class(user_krylov_b_problem_subroutine) function failed'
         print *, 'error variable = ',ierr
       end if  
-      ierr = -65
+      ierr = -70
       return ! abort solver, return to call
     end if
 
@@ -4499,7 +4318,7 @@ contains
       if (iverb.ge.0) then
         print *, 'threshold below machine precision, solving failed'
       end if
-      ierr = -60
+      ierr = -1001
       return ! abort solver, return to call
     end if
 
@@ -4508,7 +4327,7 @@ contains
       if (iverb.ge.4) then
         print *, 'desired roots more than basis, solving failed'
       end if
-      ierr = -60
+      ierr = -1003
       return ! abort solver, return to call
     end if
 
@@ -4526,7 +4345,7 @@ contains
       if (iverb.ge.0) then
         print *, 'no right hand sides, solving failed'
       end if
-      ierr = -60
+      ierr = -1004
       return ! abort solver, return to call
     end if
 
@@ -4550,7 +4369,7 @@ contains
         print *, 'class(user_float_subroutine)function for approx failed'
         print *, 'error variable = ',ierr
       end if
-      ierr = -50
+      ierr = -65
       return ! abort solver, return to call
     end if
 
@@ -4561,7 +4380,7 @@ contains
         print *, 'class(user_krylov_start_subroutine) function failed'
         print *, 'error variable = ',ierr
       end if
-      ierr = -50
+      ierr = -60
       return ! abort solver, return to call!
     end if
 
@@ -4694,7 +4513,7 @@ contains
         print *, 'class(user_base_subroutine)function rhs failed'
         print *, 'error variable = ',ierr
       end if
-      ierr = -55
+      ierr = -59
       return ! abort solver, return to call
     end if
 
@@ -4710,7 +4529,7 @@ contains
           print *, 'error variable = ',ierr
           print *, 'suggestion: delete v.rstrt'
         end if
-        ierr = -50
+        ierr = -150
         return ! abort solver, return to call
       end if
     else if (check) then !! USE CHECK
@@ -4725,7 +4544,7 @@ contains
           print *, 'error variable = ',ierr
           print *, 'suggestion: delete v.save'
         end if
-        ierr = -50
+        ierr = -150
         return ! abort solver, return to call
       end if
 !!! ORTHO START VECS HERE
@@ -4740,7 +4559,7 @@ contains
           print *, 'error variable = ',ierr 
           print *, 'suggestion: delete v.save'
         end if
-        ierr = -50
+        ierr = -51
         return
       end if
       if (k4.eq.nstart) then ! no new initial vectors needed
@@ -4762,14 +4581,14 @@ contains
             print *, 'for extending current subspace' 
             print *, 'error variable = ',ierr
           end if
-          ierr = -45
+          ierr = -50
           return ! abort solver, return to call
         end if
       end if
     else ! have to start from scratch
 !! Fresh starting basis vectors generated if 
 !! conditions are met.
-      irestart = -abs(irestart) ! may be redundant!!! NAMBI
+      irestart = -abs(irestart) ! may be redundant, included anyway
       if (iverb.ge.2) then
         print *, 'Calculation starting from scratch!'
       end if
@@ -4783,7 +4602,7 @@ contains
           print *, 'class(user_krylov_guess_subroutine) function failed' 
           print *, 'error variable = ',ierr
         end if
-        ierr = -45
+        ierr = -55
         return ! abort solver, return to call 
       end if
     end if
@@ -4855,7 +4674,7 @@ contains
           print *, 'before the first iteration'
           print *, 'error variable = ',ierr
         end if
-        ierr = -45
+        ierr = -40
         return ! abort solver, return to call
       end if
 ! print restart matrix-vector products if required
@@ -4876,7 +4695,7 @@ contains
           print *, 'error variable = ',ierr
           print *, 'suggestion: delete w.rstrt'
         end if
-        ierr = -50
+        ierr = -150
         return ! abort solver, return to call
       end if
       if (k2.lt.nstart) then
@@ -4895,7 +4714,7 @@ contains
             print *, 'before the first iteration'
             print *, 'error variable = ',ierr
           end if
-          ierr = -45
+          ierr = -40
           return ! abort solver, return to call
         end if
         call array_print_rstrt(wname,nbasis,nsubspace,&
@@ -4950,7 +4769,7 @@ contains
           print *, 'error variable = ',ierr
           print *, 'suggestion: delete r.rstrt'
         end if
-        ierr = -50
+        ierr = -150
         return ! abort solver, return to call
       end if
       if (k1.lt.nstart) then
@@ -4971,7 +4790,6 @@ contains
       end if
     end if
 
-!! NAMBI : construction of avproduct
     do j = 1, nsubspace
       avproduct(1:nbasis,j) = mvproduct(1:nbasis,j) &
   &      + (basis_vectors(1:nbasis,j) * approx_spectra(1:nbasis))
@@ -4987,7 +4805,7 @@ contains
         print *, 'initial construction of rayleigh matrix failed' 
         print *, 'error variable = ',ierr
       end if
-      ierr = -45
+      ierr = -35
       return ! abort solver, return to call 
     end if
 
@@ -5005,6 +4823,7 @@ contains
           print *, '  the rhs could be identical'
           print *, '   otherwise the basis could be the problem'
         end if
+        ierr = -34
         return
       end if 
     end if
@@ -5021,6 +4840,7 @@ contains
 
 ! SOLVER LOOP
     jter = 0
+    kter = 0
     do iter = 1, maxiter
 
 
@@ -5033,11 +4853,12 @@ contains
             print *, 'kill file is ',kill_file_string
           end if
         end if
-        ierr = -40
+        ierr = -10
         return ! abort solver, return to call
       end if
 
       jter = jter + 1
+      kter = kter + 1
 
       if (iverb.ge.0) then
         print *, '~~~~~Iteration (',iter,')~~~~~'
@@ -5071,7 +4892,7 @@ contains
           print *, 'krylov ritz(subspace solve) calculation failed'
           print *, 'error variable = ',ierr
         end if
-        ierr = -40
+        ierr = -30
         exit ! This exits subspace loop
       end if
 
@@ -5097,7 +4918,7 @@ contains
           print *, 'krylov norms calculation failed'
           print *, 'error variable = ',ierr
         end if 
-        ierr = -40
+        ierr = -25
         exit ! This exits subspace loop
       end if
 
@@ -5214,9 +5035,9 @@ contains
         if (iverb.ge.1) then
           print *, 'Condition number exceed desired convergence'
         end if
-        ierr = -30
+        ierr = -24
       end if
-      if (ierr.eq.-30) then !cholesky failed, attempt rescue
+      if (ierr.ne.0) then !cholesky failed, attempt rescue
         if (iverb.ge.0) then
           print *, 'new krylov subspace unstable'
           print *, 'attempting to stabilize'
@@ -5228,17 +5049,31 @@ contains
   &      full_solutions(1:nbasis,1:nrhs)
 !! set nsubspace to new value
         nsubspace = nrhs
-        prev_nsubspace = nrhs
+!!! SVD of saved vectors to improve condition number
+        nresiduals = nrhs
+        call krylov_orthogonalize(nbasis,nresiduals,&
+    &       basis_vectors(1:nbasis,1:nresiduals),&
+    &       diag_overlap(1:nresiduals),nsubspace,iverb,ierr)
+        if (ierr.ne.0) then
+          if (iverb.ge.0) then
+            print *, 'orthogonalizing basis vectors failed'
+            print *, 'error variable = ',ierr 
+            print *, 'suggestion: delete v.save'
+          end if
+          ierr = -23
+          return
+        end if
+        prev_nsubspace = nsubspace
 !! Set constants required for BLAS
         one_kb = real(1,kind=kind_float)
         zero_kb = real(0,kind=kind_float)
 !! determine overlap
-        call ggemm('c','n',nrhs,nrhs,nbasis,one_kb,&
-  &       basis_vectors(1:nbasis,1:nrhs),nbasis,&
-  &       basis_vectors(1:nbasis,1:nrhs),nbasis,&
+        call ggemm('c','n',nsubspace,nsubspace,nbasis,one_kb,&
+  &       basis_vectors(1:nbasis,1:nsubspace),nbasis,&
+  &       basis_vectors(1:nbasis,1:nsubspace),nbasis,&
   &       zero_kb,&
-  &       overlap(1:nrhs,1:nrhs),&
-  &       nrhs)
+  &       overlap(1:nsubspace,1:nsubspace),&
+  &       nsubspace)
         do j = 1, nrhs
           diag_overlap(j) = overlap(j,j)
         end do
@@ -5252,6 +5087,7 @@ contains
             print *, 'please observe condition number'
             print *, 'continuing iterations'
           end if
+          kter = 0
         else
           if (iverb.ge.0) then
             print *, 'current iteration solutions failed stability check'
@@ -5263,12 +5099,12 @@ contains
           exit ! This exits subspace loop
         end if
 !! generate fresh proj_RHS as well
-        call ggemm('c','n',nrhs,nrhs,nbasis,one_kb,&
-  &       basis_vectors(1:nbasis,1:nrhs),nbasis,&
+        call ggemm('c','n',nsubspace,nrhs,nbasis,one_kb,&
+  &       basis_vectors(1:nbasis,1:nsubspace),nbasis,&
   &       rhs(1:nbasis,1:nrhs),nbasis,&
   &       zero_kb,&
-  &       proj_rhs(1:nrhs,1:nrhs),&
-  &       nrhs)
+  &       proj_rhs(1:nsubspace,1:nrhs),&
+  &       nsubspace)
 !! generate fresh mvproduct
 ! call user defined matrix vector product
         associate(interfacing_bv => basis_vectors%element,&
@@ -5287,7 +5123,6 @@ contains
           nsubspace = prev_nsubspace
           exit ! This exits subspace loop
         end if
-!! NAMBI : construction of fresh  avproduct
         do j = 1, nsubspace
           avproduct(1:nbasis,j) = mvproduct(1:nbasis,j) &
   &       + ( basis_vectors(1:nbasis,j) * approx_spectra(1:nbasis))
@@ -5301,9 +5136,11 @@ contains
           if (iverb.ge.0) then
             print *, 'initial (re)construction of rayleigh matrix failed' 
             print *, 'error variable = ',ierr
+            print *, 'using previous subspace solutions for print'
           end if
-          ierr = -45
-          return ! abort solver, return to call 
+          nsubspace = prev_nsubspace
+          ierr = 0
+          exit ! This exits subspace loop
         end if
       else if (ierr.ne.0) then !krylov_check failed irrecoverably
         if (iverb.ge.0) then
@@ -5339,7 +5176,6 @@ contains
           nsubspace = prev_nsubspace
           exit ! This exits subspace loop
         end if
-  !! NAMBI : construction of avproduct
         do j = prev_nsubspace+1 , nsubspace
           avproduct(1:nbasis,j) = mvproduct(1:nbasis,j)& 
   &    +  (basis_vectors(1:nbasis,j) * approx_spectra(1:nbasis))
@@ -5412,6 +5248,7 @@ contains
       print *, ' '
         if (iverb.ge.2) then
           print *, 'number of iterations: ',jter
+          print *, 'number of iterations since restart: ',kter
           print *, ' '
         end if
     end if
@@ -5425,7 +5262,7 @@ contains
           print *, 'kill file is ',kill_file_string
         end if
       end if
-      ierr = -40
+      ierr = -10
       return ! abort solver, return to call
     end if
 
@@ -6348,7 +6185,7 @@ contains
       end if
 
 
-    else if (precon_string.eq.'new_sleijpen') then
+    else if (precon_string.eq.'half_sleijpen') then
 
       allocate(dmvx(nbasis,nroots))
 
@@ -6637,7 +6474,7 @@ contains
 !! integer for restart files
     integer(kind_integer) :: k1,k2,k3,k4 = 0
 !! integer for iteration counting
-    integer(kind_integer) :: jter = 0
+    integer(kind_integer) :: jter,kter = 0
 !! logical to pass a logic check as an argument
     logical :: check = .false.
 !! constants of type base
@@ -6781,7 +6618,8 @@ contains
       print *, 'sixth argument, guess subroutine for initial basis vectors'
       print *, 'seventh argument, mvp subroutine for MV product'
       print *, 'eighth argument, output subroutine for transferring output'
-      stop
+      ierr = -1200
+      return
     end if
 
 !! Begin solver!
@@ -6796,7 +6634,7 @@ contains
         print *, 'class(user_krylov_c_problem_subroutine) function failed'
         print *, 'error variable = ',ierr
       end if  
-      ierr = -65
+      ierr = -70
       return ! abort solver, return to call
     end if
 
@@ -6822,7 +6660,7 @@ contains
       if (iverb.ge.0) then
         print *, 'threshold below machine precision, solving failed'
       end if
-      ierr = -60
+      ierr = -1001
       return ! abort solver, return to call
     end if
 
@@ -6841,7 +6679,7 @@ contains
       if (iverb.ge.0) then
         print *, 'no right hand sides, solving failed'
       end if
-      ierr = -60
+      ierr = -1003
       return ! abort solver, return to call
     end if
 
@@ -6850,7 +6688,7 @@ contains
       if (iverb.ge.0) then
         print *, 'no frequencies, solving failed'
       end if
-      ierr = -60
+      ierr = -1005
       return ! abort solver, return to call
     end if
 
@@ -6897,7 +6735,7 @@ contains
         print *, 'desired roots more than basis, solving failed'
         print *, 'breaking up the problem is advised'
       end if
-      ierr = -60
+      ierr = -1006
       return ! abort solver, return to call
     end if
 
@@ -6921,7 +6759,7 @@ contains
         print *, 'class(user_float_subroutine)function for approx failed'
         print *, 'error variable = ',ierr
       end if
-      ierr = -50
+      ierr = -65
       return ! abort solver, return to call
     end if
 
@@ -6932,7 +6770,7 @@ contains
         print *, 'class(user_krylov_start_subroutine) function failed'
         print *, 'error variable = ',ierr
       end if
-      ierr = -50
+      ierr = -60
       return ! abort solver, return to call!
     end if
 
@@ -7075,7 +6913,7 @@ contains
         print *, 'class(user_base_subroutine)function rhs failed'
         print *, 'error variable = ',ierr
       end if
-      ierr = -55
+      ierr = -59
       return ! abort solver, return to call
     end if
 
@@ -7085,7 +6923,7 @@ contains
         print *, 'class(user_base_subroutine)function omega failed'
         print *, 'error variable = ',ierr
       end if
-      ierr = -50
+      ierr = -58
       return ! abort solver, return to call
     end if
 
@@ -7101,7 +6939,7 @@ contains
           print *, 'error variable = ',ierr
           print *, 'suggestion: delete v.rstrt'
         end if
-        ierr = -50
+        ierr = -150
         return ! abort solver, return to call
       end if
     else if (check) then !! USE CHECK
@@ -7116,7 +6954,7 @@ contains
           print *, 'error variable = ',ierr
           print *, 'suggestion: delete v.save'
         end if
-        ierr = -50
+        ierr = -150
         return ! abort solver, return to call
       end if
 !!! SVD of saved vectors to improve condition number
@@ -7130,7 +6968,7 @@ contains
           print *, 'error variable = ',ierr 
           print *, 'suggestion: delete v.save'
         end if
-        ierr = -50
+        ierr = -51
         return
       end if
       if (k4.eq.nstart) then ! no new initial vectors needed
@@ -7152,14 +6990,14 @@ contains
             print *, 'for extending current subspace' 
             print *, 'error variable = ',ierr
           end if
-          ierr = -45
+          ierr = -50
           return ! abort solver, return to call
         end if
       end if
     else ! have to start from scratch
 !! Fresh starting basis vectors generated if 
 !! conditions are met.
-      irestart = -abs(irestart) ! may be redundant!!! NAMBI
+      irestart = -abs(irestart) ! may be redundant, included anyway
       if (iverb.ge.2) then
         print *, 'Calculation starting from scratch!'
       end if
@@ -7173,7 +7011,7 @@ contains
           print *, 'class(user_krylov_guess_subroutine) function failed' 
           print *, 'error variable = ',ierr
         end if
-        ierr = -45
+        ierr = -55
         return ! abort solver, return to call 
       end if
     end if
@@ -7248,7 +7086,7 @@ contains
           print *, 'before the first iteration'
           print *, 'error variable = ',ierr
         end if
-        ierr = -45
+        ierr = -40
         return ! abort solver, return to call
       end if
 ! print restart matrix-vector products if required
@@ -7269,7 +7107,7 @@ contains
           print *, 'error variable = ',ierr
           print *, 'suggestion: delete w.rstrt'
         end if
-        ierr = -50
+        ierr = -150
         return ! abort solver, return to call
       end if
       if (k2.lt.nstart) then
@@ -7288,7 +7126,7 @@ contains
             print *, 'before the first iteration'
             print *, 'error variable = ',ierr
           end if
-          ierr = -45
+          ierr = -40
           return ! abort solver, return to call
         end if
         call array_print_rstrt(wname,nbasis,nsubspace,&
@@ -7297,7 +7135,6 @@ contains
       end if
     end if
 
-!! NAMBI : construction of avproduct
     do j = 1, nsubspace
       avproduct(1:nbasis,j) = mvproduct(1:nbasis,j) &
   &      + (basis_vectors(1:nbasis,j) * approx_spectra(1:nbasis))
@@ -7313,7 +7150,7 @@ contains
         print *, 'initial construction of rayleigh matrix failed' 
         print *, 'error variable = ',ierr
       end if
-      ierr = -45
+      ierr = -35
       return ! abort solver, return to call 
     end if
 
@@ -7366,7 +7203,7 @@ contains
           print *, 'error variable = ',ierr
           print *, 'suggestion: delete r.rstrt'
         end if
-        ierr = -50
+        ierr = -150
         return ! abort solver, return to call
       end if
       if (k1.lt.nstart) then
@@ -7401,6 +7238,7 @@ contains
           print *, '  the rhs could be identical'
           print *, '   otherwise the basis could be the problem'
         end if
+        ierr = -34
         return
       end if
     end if
@@ -7416,6 +7254,7 @@ contains
 
 ! SOLVER LOOP
     jter = 0
+    kter = 0
     do iter = 1, maxiter
 
 
@@ -7428,11 +7267,12 @@ contains
             print *, 'kill file is ',kill_file_string
           end if
         end if
-        ierr = -40
+        ierr = -10
         return ! abort solver, return to call
       end if
 
       jter = jter + 1
+      kter = kter + 1
 
       if (iverb.ge.0) then
         print *, '~~~~~Iteration (',iter,')~~~~~'
@@ -7448,25 +7288,12 @@ contains
   &     proj_rhs(1:nsubspace,1:nrhs),&
   &     overlap(1:nsubspace,1:nsubspace),diag_overlap(1:nsubspace),&
   &     omega,lagrangian,solutions(1:nsubspace,1:nroots),iverb,ierr)
-      if (ierr.eq.-35) then ! error variable for ill-conditioned overlap
-        nsubspace = prev_nsubspace
-        if (iverb.ge.0) then
-          print *, 'preparation for krylov ritz(subspace solve) failed'
-          print *, 'error variable = ',ierr
-        end if
-        if (iter.gt.1) then
-          if (iverb.ge.0) then
-            print *, 'using previous subspace solutions for print'
-          end if
-          ierr = 0
-        end if
-        exit ! This exits subspace loop
-      else if (ierr.ne.0) then
+      if (ierr.ne.0) then
         if (iverb.ge.0) then
           print *, 'krylov ritz(subspace solve) calculation failed'
           print *, 'error variable = ',ierr
         end if
-        ierr = -40
+        ierr = -30
         exit ! This exits subspace loop
       end if
 
@@ -7492,7 +7319,7 @@ contains
           print *, 'krylov norms calculation failed'
           print *, 'error variable = ',ierr
         end if 
-        ierr = -40
+        ierr = -25
         exit ! This exits subspace loop
       end if
 
@@ -7604,7 +7431,119 @@ contains
       call krylov_cholesky(nsubspace,overlap(1:nsubspace,1:nsubspace),&
   &     diag_overlap(1:nsubspace),& 
   &     cholesky(1:nsubspace,1:nsubspace),cond,iverb,ierr)
-      if (ierr.ne.0) then
+! Force restart if cond is less than threshold
+      if ((logeps).gt.log10(cond)) then
+        if (iverb.ge.1) then
+          print *, 'Condition number exceed desired convergence'
+        end if
+        ierr = -24
+      end if
+      if (ierr.ne.0) then !cholesky failed, attempt rescue
+        if (iverb.ge.0) then
+          print *, 'new krylov subspace unstable'
+          print *, 'attempting to stabilize'
+        end if
+!!!!  Drastic restart implementation.
+        ierr = 0
+!! Putting X(full solutions) as new previous V(basis)
+        basis_vectors(1:nbasis,1:nroots) = &
+  &      full_solutions(1:nbasis,1:nroots)
+!! set nsubspace to new value
+        nsubspace = nroots
+!!! SVD of saved vectors to improve condition number
+        nresiduals = nroots
+        call krylov_orthogonalize(nbasis,nresiduals,&
+    &       basis_vectors(1:nbasis,1:nresiduals),&
+    &       diag_overlap(1:nresiduals),nsubspace,iverb,ierr)
+        if (ierr.ne.0) then
+          if (iverb.ge.0) then
+            print *, 'orthogonalizing basis vectors failed'
+            print *, 'error variable = ',ierr 
+            print *, 'suggestion: delete v.save'
+          end if
+          ierr = -23
+          return
+        end if
+        prev_nsubspace = nsubspace
+!! Set constants required for BLAS
+        one_kb = real(1,kind=kind_float)
+        zero_kb = real(0,kind=kind_float)
+!! determine overlap
+        call ggemm('c','n',nsubspace,nsubspace,nbasis,one_kb,&
+  &       basis_vectors(1:nbasis,1:nsubspace),nbasis,&
+  &       basis_vectors(1:nbasis,1:nsubspace),nbasis,&
+  &       zero_kb,&
+  &       overlap(1:nsubspace,1:nsubspace),&
+  &       nsubspace)
+        do j = 1, nrhs
+          diag_overlap(j) = overlap(j,j)
+        end do
+        call krylov_cholesky(nsubspace,&
+  &       overlap(1:nsubspace,1:nsubspace),&
+  &       diag_overlap(1:nsubspace),& 
+  &       cholesky(1:nsubspace,1:nsubspace),cond,iverb,ierr)
+        if (ierr.eq.0) then !! if rescue worked
+          if (iverb.ge.0) then
+            print *, 'WARNING: internal restart'
+            print *, 'please observe condition number'
+            print *, 'continuing iterations'
+          end if
+          kter = 0
+        else
+          if (iverb.ge.0) then
+            print *, 'current iteration solutions failed stability check'
+            print *, 'error variable = ',ierr
+            print *, 'using previous subspace solutions for print'
+          end if
+          ierr = 0
+          nsubspace = prev_nsubspace
+          exit ! This exits subspace loop
+        end if
+!! generate fresh proj_RHS as well
+        call ggemm('c','n',nsubspace,nrhs,nbasis,one_kb,&
+  &       basis_vectors(1:nbasis,1:nsubspace),nbasis,&
+  &       rhs(1:nbasis,1:nrhs),nbasis,&
+  &       zero_kb,&
+  &       proj_rhs(1:nsubspace,1:nrhs),&
+  &       nsubspace)
+!! generate fresh mvproduct
+! call user defined matrix vector product
+        associate(interfacing_bv => basis_vectors%element,&
+  &             interfacing_mv => mvproduct%element)
+          call krylov_mvp%lkl_mvp(nbasis,nsubspace,&
+  &         interfacing_bv(1:nbasis,1:nsubspace),&
+  &         interfacing_mv(1:nbasis,1:nsubspace),ierr)
+        end associate
+        if (ierr.ne.0) then
+          if (iverb.ge.0) then
+            print *, 'class(libkrylov_mvp_subroutine) function failed'
+            print *, 'error variable = ',ierr
+            print *, 'using previous subspace solutions for print'
+          end if
+          ierr = 0
+          nsubspace = prev_nsubspace
+          exit ! This exits subspace loop
+        end if
+        do j = 1, nsubspace
+          avproduct(1:nbasis,j) = mvproduct(1:nbasis,j) &
+  &       + ( basis_vectors(1:nbasis,j) * approx_spectra(1:nbasis))
+        end do
+        call krylov_rayleigh(nbasis,nsubspace,&
+  &         approx_spectra,avproduct(1:nbasis,1:nsubspace),&
+  &         basis_vectors(1:nbasis,1:nsubspace),&
+  &         rayleigh(1:prev_nsubspace,1:nsubspace),&
+  &         rayleigh_sq(1:prev_nsubspace,1:nsubspace),iverb,ierr)
+        if (ierr.ne.0) then
+          if (iverb.ge.0) then
+            print *, 'initial (re)construction of rayleigh matrix failed' 
+            print *, 'error variable = ',ierr
+            print *, 'using previous subspace solutions for print'
+          end if
+          nsubspace = prev_nsubspace
+          ierr = 0
+          exit ! This exits subspace loop
+        end if
+      else if (ierr.ne.0) then !krylov_check failed irrecoverably
         if (iverb.ge.0) then
           print *, 'new krylov subspace failed stability check'
           print *, 'error variable = ',ierr
@@ -7613,6 +7552,52 @@ contains
         nsubspace = prev_nsubspace
         ierr = 0
         exit ! This exits subspace loop
+      else ! cholesky decomposition is stable, expand subspace
+!! need to increase RHS as well
+        call ggemm('c','n',nresiduals,nrhs,nbasis,one_kb,&
+  &       basis_vectors(1:nbasis,(prev_nsubspace+1):nsubspace),nbasis,&
+  &       rhs(1:nbasis,1:nrhs),nbasis,&
+  &       zero_kb,&
+  &       proj_rhs((prev_nsubspace+1):nsubspace,1:nrhs),&
+  &       nresiduals)
+  ! call user defined matrix vector product
+        associate(interfacing_bv => basis_vectors%element,& 
+  &           interfacing_mv => mvproduct%element)
+          call krylov_mvp%lkl_mvp(nbasis,nresiduals,&
+  &         interfacing_bv(1:nbasis,(prev_nsubspace+1):nsubspace),&
+  &         interfacing_mv(1:nbasis,(prev_nsubspace+1):nsubspace),ierr)
+        end associate
+        if (ierr.ne.0) then
+          if (iverb.ge.0) then
+            print *, 'class(libkrylov_mvp_subroutine) function failed'
+            print *, 'error variable = ',ierr
+            print *, 'using previous subspace solutions for print'
+          end if
+          ierr = 0
+          nsubspace = prev_nsubspace
+          exit ! This exits subspace loop
+        end if
+        do j = prev_nsubspace+1 , nsubspace
+          avproduct(1:nbasis,j) = mvproduct(1:nbasis,j)& 
+  &    +  (basis_vectors(1:nbasis,j) * approx_spectra(1:nbasis))
+        end do
+! expand rayleigh matrix
+        call krylov_expand(nbasis,nsubspace,&
+  &       nresiduals,prev_nsubspace,&
+  &       approx_spectra,avproduct(1:nbasis,1:nsubspace),&
+  &       basis_vectors(1:nbasis,1:nsubspace),&
+  &       rayleigh(1:nsubspace,1:nsubspace),&
+  &       rayleigh_sq(1:nsubspace,1:nsubspace),iverb,ierr)
+        if (ierr.ne.0) then
+          if (iverb.ge.0) then
+            print *, 'expanding rayleigh matrix failed'
+            print *, 'error variable = ',ierr
+            print *, 'using previous subspace solutions for print'
+          end if
+          ierr = 0
+          nsubspace = prev_nsubspace
+          exit ! This exits subspace loop
+        end if
       end if
 
 ! print restart basis-vectors if required
@@ -7626,14 +7611,6 @@ contains
           end if
         end if
       end if
-
-!! need to increase RHS as well
-      call ggemm('c','n',nresiduals,nrhs,nbasis,one_kb,&
-  &     basis_vectors(1:nbasis,(prev_nsubspace+1):nsubspace),nbasis,&
-  &     rhs(1:nbasis,1:nrhs),nbasis,&
-  &     zero_kb,&
-  &     proj_rhs((prev_nsubspace+1):nsubspace,1:nrhs),&
-  &     nresiduals)
 
 ! print restart proj_rhs if required
       if (irestart.ge.4) then
@@ -7653,24 +7630,6 @@ contains
         print *, ' '
       end if
 
-! call user defined matrix vector product
-      associate(interfacing_bv => basis_vectors%element, &
-  &             interfacing_mv => mvproduct%element)
-        call krylov_mvp%lkl_mvp(nbasis,nresiduals,&
-  &       interfacing_bv(1:nbasis,(prev_nsubspace+1):nsubspace),&
-  &       interfacing_mv(1:nbasis,(prev_nsubspace+1):nsubspace),ierr)
-      end associate
-      if (ierr.ne.0) then
-        if (iverb.ge.0) then
-          print *, 'class(user_krylov_mvp_subroutine) function failed'
-          print *, 'error variable = ',ierr
-          print *, 'using previous subspace solutions for print'
-        end if
-        ierr = 0
-        nsubspace = prev_nsubspace
-        exit ! This exits subspace loop
-      end if
-
 ! print restart if required
       if (irestart.ge.3) then
         call array_print_rstrt(wname,nbasis,nsubspace,&
@@ -7683,30 +7642,6 @@ contains
         end if
       end if
 
-!! NAMBI : construction of avproduct
-      do j = (prev_nsubspace+1), nsubspace
-        avproduct(1:nbasis,j) = mvproduct(1:nbasis,j) &
-  &        + (basis_vectors(1:nbasis,j) * approx_spectra(1:nbasis))
-      end do
-
-! expand rayleigh matrix
-      call krylov_expand(nbasis,nsubspace,&
-  &     nresiduals,prev_nsubspace,&
-  &     approx_spectra,avproduct(1:nbasis,1:nsubspace),&
-  &     basis_vectors(1:nbasis,1:nsubspace),&
-  &     rayleigh(1:nsubspace,1:nsubspace),&
-  &     rayleigh_sq(1:nsubspace,1:nsubspace),iverb,ierr)
-      if (ierr.ne.0) then
-        if (iverb.ge.0) then
-          print *, 'expanding rayleigh matrix failed'
-          print *, 'error variable = ',ierr
-          print *, 'using previous subspace solutions for print'
-        end if
-        ierr = 0
-        nsubspace = prev_nsubspace
-        exit ! This exits subspace loop
-      end if
-
     end do ! krylov subspace loop ends
 
 ! spacer
@@ -7714,6 +7649,7 @@ contains
       print *, ' '
         if (iverb.ge.2) then
           print *, 'number of iterations: ',jter
+          print *, 'number of iterations since restart: ',kter
           print *, ' '
         end if
     end if
@@ -7727,7 +7663,7 @@ contains
           print *, 'kill file is ',kill_file_string
         end if
       end if
-      ierr = -40
+      ierr = -10
       return ! abort solver, return to call
     end if
 

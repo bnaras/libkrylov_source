@@ -7,7 +7,7 @@ module blastypes
 !--------------------------------------------------------------------
 !< Description:
 !< This module defines the blas/lapack calls for the array operations
-!< for krylovtypes_*.f90
+!< on type(base) arrays.
 !< This is the complex version, double precision, using BLAS 
 !--------------------------------------------------------------------
 !
@@ -656,70 +656,6 @@ contains
 !--------------------------------------------------------------------
   end subroutine gheev
 !--------------------------------------------------------------------
-
-!!--------------------------------------------------------------------
-!  subroutine glaghe(n,k,obj1,obj2,ld2,iseed,ierr)
-!!--------------------------------------------------------------------
-!!
-!!--------------------------------------------------------------------
-!!< Description:
-!!< wrapper for
-!!< obtaining a symmetric matrix obj2 from the vector obj1
-!!< as the diagonals, using iseed as a randomizer
-!!--------------------------------------------------------------------
-!!
-!!--------------------------------------------------------------------
-!! Modules
-!!--------------------------------------------------------------------
-!    use basekinds
-!    use floatformat
-!    use basetypes
-!!--------------------------------------------------------------------
-!!
-!    implicit none
-!!
-!!--------------------------------------------------------------------
-!! Input Parameters
-!!--------------------------------------------------------------------
-!!! number of rows and columns in obj2 and rows in obj1
-!    integer(kind_integer), intent(in) :: n
-!!! 
-!    integer(kind_integer), intent(in) :: k
-!!! diagonal to be used to generate obj2
-!    real(kind_float), intent(in) :: obj1(:)
-!!! first dimension of obj2
-!    integer(kind_integer), intent(in) :: ld2
-!!! iseed for randomizing
-!    integer(kind_integer), intent(in) :: iseed(4)
-!!--------------------------------------------------------------------
-!! Output Parameters
-!!--------------------------------------------------------------------
-!!! eigenvalues (intent out for the sake of LAPACK)
-!    type(base), intent(inout) :: obj2(:,:)
-!!--------------------------------------------------------------------
-!! Error Parameter
-!!--------------------------------------------------------------------
-!    integer(kind_integer), intent(inout) :: ierr
-!!--------------------------------------------------------------------
-!!  Local Variables
-!!--------------------------------------------------------------------
-!!!  integer variable to store optimal WORK size
-!    integer(kind_integer) :: work_val = 1
-!!!  array for work
-!    type(base), allocatable :: work(:)
-!!--------------------------------------------------------------------
-!
-!!! allocate lwork
-!    work_val = 2*n
-!    allocate(work(work_val))
-!    call zlaghe(n,k,obj1,obj2(:,:)%element,ld2, &
-!  &     iseed,work,ierr)
-!
-!    deallocate(work)
-!
-!!--------------------------------------------------------------------
-!  end subroutine glaghe
-!!--------------------------------------------------------------------
 
 !--------------------------------------------------------------------
   subroutine ghesv(uplo,n,nrhs,obj1,ld1,ipiv,obj2,ld2,ierr)
