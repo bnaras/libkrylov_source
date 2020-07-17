@@ -12,38 +12,37 @@
 echo '~~~test_restart_from_reference file~~~' >> ../testing.summary
 echo '' >> ../testing.summary
 echo 'using libkrylov/src/real_sp_test/test_restart_b_real_sp'  >> ../testing.summary
-echo 'on the same problem as the reference test' 
-echo 'with the approximate spectra preconditioner' 
+echo 'on the same problem as the reference test' >> ../testing.summary
+echo 'with the approximate spectra preconditioner' >> ../testing.summary
 cp ../ref_1b/real_sp_1b_prob.json .
 cp ../ref_1b/real_sp_1b_rhs.json .
-rm real_sp_1b_lagr.json
-rm real_sp_1b_vecs.json
-rm *.save
-rm *.rstrt
+rm real_sp_1b_lagr.json 2>/dev/null
+rm real_sp_1b_vecs.json 2>/dev/null
+rm *.save 2>/dev/null
+rm *.rstrt 2>/dev/null
 echo '' >> ../testing.summary
 echo 'generating restart files for' >> ../testing.summary
 echo 'restart levels' >> ../testing.summary
 echo 'test output in' >> ../testing.summary
 echo 'test/real_sp_testing.results/restart_b/real_sp_b_restart_k.out' >> ../testing.summary
 touch kill.libkrylov
-rm *.save
-echo '4' | ../../../src/real_sp_test/test_restart_b_real_sp > real_sp_b_restart_k.out
+../../../src/real_sp_test/driver1b_real_sp -irestart 4 > real_sp_b_restart_k.out
 echo '' >> ../testing.summary
 rm kill.libkrylov
-mv real_sp_b_restart_0.out real_sp_b_restart_0.out.old
+mv real_sp_b_restart_0.out real_sp_b_restart_0.out.old 2>/dev/null
 echo 'generating save file for' >> ../testing.summary
 echo 'restart level 1' >> ../testing.summary
 echo 'test output in' >> ../testing.summary
 echo 'test/real_sp_testing.results/restart_b/real_sp_b_restart_0.out' >> ../testing.summary
-echo '1' | ../../../src/real_sp_test/test_restart_b_real_sp > real_sp_b_restart_0.out
+../../../src/real_sp_test/driver1b_real_sp -irestart 1 > real_sp_b_restart_0.out
 echo '' >> ../testing.summary
 rm real_sp_1b_lagr.json
 rm real_sp_1b_vecs.json
-mv real_sp_b_restart_1.out real_sp_b_restart_1.out.old
+mv real_sp_b_restart_1.out real_sp_b_restart_1.out.old 2>/dev/null
 echo 'restart level 1' >> ../testing.summary
 echo 'test output in' >> ../testing.summary
 echo 'test/real_sp_testing.results/restart_b/real_sp_b_restart_1.out' >> ../testing.summary
-echo '1' | ../../../src/real_sp_test/test_restart_b_real_sp > real_sp_b_restart_1.out
+../../../src/real_sp_test/driver1b_real_sp -irestart 1 > real_sp_b_restart_1.out
 mv real_sp_1b_lagr.json real_sp_1b_1_lagr.json
 mv real_sp_1b_vecs.json real_sp_1b_1_vecs.json
 grep 'Converged' real_sp_b_restart_1.out >> ../testing.summary
@@ -58,14 +57,14 @@ echo 'test output in' >> ../testing.summary
 echo 'test/real_sp_testing.results/restart_b/real_sp_b_restart_k.out' >> ../testing.summary
 touch kill.libkrylov
 rm *.save
-echo '4' | ../../../src/real_sp_test/test_restart_b_real_sp > real_sp_b_restart_k.out
+../../../src/real_sp_test/driver1b_real_sp -irestart 4 > real_sp_b_restart_k.out
 echo '' >> ../testing.summary
 rm kill.libkrylov
-mv real_sp_b_restart_2.out real_sp_b_restart_2.out.old
+mv real_sp_b_restart_2.out real_sp_b_restart_2.out.old 2>/dev/null
 echo 'restart level 2' >> ../testing.summary
 echo 'test output in' >> ../testing.summary
 echo 'test/real_sp_testing.results/restart_b/real_sp_b_restart_2.out' >> ../testing.summary
-echo '2' | ../../../src/real_sp_test/test_restart_b_real_sp > real_sp_b_restart_2.out
+../../../src/real_sp_test/driver1b_real_sp -irestart 2 > real_sp_b_restart_2.out
 mv real_sp_1b_lagr.json real_sp_1b_2_lagr.json
 mv real_sp_1b_vecs.json real_sp_1b_2_vecs.json
 grep 'Converged' real_sp_b_restart_2.out >> ../testing.summary
@@ -80,14 +79,14 @@ echo 'test output in' >> ../testing.summary
 echo 'test/real_sp_testing.results/restart_b/real_sp_b_restart_k.out' >> ../testing.summary
 touch kill.libkrylov
 rm *.save
-echo '4' | ../../../src/real_sp_test/test_restart_b_real_sp > real_sp_b_restart_k.out
+../../../src/real_sp_test/driver1b_real_sp -irestart 4 > real_sp_b_restart_k.out
 echo '' >> ../testing.summary
 rm kill.libkrylov
-mv real_sp_b_restart_3.out real_sp_b_restart_3.out.old
+mv real_sp_b_restart_3.out real_sp_b_restart_3.out.old 2>/dev/null
 echo 'restart level 3' >> ../testing.summary
 echo 'test output in' >> ../testing.summary
 echo 'test/real_sp_testing.results/restart_b/real_sp_b_restart_3.out' >> ../testing.summary
-echo '3' | ../../../src/real_sp_test/test_restart_b_real_sp > real_sp_b_restart_3.out
+../../../src/real_sp_test/driver1b_real_sp -irestart 3 > real_sp_b_restart_3.out
 mv real_sp_1b_lagr.json real_sp_1b_3_lagr.json
 mv real_sp_1b_vecs.json real_sp_1b_3_vecs.json
 grep 'Converged' real_sp_b_restart_3.out >> ../testing.summary
@@ -102,17 +101,16 @@ echo 'test output in' >> ../testing.summary
 echo 'test/real_sp_testing.results/restart_b/real_sp_b_restart_k.out' >> ../testing.summary
 touch kill.libkrylov
 rm *.save
-echo '4' | ../../../src/real_sp_test/test_restart_b_real_sp > real_sp_b_restart_k.out
+../../../src/real_sp_test/driver1b_real_sp -irestart 4 > real_sp_b_restart_k.out
 echo '' >> ../testing.summary
 rm kill.libkrylov
-mv real_sp_b_restart_4.out real_sp_b_restart_4.out.old
+mv real_sp_b_restart_4.out real_sp_b_restart_4.out.old 2>/dev/null
 echo 'restart level 4' >> ../testing.summary
 echo 'test output in' >> ../testing.summary
 echo 'test/real_sp_testing.results/restart_b/real_sp_b_restart_4.out' >> ../testing.summary
-echo '4' | ../../../src/real_sp_test/test_restart_b_real_sp > real_sp_b_restart_4.out
+../../../src/real_sp_test/driver1b_real_sp -irestart 4 > real_sp_b_restart_4.out
 mv real_sp_1b_lagr.json real_sp_1b_4_lagr.json
 mv real_sp_1b_vecs.json real_sp_1b_4_vecs.json
-mv real_sp_1b_indx.json real_sp_1b_4_indx.json
 grep 'Converged' real_sp_b_restart_4.out >> ../testing.summary
 echo 'error statments:' >> ../testing.summary
 grep 'failed' real_sp_b_restart_4.out >> ../testing.summary

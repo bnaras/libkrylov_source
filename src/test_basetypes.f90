@@ -7,7 +7,7 @@ program test_basetypes
 !--------------------------------------------------------------------
 !< Description:
 !< This program tests the overloaded operators
-!< calls defined in a basetypes_* file
+!< defined in a basetypes_* file
 !< structured like the print subroutines in arrayfile
 !--------------------------------------------------------------------
 !
@@ -89,9 +89,11 @@ program test_basetypes
 
 
 !! testing real_to_base (integer)
-!! writing start real_to _base to the output file
+!! writing test real_to _base to the output file
   write(unit=funit,fmt=*) 'test type(base)',&
   & ', check real_to_base (integer)'
+!! set logical check = .false.
+  check = .false.
 !! running real_to_base on assigning real number 3 to type(base) z1
   z1 = real(3,kind=kind_float)
 !! writing the test output to the output file
@@ -103,15 +105,20 @@ program test_basetypes
 !! from the operation on real(kind_float) numbers
   r_ref = real(3,kind=kind_float)
 !! writing the reference value (unformatted) to the output file
-  write(unit=funit,fmt=*) 'z1 should be equal to', r_ref
+  write(unit=funit,fmt=*) 'z1 should be equal to ', r_ref
 !! taking the absolute difference 
 !! between test variable and reference value
 !! testing if the difference is greater than machine precision 
 !! (defined by the constant eps)
-  if (abs(r_test-r_ref).gt.eps) then      
+  if (abs(r_test-r_ref).gt.eps) then 
+!! if true, set logical check = .true.     
+    check = .true.
+  end if
+!! check value of logical check   
+  if (check) then
 !! if true
 !! writing the test failed to the output file
-!! writing the test failed to standard output
+!! writing the test failed to standard output   
     write(unit=funit,fmt=*) 'test real_to_base (with integer) failed'
     print *, 'test real_to_base (with integer) failed'
   else
@@ -127,11 +134,13 @@ program test_basetypes
 !! writing start test real_to_base to the output file
   write(unit=funit,fmt=*) 'test type(base)',&
   & ', check real_to_base (decimal)'
+!! set logical check = .false.
+  check = .false.
 !! running real_to_base on assigning test input to test output
   z2 = real(25.34,kind=kind_float)
 !! writing the test output to the output file
   write(unit=funit,fmt=*) 'z2 =', z2
-!! assigning the test output z2 
+!! assigning the  test output z2 
 !! to a real(kind_float) test variable r_test
   r_test = z2
 !! assigning a reference value (real(kind_float))
@@ -144,6 +153,11 @@ program test_basetypes
 !! testing if the difference is greater than machine precision
 !! (defined by the constant eps)
   if (abs(r_test-r_ref).gt.eps) then
+!! if true, set logical check = .true.
+    check = .true.
+  end if
+!! check value of logical check
+  if (check) then
 !! if true
 !! writing the test failed to the output file
 !! writing the test failed to standard output     
@@ -162,6 +176,8 @@ program test_basetypes
 !! writing start type(base) determinant operator
   write(unit=funit,fmt=*) 'test type(base)',&
   & ', calculte determinant operator'
+!! set logical check = .false.
+  check = .false.
 !! assigning real number 25.34 to z2
   z2 = real(25.34,kind=kind_float)
 !! running determinant operator on test input onto test output
@@ -181,6 +197,11 @@ program test_basetypes
 !! testing if the difference is greater than machine precision
 !! (defined by the constant eps)
   if (abs(r_test-r_ref).gt.eps) then
+!! if true, set logical check = .true.
+    check = .true.
+  end if
+!! check value of logical check
+  if (check) then
 !! if true
 !! writing the test failed to the output file
 !! writing the test failed to standard output      
@@ -194,14 +215,17 @@ program test_basetypes
     print *, 'tested type(base) determinant'
   end if
 
+
 !! testing type(base) conjugation operator
 !! writing start type(base) conjugation operator to the output file
   write(unit=funit,fmt=*) 'test type(base)',&
   & ', calculate conjugation operator'
+!! set logical check = .false.
+  check = .false.
 !! running conjugate operator on test input  onto test output 
   z4 = conjg(z2)
 !! writing the test output to the output file
-  write(unit=funit,fmt=*) 'z4 = conjg(z2) =', z4
+  write(unit=funit,fmt=*) 'z4 = conjg(z2) = ', z4
 !! assigning the test output z4
 !! to a real(kind_float) test variable r_test
   r_test = z4
@@ -209,12 +233,17 @@ program test_basetypes
 !! from the operation on real(kind_float) numbers
   r_ref = real(25.34,kind=kind_float)
 !! writing the reference value (unformatted) to the output file
-  write(unit=funit,fmt=*) 'z4 should be equal to', r_ref 
+  write(unit=funit,fmt=*) 'z4 should be equal to ', r_ref 
 !! taking the absolute difference
 !! between test variable and reference value
 !! testing if the difference is greater than machine precision
 !! (defined by the constant eps)
   if (abs(r_test-r_ref).gt.eps) then
+!! if true, set logical check = .true.
+    check = .true.
+  end if
+!! check value of logical check
+  if (check) then
 !! if true
 !! writing the test failed to the output file
 !! writing the test failed to standard output     
@@ -235,6 +264,8 @@ program test_basetypes
 !! testing base_to_cmplx 
   write(unit=funit,fmt=*)'test type(base)',&
   &', check base_to_real'
+!! set logical check = .false.
+  check = .false.
 !! assigning complex number (1,2) to z1
 !! if z1 is type(base) real, the imaginary part of z1 should be 0
 !! if z1 is type(base) complex, the imaginary part of z1 should be 2
@@ -261,12 +292,10 @@ program test_basetypes
   end if
 !! write the reference value (unformatted) to the output file
 !! separately for the real part and the imaginary part
-  write(unit=funit,fmt=*) 'real part of c1 should be equal to', r_refr
-  write(unit=funit,fmt=*) 'imaginary part of c1 should be equal to', r_refi
+  write(unit=funit,fmt=*) 'real part of c1 should be equal to ', r_refr
+  write(unit=funit,fmt=*) 'imaginary part of c1 should be equal to ', r_refi
 !! write start to test base_to_cmplx
   write(unit=funit,fmt=*) 'test base_to_cmplx'
-!! set logical check = .false.
-  check = .false.
 !! check the absolute difference of real part of the type base 
 !! between the number in test and reference
   if (abs(r_testr-r_refr).gt.eps) then
@@ -274,9 +303,6 @@ program test_basetypes
     write(unit=funit,fmt=*) 'test real part of c1 failed'
 !! set logical check = .true.
     check = .true.
-  else
-!! if false, write test for real part of complex number succeeded
-    write(unit=funit,fmt=*) 'test real part of c1 succeeded'
   end if
 !! check the absolute difference of imaginary part of the type base
 !! between the number in test and reference
@@ -285,16 +311,15 @@ program test_basetypes
     write(unit=funit,fmt=*) 'test imaginary part of c1 failed'
 !! set logical check = .true.
     check = .true.
-  else
-!! if false, write test for imaginary part of complex number succeeded
-    write(unit=funit,fmt=*) 'test imaginary part of c1 succeeded'
   end if
 !! check value of logical check
   if (check) then
 !! if true, write the base_to_cmplx test failed to the output file
+    write(unit=funit,fmt=*) 'test base_to_cmplx failed'
     print *, 'test base_to_cmplx failed'
   else
 !! if false, write the base_to_cmplx test tested to the output file
+    write(unit=funit,fmt=*) 'test base_to_cmplx succeeded'
     print *, 'tested base_to_cmplx'
   end if 
 
@@ -303,6 +328,8 @@ program test_basetypes
 !! writing start base_plus_base to the output file
   write(unit=funit,fmt=*) 'test type(base)',&
   &', calculate addition operator of base_plus_base' 
+!! set logical check = .false.
+  check = .false.
 !! assigning real number 21.23 to z3
 !! assigning real number 35.63 to z4
   z3 = real(21.23,kind=kind_float)
@@ -320,12 +347,18 @@ program test_basetypes
 !! from the operation on real(kind_float) numbers
   r_ref = real(21.23,kind=kind_float) + real(35.63,kind=kind_float)
 !! writing the reference value (unformatted) to the output file
-  write(unit=funit,fmt=*) 'z5 should be equal to', r_ref
+  write(unit=funit,fmt=*) 'z5 should be equal to ', r_ref
 !! taking the absolute difference
 !! between test variable and reference value
 !! testing if the difference is greater than machine precision
 !! (defined by the constant eps)
   if (abs(r_test-r_ref).gt.eps) then 
+!! if true, set logical check = .true.
+    check = .true.
+  end if
+!! check value of logical check
+  if (check) then
+!! if true,
 !! if true
 !! writing the test failed to the output file
 !! writing the test failed to standard output     
@@ -335,7 +368,7 @@ program test_basetypes
 !! writing the test succeeded to the output file
 !! writing the test tested to standard output
     write(unit=funit,fmt=*) 'test base_plus_base succeeded'
-    print *, 'tested vase_plus_base'
+    print *, 'tested base_plus_base'
   end if
 
 
@@ -343,12 +376,14 @@ program test_basetypes
 !! writing start base_minus_base to the output file 
   write(unit=funit,fmt=*) 'test type(base)',&
   &', calculate subtraction operation base_minus_base'
+!! set logical check = .false.
+  check = .false.
 !! assigning real number 35.63 to z4
 !! assigning real number 53.82 to z5
   z4 = real(35.63,kind=kind_float)
   z5 = real(53.82,kind=kind_float)
 !! writing the operation function and test input(unformatted) to output file
-  write(unit=funit,fmt=*) 'operation', z5, '-', z4
+  write(unit=funit,fmt=*) 'operation ', z5, '-', z4
 !! running base_minus_base and assigning test input onto test output 
   z6 = z5 - z4
 !! writing the test output to the output file
@@ -359,12 +394,17 @@ program test_basetypes
 !! assigning a reference value (real(kind_float))
 !! from the operation on real(kind_float) numbers
   r_ref = real(53.82,kind=kind_float) - real(35.63,kind=kind_float) 
-  write(unit=funit,fmt=*) 'z6 should be equal to', r_ref
+  write(unit=funit,fmt=*) 'z6 should be equal to ', r_ref
 !! taking the absolute difference
 !! between test variable and reference value
 !! testing if the difference is greater than machine precision
 !! (defined by the constant eps)
   if (abs(r_test-r_ref).gt.eps) then
+!! if true, set logical check = .true.
+    check = .true.
+  end if
+!! check value of logical check
+  if (check) then
 !! if true
 !! writing the test failed to the output file
 !! wriitng the test failed to standard output      
@@ -382,7 +422,9 @@ end if
 !! testing base_times_base
 !! writing start base_times_base and test input (unformatted) to output file 
   write(unit=funit,fmt=*) 'test type(base)',&
-  &',calculate multiplication operator base_times_base'
+  &', calculate multiplication operator base_times_base'
+!! set logical check = .false.
+  check = .false.
 !! assigning real number 53.82 to z5
 !! assigning real number 62.91 to z6
   z5 = real(53.82,kind=kind_float)
@@ -405,6 +447,11 @@ end if
 !! testing if the difference is greater than machine precision
 !! (defined by the constant eps)
   if (abs(r_test-r_ref).gt.eps) then
+!! if true, set logical check = .true.
+  check = .true.
+  end if
+!! check value of logical check
+  if (check) then
 !! if true
 !! writing the test failed to the output file
 !! writing the test failed to standard output      
@@ -423,6 +470,8 @@ end if
 !! writing start base_by_base and test input (unformatted) to output file
   write(unit=funit,fmt=*) 'test type(base)',&
   &', calculate division operator base_by_base'
+!! set logical check = .false.
+  check = .false.
 !! assigning real number 62.91 to z6
 !! assigning real number 78.23 to z7
   z6 = real(62.91,kind=kind_float)
@@ -445,6 +494,11 @@ end if
 !! testing if the difference is greater than machined precision
 !! (defined by the constant eps)
   if (abs(r_test-r_ref).gt.eps) then      
+!! if true, set logical check = .true.
+    check = .true.
+  end if
+!! check value of logical check
+  if (check) then
 !! if true
 !! writing the test failed to the output file
 !! writing the test failed to standard output
@@ -463,6 +517,8 @@ end if
 !! writing start base_minus_real and test input (unformatted) to output file
   write(unit=funit,fmt=*) 'test type(base)',&
   &', calculate subtraction opeartor base_minus_real'
+!! set logical check = .false.
+  check = .false.
 !! assigning real number 82.93 to z8
 !! assigning real number 20 to x1
   z8 = real(82.93,kind=kind_float)
@@ -485,6 +541,11 @@ end if
 !! testing if the difference is greater than machine precision
 !! (defined by the constant eps)
   if (abs(r_test-r_ref).gt.eps) then
+!! if true, set logical check = .true.
+    check = .true.
+  end if
+!! check value of logical check
+  if (check) then
 !! if true
 !! writing the test failed to the output file
 !! writing the test failed to standard output      
@@ -503,6 +564,8 @@ end if
 !! writing start base_times_real and test input (unformatted) output file
   write(unit=funit,fmt=*) 'test type(base)',&
   &', calculate multiplication operator base_times_real' 
+!! set logical check = .false.
+  check = .false.
 !! assigning real number 91.43 to z9 
 !! assigning real number 20 to x1
   z9 = real(91.43,kind=kind_float)
@@ -525,6 +588,11 @@ end if
 !! testing if the difference is greater than machine precision
 !! (defined by the constant eps)
   if (abs(r_test-r_ref).gt.eps) then
+!! if true, set logical check = .true.
+    check = .true.
+  end if
+!! check value of logical check
+  if (check) then
 !! if true
 !! writing the test failed to the output file
 !! writing the test failed to standard output
@@ -543,12 +611,14 @@ end if
 !! writing start base_by_real and test input (unformatted) output file
   write(unit=funit,fmt=*) 'test type(base)',&
   &', calculate divison operator base_by_real'
+!! set logical check = .false.
+  check = .false.
 !! assigning real number 102.53 to z20
 !! assigning real number 5.87 to x2 
   z10 = real(102.53,kind=kind_float)
   x2 = real(5.87,kind=kind_float)
 !! writing the operation function and test input(unformatted) to output file
-  write(unit=funit,fmt=*) 'operation', z10, '/', x2 
+  write(unit=funit,fmt=*) 'operation ', z10, '/', x2 
 !! running base_by_real and assignng test input onto test output
   z11 = z10 / x2
 !! writing the test output to the output file
@@ -559,12 +629,17 @@ end if
 !! assigning a reference value (real(kind_float))
 !! from the operation on real(kind_float) numbers
   r_ref = real(102.53,kind=kind_float) / real(5.87,kind=kind_float)
-  write(unit=funit,fmt=*) 'z11 should be equal to', r_ref
+  write(unit=funit,fmt=*) 'z11 should be equal to ', r_ref
 !! taking the absolute difference
 !! between test variable and reference value 
 !! testing if the difference is greater than machine precision
 !! (defined by the constant eps)
   if (abs(r_test-r_ref).gt.eps) then
+!! if true, set logical check = .true.
+    check = .true.
+  end if
+!! check value of logical check
+  if (check) then
 !! if true
 !! writing the test failed to the output file
 !! writing the test failed to standard output

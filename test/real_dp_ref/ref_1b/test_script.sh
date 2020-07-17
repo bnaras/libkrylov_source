@@ -19,13 +19,13 @@ echo 'at zero frequency'  >> ../testing.summary
 echo 'comparing to exact lagrangians' >> ../testing.summary
 sed '7,9!d' real_dp_1b_exact_lagr.json >> ../testing.summary
 echo '' >> ../testing.summary
-rm real_dp_1b_lagr.json
-rm real_dp_1b_vecs.json
-mv real_dp_npc_driver1b.out real_dp_npc_driver1b.out.old
+rm real_dp_1b_lagr.json 2>/dev/null
+rm real_dp_1b_vecs.json 2>/dev/null
+mv real_dp_npc_driver1b.out real_dp_npc_driver1b.out.old 2>/dev/null
 echo 'solve reference problem with no preconditioner' >> ../testing.summary
 echo 'test output in' >> ../testing.summary
 echo 'test/real_dp_testing.results/random_1b/real_dp_npc_driver1b.out' >> ../testing.summary
-echo 'none' | ../../../src/real_dp_test/driver1b_real_dp > real_dp_npc_driver1b.out
+../../../src/real_dp_test/driver1b_real_dp -precon none > real_dp_npc_driver1b.out
 mv real_dp_1b_lagr.json real_dp_1b_npc_lagr.json
 mv real_dp_1b_vecs.json real_dp_1b_npc_vecs.json
 grep 'Converged' real_dp_npc_driver1b.out >> ../testing.summary
@@ -34,11 +34,11 @@ grep 'failed' real_dp_npc_driver1b.out >> ../testing.summary
 echo 'lagrangians:' >> ../testing.summary
 sed '7,9!d' real_dp_1b_npc_lagr.json >> ../testing.summary
 echo '' >> ../testing.summary
-mv real_dp_apc_driver1b.out real_dp_apc_driver1b.out.old
+mv real_dp_apc_driver1b.out real_dp_apc_driver1b.out.old 2>/dev/null
 echo 'solve reference problem with approximate spectra preconditioner' >> ../testing.summary
 echo 'test output in' >> ../testing.summary
 echo 'test/real_dp_testing.results/random_1b/real_dp_apc_driver1b.out' >> ../testing.summary
-echo 'approx_spectra' | ../../../src/real_dp_test/driver1b_real_dp > real_dp_apc_driver1b.out
+../../../src/real_dp_test/driver1b_real_dp -precon approx_spectra > real_dp_apc_driver1b.out
 mv real_dp_1b_lagr.json real_dp_1b_apc_lagr.json
 mv real_dp_1b_vecs.json real_dp_1b_apc_vecs.json
 grep 'Converged' real_dp_apc_driver1b.out >> ../testing.summary
@@ -46,5 +46,18 @@ echo 'error statments:' >> ../testing.summary
 grep 'failed' real_dp_apc_driver1b.out >> ../testing.summary
 echo 'lagrangians:' >> ../testing.summary
 sed '7,9!d' real_dp_1b_apc_lagr.json >> ../testing.summary
+echo '' >> ../testing.summary
+mv real_dp_spc_driver1b.out real_dp_spc_driver1b.out.old 2>/dev/null
+echo 'solve reference problem with Jacobi-Davidson preconditioner' >> ../testing.summary
+echo 'test output in' >> ../testing.summary
+echo 'test/real_dp_testing.results/random_1b/real_dp_spc_driver1b.out' >> ../testing.summary
+../../../src/real_dp_test/driver1b_real_dp -precon sleijpen > real_dp_spc_driver1b.out
+mv real_dp_1b_lagr.json real_dp_1b_spc_lagr.json
+mv real_dp_1b_vecs.json real_dp_1b_spc_vecs.json
+grep 'Converged' real_dp_spc_driver1b.out >> ../testing.summary
+echo 'error statments:' >> ../testing.summary
+grep 'failed' real_dp_spc_driver1b.out >> ../testing.summary
+echo 'lagrangians:' >> ../testing.summary
+sed '7,9!d' real_dp_1b_spc_lagr.json >> ../testing.summary
 echo '' >> ../testing.summary
 echo '~~~~~Real Double reference_b test done~~~~~'

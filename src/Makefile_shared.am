@@ -28,69 +28,54 @@ test_ritz_real_sp_LDADD = libkrylov_real_sp.la
 # test of implemented subroutines in interface
 real_sp_krylovintrfcdir = $(PWD)/real_sp_test
 real_sp_krylovintrfc_PROGRAMS = test_libkrylovinterface_real_sp
-test_libkrylovinterface_real_sp_SOURCES = test_libkrylovinterface_real_sp.f90
+test_libkrylovinterface_real_sp_SOURCES = interface2_real_sp.f90 \
+test_libkrylovinterface.f90
 test_libkrylovinterface_real_sp_LDADD = libkrylov_real_sp.la
 # test of solver subroutine norms
 real_sp_normsdir = $(PWD)/real_sp_test
 real_sp_norms_PROGRAMS = test_norms_real_sp
-test_norms_real_sp_SOURCES = real_sp_srcs/test_norms_real_sp.f90
+test_norms_real_sp_SOURCES = test_norms.f90
 test_norms_real_sp_LDADD = libkrylov_real_sp.la
 # check of quality for restart files
 real_sp_restartdir = $(PWD)/real_sp_lib
 real_sp_restart_PROGRAMS = restart_check_libkrylov_real_sp
 restart_check_libkrylov_real_sp_SOURCES = restart_check.f90
 restart_check_libkrylov_real_sp_LDADD = libkrylov_real_sp.la
-# generate vandermonde matrix for driver1a
-real_sp_vm_problem1adir = $(PWD)/real_sp_test
-real_sp_vm_problem1a_PROGRAMS = problem1a_vm_real_sp
-problem1a_vm_real_sp_SOURCES = problem_1a_vandermonde.f90
-problem1a_vm_real_sp_LDADD = libkrylov_real_sp.la
-# generate pascal matrix for driver1a
-real_sp_ps_problem1adir = $(PWD)/real_sp_test
-real_sp_ps_problem1a_PROGRAMS = problem1a_ps_real_sp
-problem1a_ps_real_sp_SOURCES = problem_1a_pascal.f90
-problem1a_ps_real_sp_LDADD = libkrylov_real_sp.la
-# generate pascal matrix for driver1a
-real_sp_hk_problem1adir = $(PWD)/real_sp_test
-real_sp_hk_problem1a_PROGRAMS = problem1a_hk_real_sp
-problem1a_hk_real_sp_SOURCES = problem_1a_huckel.f90
-problem1a_hk_real_sp_LDADD = libkrylov_real_sp.la
+# generate symmetric matrix for driver1a
+real_sp_sym_problem1dir = $(PWD)/real_sp_test
+real_sp_sym_problem1_PROGRAMS = problem1_sym_real_sp
+problem1_sym_real_sp_SOURCES = symmetric_problem.f90
+problem1_sym_real_sp_LDADD = libkrylov_real_sp.la
 # driver1a - program for calling solver on a problem on file
 real_sp_driver1adir = $(PWD)/real_sp_test
 real_sp_driver1a_PROGRAMS = driver1a_real_sp
-driver1a_real_sp_SOURCES = real_sp_srcs/driver1types_real_sp.f90\
-real_sp_srcs/driver_1a_real_sp.f90
+driver1a_real_sp_SOURCES = driver1types_real_sp.f90\
+driver_1a.f90
 driver1a_real_sp_LDADD = libkrylov_real_sp.la
 # driver1b - program for calling b_solver on a problem on file
 real_sp_driver1bdir = $(PWD)/real_sp_test
 real_sp_driver1b_PROGRAMS = driver1b_real_sp
-driver1b_real_sp_SOURCES = real_sp_srcs/driver1types_real_sp.f90\
-real_sp_srcs/driver_1b_real_sp.f90
+driver1b_real_sp_SOURCES = driver1types_real_sp.f90\
+driver_1b.f90
 driver1b_real_sp_LDADD = libkrylov_real_sp.la
 # driver1c - program for calling c_solver on a problem on file
 real_sp_driver1cdir = $(PWD)/real_sp_test
 real_sp_driver1c_PROGRAMS = driver1c_real_sp
-driver1c_real_sp_SOURCES = real_sp_srcs/driver1types_real_sp.f90\
-real_sp_srcs/driver_1c_real_sp.f90
+driver1c_real_sp_SOURCES = driver1types_real_sp.f90\
+driver_1c.f90
 driver1c_real_sp_LDADD = libkrylov_real_sp.la
 # test restart a - program for calling a_solver on a problem on file
-real_sp_test_restart_adir = $(PWD)/real_sp_test
-real_sp_test_restart_a_PROGRAMS = test_restart_a_real_sp
-test_restart_a_real_sp_SOURCES = real_sp_srcs/test_restart_a_real_sp.f90\
-real_sp_srcs/driver1types_real_sp.f90
-test_restart_a_real_sp_LDADD = libkrylov_real_sp.la
-# test restart b - program for calling b_solver on a problem on file
-real_sp_test_restart_bdir = $(PWD)/real_sp_test
-real_sp_test_restart_b_PROGRAMS = test_restart_b_real_sp
-test_restart_b_real_sp_SOURCES = real_sp_srcs/test_restart_b_real_sp.f90\
-real_sp_srcs/driver1types_real_sp.f90
-test_restart_b_real_sp_LDADD = libkrylov_real_sp.la
+# real_sp_test_restart_adir = $(PWD)/real_sp_test
+# real_sp_test_restart_a_PROGRAMS = test_restart_a_real_sp
+# test_restart_a_real_sp_SOURCES = real_sp_srcs/test_restart_a_real_sp.f90\
+# real_sp_srcs/driver1types_real_sp.f90
+# test_restart_b_real_sp_LDADD = libkrylov_real_sp.la
 # test restart c - program for calling c_solver on a problem on file
-real_sp_test_restart_cdir = $(PWD)/real_sp_test
-real_sp_test_restart_c_PROGRAMS = test_restart_c_real_sp
-test_restart_c_real_sp_SOURCES = real_sp_srcs/test_restart_c_real_sp.f90\
-real_sp_srcs/driver1types_real_sp.f90
-test_restart_c_real_sp_LDADD = libkrylov_real_sp.la
+# real_sp_test_restart_cdir = $(PWD)/real_sp_test
+# real_sp_test_restart_c_PROGRAMS = test_restart_c_real_sp
+# test_restart_c_real_sp_SOURCES = real_sp_srcs/test_restart_c_real_sp.f90\
+# real_sp_srcs/driver1types_real_sp.f90
+# test_restart_c_real_sp_LDADD = libkrylov_real_sp.la
 # complex single precision
 # Library
 cmplx_sp_libdir = $(PWD)/cmplx_sp_lib
@@ -118,59 +103,60 @@ test_ritz_cmplx_sp_LDADD = libkrylov_cmplx_sp.la
 # test of implemented subroutines in interface
 cmplx_sp_krylovintrfcdir = $(PWD)/cmplx_sp_test
 cmplx_sp_krylovintrfc_PROGRAMS = test_libkrylovinterface_cmplx_sp
-test_libkrylovinterface_cmplx_sp_SOURCES = test_libkrylovinterface_cmplx_sp.f90
+test_libkrylovinterface_cmplx_sp_SOURCES = interface2_cmplx_sp.f90 \
+test_libkrylovinterface.f90
 test_libkrylovinterface_cmplx_sp_LDADD = libkrylov_cmplx_sp.la
 # test of solver subroutine norms
 cmplx_sp_normsdir = $(PWD)/cmplx_sp_test
 cmplx_sp_norms_PROGRAMS = test_norms_cmplx_sp
-test_norms_cmplx_sp_SOURCES = cmplx_sp_srcs/test_norms_cmplx_sp.f90
+test_norms_cmplx_sp_SOURCES = test_norms.f90
 test_norms_cmplx_sp_LDADD = libkrylov_cmplx_sp.la
 # check of quality for restart files
 cmplx_sp_restartdir = $(PWD)/cmplx_sp_lib
 cmplx_sp_restart_PROGRAMS = restart_check_libkrylov_cmplx_sp
 restart_check_libkrylov_cmplx_sp_SOURCES = restart_check.f90
 restart_check_libkrylov_cmplx_sp_LDADD = libkrylov_cmplx_sp.la
-# generate vandermonde matrix for driver1a
-cmplx_sp_vm_problem1adir = $(PWD)/cmplx_sp_test
-cmplx_sp_vm_problem1a_PROGRAMS = problem1a_vm_cmplx_sp
-problem1a_vm_cmplx_sp_SOURCES = problem_1a_vandermonde.f90
-problem1a_vm_cmplx_sp_LDADD = libkrylov_cmplx_sp.la
+# generate symmetric matrix for driver1a
+cmplx_sp_sym_problem1dir = $(PWD)/cmplx_sp_test
+cmplx_sp_sym_problem1_PROGRAMS = problem1_sym_cmplx_sp
+problem1_sym_cmplx_sp_SOURCES = symmetric_problem.f90
+problem1_sym_cmplx_sp_LDADD = libkrylov_cmplx_sp.la
 # driver1a - program for calling solver on a problem on file
 cmplx_sp_driver1adir = $(PWD)/cmplx_sp_test
 cmplx_sp_driver1a_PROGRAMS = driver1a_cmplx_sp
-driver1a_cmplx_sp_SOURCES = cmplx_sp_srcs/driver1types_cmplx_sp.f90\
-cmplx_sp_srcs/driver_1a_cmplx_sp.f90
+driver1a_cmplx_sp_SOURCES = driver1types_cmplx_sp.f90\
+driver_1a.f90
 driver1a_cmplx_sp_LDADD = libkrylov_cmplx_sp.la
 # driver1b - program for calling b_solver on a problem on file
 cmplx_sp_driver1bdir = $(PWD)/cmplx_sp_test
 cmplx_sp_driver1b_PROGRAMS = driver1b_cmplx_sp
-driver1b_cmplx_sp_SOURCES = cmplx_sp_srcs/driver1types_cmplx_sp.f90\
-cmplx_sp_srcs/driver_1b_cmplx_sp.f90
+driver1b_cmplx_sp_SOURCES = driver1types_cmplx_sp.f90\
+driver_1b.f90
 driver1b_cmplx_sp_LDADD = libkrylov_cmplx_sp.la
 # driver1c - program for calling c_solver on a problem on file
 cmplx_sp_driver1cdir = $(PWD)/cmplx_sp_test
 cmplx_sp_driver1c_PROGRAMS = driver1c_cmplx_sp
-driver1c_cmplx_sp_SOURCES = cmplx_sp_srcs/driver1types_cmplx_sp.f90\
-cmplx_sp_srcs/driver_1c_cmplx_sp.f90
+driver1c_cmplx_sp_SOURCES = driver1types_cmplx_sp.f90\
+driver_1c.f90
 driver1c_cmplx_sp_LDADD = libkrylov_cmplx_sp.la
 # test restart a - program for calling a_solver on a problem on file
-cmplx_sp_test_restart_adir = $(PWD)/cmplx_sp_test
-cmplx_sp_test_restart_a_PROGRAMS = test_restart_a_cmplx_sp
-test_restart_a_cmplx_sp_SOURCES = cmplx_sp_srcs/test_restart_a_cmplx_sp.f90\
-cmplx_sp_srcs/driver1types_cmplx_sp.f90
-test_restart_a_cmplx_sp_LDADD = libkrylov_cmplx_sp.la
+# cmplx_sp_test_restart_adir = $(PWD)/cmplx_sp_test
+# cmplx_sp_test_restart_a_PROGRAMS = test_restart_a_cmplx_sp
+# test_restart_a_cmplx_sp_SOURCES = cmplx_sp_srcs/test_restart_a_cmplx_sp.f90\
+# cmplx_sp_srcs/driver1types_cmplx_sp.f90
+# test_restart_a_cmplx_sp_LDADD = libkrylov_cmplx_sp.la
 # test restart b - program for calling b_solver on a problem on file
-cmplx_sp_test_restart_bdir = $(PWD)/cmplx_sp_test
-cmplx_sp_test_restart_b_PROGRAMS = test_restart_b_cmplx_sp
-test_restart_b_cmplx_sp_SOURCES = cmplx_sp_srcs/test_restart_b_cmplx_sp.f90\
-cmplx_sp_srcs/driver1types_cmplx_sp.f90
-test_restart_b_cmplx_sp_LDADD = libkrylov_cmplx_sp.la
+# cmplx_sp_test_restart_bdir = $(PWD)/cmplx_sp_test
+# cmplx_sp_test_restart_b_PROGRAMS = test_restart_b_cmplx_sp
+# test_restart_b_cmplx_sp_SOURCES = cmplx_sp_srcs/test_restart_b_cmplx_sp.f90\
+# cmplx_sp_srcs/driver1types_cmplx_sp.f90
+# test_restart_b_cmplx_sp_LDADD = libkrylov_cmplx_sp.la
 # test restart c - program for calling c_solver on a problem on file
-cmplx_sp_test_restart_cdir = $(PWD)/cmplx_sp_test
-cmplx_sp_test_restart_c_PROGRAMS = test_restart_c_cmplx_sp
-test_restart_c_cmplx_sp_SOURCES = cmplx_sp_srcs/test_restart_c_cmplx_sp.f90\
-cmplx_sp_srcs/driver1types_cmplx_sp.f90
-test_restart_c_cmplx_sp_LDADD = libkrylov_cmplx_sp.la
+# cmplx_sp_test_restart_cdir = $(PWD)/cmplx_sp_test
+# cmplx_sp_test_restart_c_PROGRAMS = test_restart_c_cmplx_sp
+# test_restart_c_cmplx_sp_SOURCES = cmplx_sp_srcs/test_restart_c_cmplx_sp.f90\
+# cmplx_sp_srcs/driver1types_cmplx_sp.f90
+# test_restart_c_cmplx_sp_LDADD = libkrylov_cmplx_sp.la
 # Real Double precision
 # library
 real_dp_libdir = $(PWD)/real_dp_lib
@@ -198,59 +184,61 @@ test_ritz_real_dp_LDADD = libkrylov_real_dp.la
 # test of implemented subroutines in interface
 real_dp_krylovintrfcdir = $(PWD)/real_dp_test
 real_dp_krylovintrfc_PROGRAMS = test_libkrylovinterface_real_dp
-test_libkrylovinterface_real_dp_SOURCES = test_libkrylovinterface_real_dp.f90
+test_libkrylovinterface_real_dp_SOURCES = interface2_real_dp.f90 \
+test_libkrylovinterface.f90
 test_libkrylovinterface_real_dp_LDADD = libkrylov_real_dp.la
 # test of solver subroutine norms
 real_dp_normsdir = $(PWD)/real_dp_test
 real_dp_norms_PROGRAMS = test_norms_real_dp
-test_norms_real_dp_SOURCES = real_dp_srcs/test_norms_real_dp.f90
+test_norms_real_dp_SOURCES = test_norms.f90
 test_norms_real_dp_LDADD = libkrylov_real_dp.la
 # check of quality for restart files
 real_dp_restartdir = $(PWD)/real_dp_lib
 real_dp_restart_PROGRAMS = restart_check_libkrylov_real_dp
 restart_check_libkrylov_real_dp_SOURCES = restart_check.f90
 restart_check_libkrylov_real_dp_LDADD = libkrylov_real_dp.la
-# generate vandermonde matrix for driver1a
-real_dp_vm_problem1adir = $(PWD)/real_dp_test
-real_dp_vm_problem1a_PROGRAMS = problem1a_vm_real_dp
-problem1a_vm_real_dp_SOURCES = problem_1a_vandermonde.f90
-problem1a_vm_real_dp_LDADD = libkrylov_real_dp.la
+# generate symmetric matrix for driver1a
+real_dp_sym_problem1dir = $(PWD)/real_dp_test
+real_dp_sym_problem1_PROGRAMS = problem1_sym_real_dp
+problem1_sym_real_dp_SOURCES = symmetric_problem.f90
+problem1_sym_real_dp_LDADD = libkrylov_real_dp.la
 # driver1a - program for calling solver on a problem on file
 real_dp_driver1adir = $(PWD)/real_dp_test
 real_dp_driver1a_PROGRAMS = driver1a_real_dp
-driver1a_real_dp_SOURCES = real_dp_srcs/driver1types_real_dp.f90\
-real_dp_srcs/driver_1a_real_dp.f90
+driver1a_real_dp_SOURCES = driver1types_real_dp.f90\
+driver_1a.f90
 driver1a_real_dp_LDADD = libkrylov_real_dp.la
 # driver1b - program for calling b_solver on a problem on file
 real_dp_driver1bdir = $(PWD)/real_dp_test
 real_dp_driver1b_PROGRAMS = driver1b_real_dp
-driver1b_real_dp_SOURCES = real_dp_srcs/driver1types_real_dp.f90\
-real_dp_srcs/driver_1b_real_dp.f90
+driver1b_real_dp_SOURCES = driver1types_real_dp.f90\
+driver_1b.f90
 driver1b_real_dp_LDADD = libkrylov_real_dp.la
 # driver1c - program for calling c_solver on a problem on file
 real_dp_driver1cdir = $(PWD)/real_dp_test
 real_dp_driver1c_PROGRAMS = driver1c_real_dp
-driver1c_real_dp_SOURCES = real_dp_srcs/driver1types_real_dp.f90\
-real_dp_srcs/driver_1c_real_dp.f90
+driver1c_real_dp_SOURCES = driver1types_real_dp.f90\
+driver_1c.f90
 driver1c_real_dp_LDADD = libkrylov_real_dp.la
 # test restart a - program for calling a_solver on a problem on file
-real_dp_test_restart_adir = $(PWD)/real_dp_test
-real_dp_test_restart_a_PROGRAMS = test_restart_a_real_dp
-test_restart_a_real_dp_SOURCES = real_dp_srcs/test_restart_a_real_dp.f90\
-real_dp_srcs/driver1types_real_dp.f90
-test_restart_a_real_dp_LDADD = libkrylov_real_dp.la
+# real_dp_test_restart_adir = $(PWD)/real_dp_test
+# real_dp_test_restart_a_PROGRAMS = test_restart_a_real_dp
+# test_restart_a_real_dp_SOURCES = \
+# real_dp_srcs/driver1types_real_dp.f90\
+# real_dp_srcs/test_restart_a_real_dp.f90
+# test_restart_a_real_dp_LDADD = libkrylov_real_dp.la
 # test restart b - program for calling b_solver on a problem on file
-real_dp_test_restart_bdir = $(PWD)/real_dp_test
-real_dp_test_restart_b_PROGRAMS = test_restart_b_real_dp
-test_restart_b_real_dp_SOURCES = real_dp_srcs/test_restart_b_real_dp.f90\
-real_dp_srcs/driver1types_real_dp.f90
-test_restart_b_real_dp_LDADD = libkrylov_real_dp.la
+# real_dp_test_restart_bdir = $(PWD)/real_dp_test
+# real_dp_test_restart_b_PROGRAMS = test_restart_b_real_dp
+# test_restart_b_real_dp_SOURCES = real_dp_srcs/test_restart_b_real_dp.f90\
+# real_dp_srcs/driver1types_real_dp.f90
+# test_restart_b_real_dp_LDADD = libkrylov_real_dp.la
 # test restart c - program for calling c_solver on a problem on file
-real_dp_test_restart_cdir = $(PWD)/real_dp_test
-real_dp_test_restart_c_PROGRAMS = test_restart_c_real_dp
-test_restart_c_real_dp_SOURCES = real_dp_srcs/test_restart_c_real_dp.f90\
-real_dp_srcs/driver1types_real_dp.f90
-test_restart_c_real_dp_LDADD = libkrylov_real_dp.la
+# real_dp_test_restart_cdir = $(PWD)/real_dp_test
+# real_dp_test_restart_c_PROGRAMS = test_restart_c_real_dp
+# test_restart_c_real_dp_SOURCES = real_dp_srcs/test_restart_c_real_dp.f90\
+# real_dp_srcs/driver1types_real_dp.f90
+# test_restart_c_real_dp_LDADD = libkrylov_real_dp.la
 # complex double precision
 # Library
 cmplx_dp_libdir = $(PWD)/cmplx_dp_lib
@@ -278,56 +266,57 @@ test_ritz_cmplx_dp_LDADD = libkrylov_cmplx_dp.la
 # test of implemented subroutines in interface
 cmplx_dp_krylovintrfcdir = $(PWD)/cmplx_dp_test
 cmplx_dp_krylovintrfc_PROGRAMS = test_libkrylovinterface_cmplx_dp
-test_libkrylovinterface_cmplx_dp_SOURCES = test_libkrylovinterface_cmplx_dp.f90
+test_libkrylovinterface_cmplx_dp_SOURCES = interface2_cmplx_dp.f90 \
+test_libkrylovinterface.f90
 test_libkrylovinterface_cmplx_dp_LDADD = libkrylov_cmplx_dp.la
 # test of solver subroutine norms
 cmplx_dp_normsdir = $(PWD)/cmplx_dp_test
 cmplx_dp_norms_PROGRAMS = test_norms_cmplx_dp
-test_norms_cmplx_dp_SOURCES = cmplx_dp_srcs/test_norms_cmplx_dp.f90
+test_norms_cmplx_dp_SOURCES = test_norms.f90
 test_norms_cmplx_dp_LDADD = libkrylov_cmplx_dp.la
 # check of quality for restart files
 cmplx_dp_restartdir = $(PWD)/cmplx_dp_lib
 cmplx_dp_restart_PROGRAMS = restart_check_libkrylov_cmplx_dp
 restart_check_libkrylov_cmplx_dp_SOURCES = restart_check.f90
 restart_check_libkrylov_cmplx_dp_LDADD = libkrylov_cmplx_dp.la
-# generate vandermonde matrix for driver1a
-cmplx_dp_vm_problem1adir = $(PWD)/cmplx_dp_test
-cmplx_dp_vm_problem1a_PROGRAMS = problem1a_vm_cmplx_dp
-problem1a_vm_cmplx_dp_SOURCES = problem_1a_vandermonde.f90
-problem1a_vm_cmplx_dp_LDADD = libkrylov_cmplx_dp.la
+# generate symmetric matrix for driver1a
+cmplx_dp_sym_problem1dir = $(PWD)/cmplx_dp_test
+cmplx_dp_sym_problem1_PROGRAMS = problem1_sym_cmplx_dp
+problem1_sym_cmplx_dp_SOURCES = symmetric_problem.f90
+problem1_sym_cmplx_dp_LDADD = libkrylov_cmplx_dp.la
 # driver1a - program for calling solver on a problem on file
 cmplx_dp_driver1adir = $(PWD)/cmplx_dp_test
 cmplx_dp_driver1a_PROGRAMS = driver1a_cmplx_dp
-driver1a_cmplx_dp_SOURCES = cmplx_dp_srcs/driver1types_cmplx_dp.f90\
-cmplx_dp_srcs/driver_1a_cmplx_dp.f90
+driver1a_cmplx_dp_SOURCES = driver1types_cmplx_dp.f90\
+driver_1a.f90
 driver1a_cmplx_dp_LDADD = libkrylov_cmplx_dp.la
 # driver1b - program for calling b_solver on a problem on file
 cmplx_dp_driver1bdir = $(PWD)/cmplx_dp_test
 cmplx_dp_driver1b_PROGRAMS = driver1b_cmplx_dp
-driver1b_cmplx_dp_SOURCES = cmplx_dp_srcs/driver1types_cmplx_dp.f90\
-cmplx_dp_srcs/driver_1b_cmplx_dp.f90
+driver1b_cmplx_dp_SOURCES = driver1types_cmplx_dp.f90\
+driver_1b.f90
 driver1b_cmplx_dp_LDADD = libkrylov_cmplx_dp.la
 # driver1c - program for calling c_solver on a problem on file
 cmplx_dp_driver1cdir = $(PWD)/cmplx_dp_test
 cmplx_dp_driver1c_PROGRAMS = driver1c_cmplx_dp
-driver1c_cmplx_dp_SOURCES = cmplx_dp_srcs/driver1types_cmplx_dp.f90\
-cmplx_dp_srcs/driver_1c_cmplx_dp.f90
+driver1c_cmplx_dp_SOURCES = driver1types_cmplx_dp.f90\
+driver_1c.f90
 driver1c_cmplx_dp_LDADD = libkrylov_cmplx_dp.la
 # test restart a - program for calling a_solver on a problem on file
-cmplx_dp_test_restart_adir = $(PWD)/cmplx_dp_test
-cmplx_dp_test_restart_a_PROGRAMS = test_restart_a_cmplx_dp
-test_restart_a_cmplx_dp_SOURCES = cmplx_dp_srcs/test_restart_a_cmplx_dp.f90\
-cmplx_dp_srcs/driver1types_cmplx_dp.f90
-test_restart_a_cmplx_dp_LDADD = libkrylov_cmplx_dp.la
+# cmplx_dp_test_restart_adir = $(PWD)/cmplx_dp_test
+# cmplx_dp_test_restart_a_PROGRAMS = test_restart_a_cmplx_dp
+# test_restart_a_cmplx_dp_SOURCES = cmplx_dp_srcs/test_restart_a_cmplx_dp.f90\
+# cmplx_dp_srcs/driver1types_cmplx_dp.f90
+# test_restart_a_cmplx_dp_LDADD = libkrylov_cmplx_dp.la
 # test restart b - program for calling b_solver on a problem on file
-cmplx_dp_test_restart_bdir = $(PWD)/cmplx_dp_test
-cmplx_dp_test_restart_b_PROGRAMS = test_restart_b_cmplx_dp
-test_restart_b_cmplx_dp_SOURCES = cmplx_dp_srcs/test_restart_b_cmplx_dp.f90\
-cmplx_dp_srcs/driver1types_cmplx_dp.f90
-test_restart_b_cmplx_dp_LDADD = libkrylov_cmplx_dp.la
+# cmplx_dp_test_restart_bdir = $(PWD)/cmplx_dp_test
+# cmplx_dp_test_restart_b_PROGRAMS = test_restart_b_cmplx_dp
+# test_restart_b_cmplx_dp_SOURCES = cmplx_dp_srcs/test_restart_b_cmplx_dp.f90\
+# cmplx_dp_srcs/driver1types_cmplx_dp.f90
+# test_restart_b_cmplx_dp_LDADD = libkrylov_cmplx_dp.la
 # test restart c - program for calling c_solver on a problem on file
-cmplx_dp_test_restart_cdir = $(PWD)/cmplx_dp_test
-cmplx_dp_test_restart_c_PROGRAMS = test_restart_c_cmplx_dp
-test_restart_c_cmplx_dp_SOURCES = cmplx_dp_srcs/test_restart_c_cmplx_dp.f90\
-cmplx_dp_srcs/driver1types_cmplx_dp.f90
-test_restart_c_cmplx_dp_LDADD = libkrylov_cmplx_dp.la
+# cmplx_dp_test_restart_cdir = $(PWD)/cmplx_dp_test
+# cmplx_dp_test_restart_c_PROGRAMS = test_restart_c_cmplx_dp
+# test_restart_c_cmplx_dp_SOURCES = cmplx_dp_srcs/test_restart_c_cmplx_dp.f90\
+# cmplx_dp_srcs/driver1types_cmplx_dp.f90
+# test_restart_c_cmplx_dp_LDADD = libkrylov_cmplx_dp.la

@@ -1,5 +1,5 @@
 #bin/bash
-mv testing.summary testing.summary.old
+mv testing.summary testing.summary.old 2>/dev/null
 cp -r ../cmplx_sp_ref/* .
 # run tests and get output into the right places
 echo 'libkrylov tests' >> testing.summary
@@ -28,6 +28,4 @@ cd ../restart_c
 #./test_script.sh
 cd ..
 echo '~all Complex Single Precision Tests done~'
-echo '~echoing test summary~'
-cat testing.summary
 

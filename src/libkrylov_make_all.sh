@@ -14,18 +14,22 @@ echo 'Make script for every library in libkrylov'
 # this command only makes sense for making everything
 make installdirs
 ./libkrylov_make_interactive.sh << ENDINPUT
+no
 single
 real
 ENDINPUT
 ./libkrylov_make_interactive.sh << ENDINPUT
+no
 double
 real
 ENDINPUT
 ./libkrylov_make_interactive.sh << ENDINPUT
+no
 single
 complex
 ENDINPUT
 ./libkrylov_make_interactive.sh << ENDINPUT
+no
 double
 complex
 ENDINPUT

@@ -52,6 +52,7 @@ program krylovdriver_1b
   type(lkl_pc_none) :: krylov_pc_none
   type(lkl_pc_approx) :: krylov_pc_approx
   type(lkl_pc_davidson) :: krylov_pc_davidson
+  type(lkl_pc_sleijpen) :: krylov_pc_sleijpen
   type(kl_mvp) :: krylov_mvp
   type(kl_output_b) :: krylov_output
 !--------------------------------------------------------------------
@@ -61,6 +62,7 @@ program krylovdriver_1b
   character(len=32) :: preconditioner = ''
 ! contains the matrix of problem, read in from file
   type(base), target, allocatable :: krylov_a(:,:)
+  real(kind_float), target, allocatable :: krylov_d(:)
 ! contains the rhs of problem, read in from file
   type(base), target, allocatable :: krylov_p(:,:)
 ! character string to become id_string in solver
@@ -76,6 +78,7 @@ program krylovdriver_1b
 ! which becomes the size of rhs
   integer(kind_integer) :: n3 = 0
   integer(kind_integer) :: n4 = 0
+  integer(kind_integer) :: j = 0
 !--------------------------------------------------------------------
 ! Error Parameter
 !--------------------------------------------------------------------
@@ -117,6 +120,7 @@ program krylovdriver_1b
 
 !! allocate array to contain problem
   allocate(krylov_a(krylov_problem%n_size,krylov_problem%n_size))
+  allocate(krylov_d(krylov_problem%n_size))
 
 !! read problem array
   call array_read_base(filename_string,krylov_problem%n_size,&
@@ -126,6 +130,11 @@ program krylovdriver_1b
     print *, 'solver failed as problem can not be read!'
     stop
   end if
+
+  do j = 1, krylov_problem%n_size
+    krylov_d(j) = krylov_a(j,j)
+!    krylov_a(j,j) = real(0,kind=kind_float)
+  end do
 
 
 !! set the filename_string for the file name of rhs
@@ -168,12 +177,17 @@ program krylovdriver_1b
 
 ! set pointers to local variables required for input subroutines
   krylov_problem%problem_string => b1_string
-  krylov_approx%krylov_a => krylov_a
+  krylov_approx%krylov_d => krylov_d
   krylov_mvp%krylov_a => krylov_a
   krylov_rhs%krylov_p => krylov_p
 
 ! call solver
-  if (preconditioner.eq.'davidson') then
+  if (preconditioner.eq.'sleijpen') then
+    call problem_b_solver(krylov_approx,krylov_s_eg,&
+  &   krylov_rhs, &
+  &   krylov_problem,krylov_g_uv,krylov_mvp,krylov_pc_sleijpen, &
+  &   krylov_output,ierr)
+  else if (preconditioner.eq.'davidson') then
     print *, 'equivalent to approx_spectra'
     call problem_b_solver(krylov_approx,krylov_s_eg,&
   &   krylov_rhs, &
@@ -202,6 +216,7 @@ program krylovdriver_1b
 
 ! no post calculation operations, everything done within solver
   deallocate(krylov_a)
+  deallocate(krylov_d)
   deallocate(krylov_p)
 
 !--------------------------------------------------------------------

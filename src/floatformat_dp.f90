@@ -7,7 +7,12 @@ module floatformat
 !--------------------------------------------------------------------
 !< Description:
 !< This module defines the precision of real(kind_float)
-!< which is to be used in basetypes_*.f90 and above
+!< which is to be used in basetypes_*.f90 and above,
+!< as well as a epsilon 'eps' value for machine precision.
+!< This module also defines some strings that can be used 
+!< in the solver to identify what has been compiled
+!< and format output.
+!< This is for double precision.
 !--------------------------------------------------------------------
 !
 !--------------------------------------------------------------------
@@ -36,7 +41,7 @@ module floatformat
 !--------------------------------------------------------------------
 
 !--------------------------------------------------------------------
-! Character string for formatting float print, for testing purposes
+! Character string for formatting float print
 !--------------------------------------------------------------------
   character(len=6), parameter :: &
   & float_format_string = 'e24.17'
@@ -44,9 +49,10 @@ module floatformat
 
 !--------------------------------------------------------------------
 ! Setting the precision of reals for array operations - 
-! in basetypes_*.f90, the BLAS calls must match
-! please make a new basetypes_*.f90 if implementing a new precision
-! or use the basetypes_*_bf.f90 for the 'BLAS-free' implementation
+! in blastypes_*.f90, the BLAS calls must match
+! please make a new blastypes_*.f90 if implementing a new precision
+! the blastypes_*_bf.f90 for the 'BLAS-free' implementation
+! is coming soon.
 !--------------------------------------------------------------------
 
 !! precision parameter

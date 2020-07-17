@@ -48,9 +48,11 @@ program krylovdriver_1a
   type(kl_approx) :: krylov_approx
   type(lkl_s_elec_gas) :: krylov_s_eg
   type(lkl_g_unit_vec) :: krylov_g_uv
+  type(lkl_pc_all) :: krylov_pc_all
   type(lkl_pc_none) :: krylov_pc_none
   type(lkl_pc_approx) :: krylov_pc_approx
   type(lkl_pc_davidson) :: krylov_pc_davidson
+  type(lkl_pc_sleijpen) :: krylov_pc_sleijpen
   type(kl_mvp) :: krylov_mvp
   type(kl_output_a) :: krylov_output
 !--------------------------------------------------------------------
@@ -60,6 +62,7 @@ program krylovdriver_1a
   character(len=32) :: preconditioner = ''
 ! contains the matrix problem, read in from file
   type(base), target, allocatable :: krylov_a(:,:)
+  real(kind_float), target, allocatable :: krylov_d(:)
 ! character string to become id_string in solver
   character(len=22), target :: a1_string = ''
 ! character string for file name that contains the problem
@@ -70,6 +73,7 @@ program krylovdriver_1a
 ! which becomes nbasis via krylov_problem%n_size
   integer(kind_integer) :: n1 = 0
   integer(kind_integer) :: n2 = 0
+  integer(kind_integer) :: j = 0
 !--------------------------------------------------------------------
 ! Error Parameter
 !--------------------------------------------------------------------
@@ -82,6 +86,8 @@ program krylovdriver_1a
   print *, 'Please enter an option for the preconditioner'
   read (*,*) preconditioner
   print *, preconditioner,' entered'
+
+  krylov_pc_all%precon_string = preconditioner
 
 !! set irestart
   krylov_problem%irestart = 0
@@ -111,6 +117,7 @@ program krylovdriver_1a
 
 !! allocate array to contain problem
   allocate(krylov_a(krylov_problem%n_size,krylov_problem%n_size))
+  allocate(krylov_d(krylov_problem%n_size))
 
 !! read problem array size
   call array_read_base(filename_string,krylov_problem%n_size,&
@@ -121,40 +128,27 @@ program krylovdriver_1a
     stop
   end if
 
+  do j = 1, krylov_problem%n_size
+    krylov_d(j) = krylov_a(j,j)
+!    krylov_a(j,j) = real(0,kind=kind_float)
+  end do
+
 ! set pointers to local variables required for input subroutines
   krylov_problem%problem_string => a1_string
-  krylov_approx%krylov_a => krylov_a
+  krylov_approx%krylov_d => krylov_d
   krylov_mvp%krylov_a => krylov_a
 
 ! call solver
-  if (preconditioner.eq.'davidson') then
-    call problem_a_solver(krylov_approx,krylov_s_eg,&
+  call problem_a_solver(krylov_approx,krylov_s_eg,&
   &   krylov_problem, &
-  &   krylov_g_uv,krylov_mvp,krylov_pc_davidson, &
+  &   krylov_g_uv,krylov_mvp,krylov_pc_all, &
   &   krylov_output,ierr)
-  else if (preconditioner.eq.'approx_spectra') then
-    call problem_a_solver(krylov_approx,krylov_s_eg,&
-  &   krylov_problem, &
-  &   krylov_g_uv,krylov_mvp,krylov_pc_approx, &
-  &   krylov_output,ierr)
-  else if (preconditioner.eq.'none') then
-    call problem_a_solver(krylov_approx,krylov_s_eg,&
-  &   krylov_problem, &
-  &   krylov_g_uv,krylov_mvp,krylov_pc_none, &
-  &   krylov_output,ierr)
-  else
-    print *, 'unrecognised preconditioner string'
-    print *, 'using davidson'
-    call problem_a_solver(krylov_approx,krylov_s_eg,&
-  &   krylov_problem, &
-  &   krylov_g_uv,krylov_mvp,krylov_pc_davidson, &
-  &   krylov_output,ierr)
-  end if
 
   print *, 'final ierr value = ',ierr
 
 ! no post calculation operations, everything done within solver
   deallocate(krylov_a)
+  deallocate(krylov_d)
 
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------

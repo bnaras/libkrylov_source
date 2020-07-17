@@ -30,8 +30,10 @@ module driver1types_real_dp
   use blastypes
 ! krylov subspace function signatures
   use libkrylovinterface
+  use libkrylovinterface2
 ! krylov subspace function signatures, specifically
 ! for a symmetric slyvester problem
+  use libkrylovinterface_real_dp
 !--------------------------------------------------------------------
 ! Implicit none
 !--------------------------------------------------------------------
@@ -108,7 +110,7 @@ module driver1types_real_dp
 ! contains the matrix problem
 ! pointer to target set outside of solver
 ! shared with kl_mvp, must be set before calling solver
-    type(base), pointer :: krylov_a(:,:) => null()
+    real(kind_float), pointer :: krylov_d(:) => null()
   contains
     procedure :: vector_fill => fill_kl_approx
   end type kl_approx
@@ -236,15 +238,15 @@ contains
       maxstart = nbasis
     else if (nbasis.lt.50) then
       nroots = 2
-      minstart = 8
+      minstart = 0
       maxstart = 16
     else if (nbasis.lt.200) then
       nroots = 5
-      minstart = floor(0.2*nbasis,kind=kind_integer)
-      maxstart = floor(0.5*nbasis,kind=kind_integer)
+      minstart = 20
+      maxstart = floor(0.8*nbasis,kind=kind_integer)
     else
       nroots = 5
-      minstart = floor(0.1*nbasis,kind=kind_integer)
+      minstart = 50
       maxstart = floor(0.3*nbasis,kind=kind_integer)
     end if
 
@@ -341,13 +343,13 @@ contains
       minstart = nbasis
       maxstart = nbasis
     else if (nbasis.lt.50) then
-      minstart = 8
+      minstart = 0
       maxstart = 16
     else if (nbasis.lt.200) then
-      minstart = floor(0.2*nbasis,kind=kind_integer)
+      minstart = 0
       maxstart = floor(0.5*nbasis,kind=kind_integer)
     else
-      minstart = floor(0.1*nbasis,kind=kind_integer)
+      minstart = 0
       maxstart = floor(0.3*nbasis,kind=kind_integer)
     end if
 
@@ -444,13 +446,13 @@ contains
       minstart = nbasis
       maxstart = nbasis
     else if (nbasis.lt.50) then
-      minstart = 8
+      minstart = 0
       maxstart = 16
     else if (nbasis.lt.200) then
-      minstart = floor(0.2*nbasis,kind=kind_integer)
+      minstart = 0
       maxstart = floor(0.5*nbasis,kind=kind_integer)
     else
-      minstart = floor(0.1*nbasis,kind=kind_integer)
+      minstart = 0
       maxstart = floor(0.3*nbasis,kind=kind_integer)
     end if
 
@@ -520,7 +522,7 @@ contains
 
 !! obtain approximate spectra from diagonal of problem
     do j = 1, n1
-      obj(j) = data%krylov_a(j,j)
+      obj(j) = data%krylov_d(j)
     end do    
 
 !--------------------------------------------------------------------

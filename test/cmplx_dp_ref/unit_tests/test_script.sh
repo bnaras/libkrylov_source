@@ -14,7 +14,7 @@ echo '~~~file_test~~~' >> ../testing.summary
 echo '~~~~~Complex Double File tests done~~~~~'
 echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~' >> ../testing.summary
 echo '~~~basetype_test~~~' >> ../testing.summary
-mv cmplx_dp_base_test.out cmplx_dp_base_test.out.old
+mv cmplx_dp_base_test.out cmplx_dp_base_test.out.old 2>/dev/null
 echo 'test output in' >> ../testing.summary
 echo 'test/cmplx_dp_testing.results/unit_tests/cmplx_dp_base_test.out' >> ../testing.summary
 ../../../src/cmplx_dp_test/test_basetypes_cmplx_dp >> ../testing.summary
@@ -23,7 +23,7 @@ grep 'failed' cmplx_dp_base_test.out >> ../testing.summary
 echo '~~~~~Complex Double type(base) tests done~~~~~'
 echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~' >> ../testing.summary
 echo '~~~blastype_test~~~' >> ../testing.summary
-mv cmplx_dp_blas_test.out cmplx_dp_blas_test.out.old
+mv cmplx_dp_blas_test.out cmplx_dp_blas_test.out.old 2>/dev/null
 echo 'test output in' >> ../testing.summary
 echo 'test/cmplx_dp_testing.results/unit_tests/cmplx_dp_blas_test.out' >> ../testing.summary
 ../../../src/cmplx_dp_test/test_blastypes_cmplx_dp >> ../testing.summary
@@ -32,27 +32,26 @@ grep 'failed' cmplx_dp_blas_test.out >> ../testing.summary
 echo '~~~~~Complex Double type(base) array tests done~~~~~'
 echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~' >> ../testing.summary
 echo '~~~solver_subroutines_test~~~' >> ../testing.summary
-mv cmplx_dp_ritz_test.out cmplx_dp_ritz_test.out.old
+mv cmplx_dp_ritz_test.out cmplx_dp_ritz_test.out.old 2>/dev/null
 echo 'test output in' >> ../testing.summary
 echo 'test/cmplx_dp_testing.results/unit_tests/cmplx_dp_ritz_test.out' >> ../testing.summary
-../../../src/real_dp_test/test_ritz_cmplx_dp >> cmplx_dp_ritz_test.out
+../../../src/cmplx_dp_test/test_ritz_cmplx_dp >> cmplx_dp_ritz_test.out
 cat cmplx_dp_ritz_test.sum >> ../testing.summary
 echo error statements: >> ../testing.summary
 grep 'failed' cmplx_dp_ritz_test.out >> ../testing.summary
 echo '~~~~~Complex Double solver subroutine tests done~~~~~'
 echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~' >> ../testing.summary
 echo '~~~krylov_interface_subroutines_test~~~' >> ../testing.summary
-mv cmplx_dp_interface_test.out cmplx_dp_interface_test.out.old
+mv cmplx_dp_interface_test.out cmplx_dp_interface_test.out.old 2>/dev/null
 echo 'test output in' >> ../testing.summary
 echo 'test/cmplx_dp_testing.results/cmplx_dp_interface_test.out' >> ../testing.summary
-../../../src/cmplx_dp_test/test_libkrylovinterface_cmplx_dp 
+../../../src/cmplx_dp_test/test_libkrylovinterface_cmplx_dp >> ../testing.summary
 echo '~~~~~Complex Double subroutine tests done~~~~~'
-grep 'tested' cmplx_dp_interface_test.out >> ../testing.summary
 echo error statements: >> ../testing.summary
 grep 'failed' cmplx_dp_interface_test.out >> ../testing.summary
 echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~' >> ../testing.summary
 echo '~~~norms_subroutines_test~~~' >> ../testing.summary
-mv cmplx_dp_norms_test.out cmplx_dp_norms_test.out.old
+mv cmplx_dp_norms_test.out cmplx_dp_norms_test.out.old 2>/dev/null
 echo 'test output in' >> ../testing.summary
 echo 'test/cmplx_dp_testing.results/unit_tests/cmplx_dp_norms_test.out' >> ../testing.summary
 ../../../src/cmplx_dp_test/test_norms_cmplx_dp >> cmplx_dp_norms_test.out

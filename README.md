@@ -32,12 +32,15 @@ has been instructive.
 Generalizing matrix element types was carried out by Naje' George.
 
 Zoey Shen Ziyue improved the unit testing for generic matrix
-element operations and the generic matrix element operations.
-She has also constructed the modules required for the user to
-build their own input functions.
+element operations and the generic matrix element operations, which 
+achieves compile-time polymorphism.
+She is improving users-friendliness of calling any 
+compiled solver for various matrix element types and precision.
 
 Samuel Beoke has written most of the wiki while debugging 
-the code. 
+the code. Sam is responsible for the testing of the solver
+on problems in the test suite, and some python scripts for
+visualization.
 
 The project would like to thank 
 Dr. Shane M. Parker for useful discussions.
