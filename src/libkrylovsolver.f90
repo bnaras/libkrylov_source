@@ -1160,7 +1160,7 @@ contains
       if (iverb.ge.0) then
         print *, 'No free file units!'
       end if
-      ierr = -9
+      ierr = -150
       return
     end if
 
@@ -1175,7 +1175,7 @@ contains
         print *, 'file cannot be opened!'
       end if
       close(unit=funit,iostat=ierr,status='keep') ! force close with iostat
-      ierr = -7
+      ierr = -154
       return
     end if
 
@@ -1186,7 +1186,7 @@ contains
         print *, 'file size cannot be read!'
       end if
       close(unit=funit,iostat=ierr,status='keep') ! force close with iostat
-      ierr = -7
+      ierr = -164
       return
     end if
 
@@ -1199,12 +1199,12 @@ contains
       end if
       close(unit=funit,iostat=ierr,status='keep') ! force close with iostat
       deallocate(test_array)
-      ierr = -7
+      ierr = -153
       return
     end if
 
     close(unit=funit,iostat=ierr,status='keep') ! last value of ierr
-    if (ierr.ne.0) ierr = -7
+    if (ierr.ne.0) ierr = -149
     deallocate(test_array)
 
 
@@ -1275,7 +1275,7 @@ contains
       if (iverb.ge.0) then
         print *, 'No free file units!'
       end if
-      ierr = -9
+      ierr = -159
       return
     end if
 
@@ -1290,7 +1290,7 @@ contains
         print *, 'file cannot be opened!'
       end if
       close(unit=funit,iostat=ierr,status='keep') ! force close with iostat
-      ierr = -7
+      ierr = -167
       return
     end if
 
@@ -1302,23 +1302,23 @@ contains
         print *, 'file does not have dimensions set!'
       end if
       close(unit=funit,iostat=ierr,status='keep') ! force close with iostat
-      ierr = -7
+      ierr = -177
       return
     end if
     if (k1.ne.n1) then
       if (iverb.ge.0) then
-        print *, 'output array does not have matching rows'
+        print *, 'output array does not have matching row size'
       end if
       close(unit=funit,iostat=ierr,status='keep') ! force close with iostat
-      ierr = -7
+      ierr = -187
       return
     end if
     if (k2.ne.n2) then
       if (iverb.ge.0) then
-        print *, 'output array does not have matching rows'
+        print *, 'output array does not have matching column size'
       end if
       close(unit=funit,iostat=ierr,status='keep') ! force close with iostat
-      ierr = -7
+      ierr = -187
       return
     end if
 
@@ -1329,12 +1329,12 @@ contains
         print *, 'file contents corrupted!'
       end if
       close(unit=funit,iostat=ierr,status='keep')
-      ierr = -7
+      ierr = -197
       return
     end if
 
     close(unit=funit,iostat=ierr,status='keep')
-    if (ierr.ne.0) ierr = -7
+    if (ierr.ne.0) ierr = -157
 
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
@@ -1400,7 +1400,7 @@ contains
       if (iverb.ge.0) then
         print *, 'No free file units!'
       end if
-      ierr = -9
+      ierr = -159
       return
     end if
 
@@ -1415,7 +1415,7 @@ contains
         print *, 'file cannot be opened with replace status!'
       end if
       close(unit=funit,iostat=ierr,status='delete') ! force close with iostat
-      ierr = -7
+      ierr = -176
       return
     end if
 
@@ -1427,7 +1427,7 @@ contains
         print *, 'unable to write dimensions to file!'
       end if
       close(unit=funit,iostat=ierr,status='delete') ! force close with iostat
-      ierr = -7
+      ierr = -186
       return
     end if
 
@@ -1438,12 +1438,12 @@ contains
         print *, 'unable to print contents to file!'
       end if
       close(unit=funit,iostat=ierr,status='delete') !force close with iostat
-      ierr = -7
+      ierr = -196
       return
     end if
 
     close(unit=funit,iostat=ierr,status='keep')
-    if (ierr.ne.0) ierr = -7
+    if (ierr.ne.0) ierr = -156
 
 
 
@@ -1496,7 +1496,7 @@ contains
       if (iverb.ge.0) then
         print *, 'No free file units!'
       end if
-      ierr = -9
+      ierr = -159
       return
     end if
 
@@ -1510,13 +1510,13 @@ contains
         print *, 'file cannot be opened with replace status!'
       end if
       close(unit=funit,iostat=ierr,status='delete') ! force close with iostat
-      ierr = -7
+      ierr = -171
       return
     end if
 
 !! delete file
     close(unit=funit,iostat=ierr,status='delete')
-    if (ierr.ne.0) ierr = -7
+    if (ierr.ne.0) ierr = -177
 
 
 
@@ -2630,13 +2630,30 @@ contains
       if (check) then
         call array_read_rstrt_size(vname,k1,k2,iverb,ierr)
         if (ierr.ne.0) then ! no restart available
-          ierr = 0
-          irestart = -abs(irestart)
+          if (iverb.ge.0) then
+            print *, 'v.rstrt failed to read'
+            print *, 'error variable = ',ierr
+            print *, 'suggestion: delete v.rstrt'
+          end if
+          ierr = -150
+          return ! abort solver, return to call
         else if (k1.ne.nbasis) then ! vfile not in this basis
-          irestart = -abs(irestart)
-        else if (k2.le.0) then ! not possible number of vectors
-          irestart = -abs(irestart)
-        else if (k2.ne.nstart) then ! vfile from different iter
+          if (iverb.ge.0) then
+            print *, 'v.rstrt basis size does not match problem'
+            print *, 'restart failed'
+            print *, 'suggestion: delete v.rstrt'
+          end if
+          ierr = -150
+          return ! abort solver, return to call
+        else if (k2.lt.nroots) then ! not possible number of vectors
+          if (iverb.ge.0) then
+            print *, 'v.rstrt has too few vectors'
+            print *, 'restart failed'
+            print *, 'suggestion: delete v.rstrt'
+          end if
+          ierr = -150
+          return ! abort solver, return to call
+        else if (k2.gt.nstart) then ! vfile from different iter
             nstart = k2
         end if ! vfile pass all checks
       else !no restart available or possible
@@ -2652,12 +2669,29 @@ contains
       if (check) then
         call array_read_rstrt_size(sname,k3,k4,iverb,ierr)
         if (ierr.ne.0) then ! no restart available
-          ierr = 0
-          irestart = -abs(irestart)
+          if (iverb.ge.0) then
+            print *, 'v.save failed to read'
+            print *, 'error variable = ',ierr
+            print *, 'suggestion: delete v.save'
+          end if
+          ierr = -150
+          return ! abort solver, return to call
         else if (k3.ne.nbasis) then ! sfile not in this basis
-          irestart = -abs(irestart)
+          if (iverb.ge.0) then
+            print *, 'v.save basis size does not match problem'
+            print *, 'restart from save failed'
+            print *, 'suggestion: delete v.save'
+          end if
+          ierr = -150
+          return ! abort solver, return to call
         else if (k4.le.0) then ! not possible number of vectors
-          irestart = -abs(irestart)
+          if (iverb.ge.0) then
+            print *, 'v.save does not have any vectors'
+            print *, 'restart from save failed'
+            print *, 'suggestion: delete v.save'
+          end if
+          ierr = -150
+          return ! abort solver, return to call
         else ! sfile passes all checks, using sfile
           if ((nstart.gt.k4).and.(k4.ge.nroots)) then 
           ! expanding with new vectors may lead to linear dependence!!
@@ -2834,13 +2868,30 @@ contains
       inquire(file=wname,exist=check)
       if (check) then
         call array_read_rstrt_size(wname,k1,k2,iverb,ierr)
-        if (ierr.ne.0) then ! no wfile
-          irestart = -abs(irestart)
-          ierr = 0
+        if (ierr.ne.0) then ! wfile broken
+          if (iverb.ge.0) then
+            print *, 'w.rstrt failed to read'
+            print *, 'error variable = ',ierr
+            print *, 'suggestion: delete w.rstrt'
+          end if
+          ierr = -150
+          return ! abort solver, return to call
         else if (k1.ne.nbasis) then ! wfile not in this basis
-          irestart = -abs(irestart)
+          if (iverb.ge.0) then
+            print *, 'w.rstrt basis size does not match problem'
+            print *, 'restart failed'
+            print *, 'suggestion: delete w.rstrt'
+          end if
+          ierr = -150
+          return ! abort solver, return to call
         else if (k2.gt.nstart) then ! wfile not matching vfile?
-          irestart = -abs(irestart)
+          if (iverb.ge.0) then
+            print *, 'w.rstrt vectors do not match v.rstrt'
+            print *, 'restart failed'
+            print *, 'suggestion: delete w.rstrt'
+          end if
+          ierr = -150
+          return ! abort solver, return to call
         end if
       else ! no wfile
         irestart = -abs(irestart)
@@ -4416,13 +4467,30 @@ contains
       inquire(file=vname,exist=check)
       if (check) then
         call array_read_rstrt_size(vname,k1,k2,iverb,ierr)
-        if (ierr.ne.0) then ! no restart available
-          ierr = 0
-          irestart = -abs(irestart)
+        if (ierr.ne.0) then ! restart file broken
+          if (iverb.ge.0) then
+            print *, 'v.rstrt failed to read'
+            print *, 'error variable = ',ierr
+            print *, 'suggestion: delete v.rstrt'
+          end if
+          ierr = -150
+          return ! abort solver, return to call
         else if (k1.ne.nbasis) then ! vfile not in this basis
-          irestart = -abs(irestart)
-        else if (k2.le.0) then ! not possible number of vectors
-          irestart = -abs(irestart)
+          if (iverb.ge.0) then
+            print *, 'v.rstrt basis size does not match problem'
+            print *, 'restart failed'
+            print *, 'suggestion: delete v.rstrt'
+          end if
+          ierr = -150
+          return ! abort solver, return to call
+        else if (k2.lt.nrhs) then ! not possible number of vectors
+          if (iverb.ge.0) then
+            print *, 'v.rstrt has too few vectors'
+            print *, 'restart failed'
+            print *, 'suggestion: delete v.rstrt'
+          end if
+          ierr = -150
+          return ! abort solver, return to call
         else if (k2.ne.nstart) then ! vfile from different iter ! vfile pass all checks
             nstart = k2
         end if ! vfile pass all checks
@@ -4439,12 +4507,29 @@ contains
       if (check) then
         call array_read_rstrt_size(sname,k3,k4,iverb,ierr)
         if (ierr.ne.0) then ! no restart available
-          ierr = 0
-          irestart = -abs(irestart)
+          if (iverb.ge.0) then
+            print *, 'v.save failed to read'
+            print *, 'error variable = ',ierr
+            print *, 'suggestion: delete v.save'
+          end if
+          ierr = -150
+          return ! abort solver, return to call
         else if (k3.ne.nbasis) then ! sfile not in this basis
-          irestart = -abs(irestart)
+          if (iverb.ge.0) then
+            print *, 'v.save basis size does not match problem'
+            print *, 'restart from save failed'
+            print *, 'suggestion: delete v.save'
+          end if
+          ierr = -150
+          return ! abort solver, return to call
         else if (k4.le.0) then ! not possible number of vectors
-          irestart = -abs(irestart)
+          if (iverb.ge.0) then
+            print *, 'v.save does not have any vectors'
+            print *, 'restart from save failed'
+            print *, 'suggestion: delete v.save'
+          end if
+          ierr = -150
+          return ! abort solver, return to call
         else ! sfile passes all checks, using sfile
           if ((nstart.gt.k4).and.(k4.ge.nrhs)) then 
           ! expanding with new vectors may lead to linear dependence!!
@@ -4647,13 +4732,30 @@ contains
       inquire(file=wname,exist=check)
       if (check) then
         call array_read_rstrt_size(wname,k1,k2,iverb,ierr)
-        if (ierr.ne.0) then ! no wfile
-          irestart = -abs(irestart)
-          ierr = 0
+        if (ierr.ne.0) then ! wfile broken
+          if (iverb.ge.0) then
+            print *, 'w.rstrt failed to read'
+            print *, 'error variable = ',ierr
+            print *, 'suggestion: delete w.rstrt'
+          end if
+          ierr = -150
+          return ! abort solver, return to call
         else if (k1.ne.nbasis) then ! wfile not in this basis
-          irestart = -abs(irestart)
+          if (iverb.ge.0) then
+            print *, 'w.rstrt basis size does not match problem'
+            print *, 'restart failed'
+            print *, 'suggestion: delete w.rstrt'
+          end if
+          ierr = -150
+          return ! abort solver, return to call
         else if (k2.gt.nstart) then ! wfile not matching vfile?
-          irestart = -abs(irestart)
+          if (iverb.ge.0) then
+            print *, 'w.rstrt vectors do not match v.rstrt'
+            print *, 'restart failed'
+            print *, 'suggestion: delete w.rstrt'
+          end if
+          ierr = -150
+          return ! abort solver, return to call
         end if
       else ! no wfile
         irestart = -abs(irestart)
@@ -4666,6 +4768,7 @@ contains
   &             interfacing_mv => mvproduct%element)
         call krylov_mvp%lkl_mvp(nbasis,nsubspace,&
   &       interfacing_bv(1:nbasis,1:nsubspace),&
+!  &       basis_vector(1:nbasis,1:nsubspace)%element,&
   &       interfacing_mv(1:nbasis,1:nsubspace),ierr)
       end associate
       if (ierr.ne.0) then
@@ -4729,13 +4832,30 @@ contains
       inquire(file=rname,exist=check)
       if (check) then
         call array_read_rstrt_size(rname,k1,k2,iverb,ierr)
-        if (ierr.ne.0) then ! no rfile
-          irestart = -abs(irestart)
-          ierr = 0
-        else if (k1.gt.nstart) then ! rfile not matching vfile?
-          irestart = -abs(irestart)
-        else if (k2.ne.nrhs) then ! rfile not matching problem?
-          irestart = -abs(irestart)
+        if (ierr.ne.0) then ! rfile broken
+          if (iverb.ge.0) then
+            print *, 'r.rstrt failed to read'
+            print *, 'error variable = ',ierr
+            print *, 'suggestion: delete r.rstrt'
+          end if
+          ierr = -150
+          return ! abort solver, return to call
+        else if (k1.ne.nstart) then ! rfile not in this basis
+          if (iverb.ge.0) then
+            print *, 'r.rstrt basis size does not match start'
+            print *, 'restart failed'
+            print *, 'suggestion: delete r.rstrt'
+          end if
+          ierr = -150
+          return ! abort solver, return to call
+        else if (k2.gt.nrhs) then ! rfile not matching rhs?
+          if (iverb.ge.0) then
+            print *, 'r.rstrt vectors do not match rhs'
+            print *, 'restart failed'
+            print *, 'suggestion: delete r.rstrt'
+          end if
+          ierr = -150
+          return ! abort solver, return to call
         end if
       else ! no rfile
         irestart = -abs(irestart)
@@ -6809,13 +6929,30 @@ contains
       if (check) then
         call array_read_rstrt_size(vname,k1,k2,iverb,ierr)
         if (ierr.ne.0) then ! no restart available
-          ierr = 0
-          irestart = -abs(irestart)
+          if (iverb.ge.0) then
+            print *, 'v.rstrt failed to read'
+            print *, 'error variable = ',ierr
+            print *, 'suggestion: delete v.rstrt'
+          end if
+          ierr = -150
+          return ! abort solver, return to call
         else if (k1.ne.nbasis) then ! vfile not in this basis
-          irestart = -abs(irestart)
-        else if (k2.le.0) then ! not possible number of vectors
-          irestart = -abs(irestart)
-        else if (k2.ne.nstart) then ! vfile from different iter ! vfile pass all checks
+          if (iverb.ge.0) then
+            print *, 'v.rstrt basis size does not match problem'
+            print *, 'restart failed'
+            print *, 'suggestion: delete v.rstrt'
+          end if
+          ierr = -150
+          return ! abort solver, return to call
+        else if (k2.lt.nroots) then ! not possible number of vectors
+          if (iverb.ge.0) then
+            print *, 'v.rstrt has too few vectors'
+            print *, 'restart failed'
+            print *, 'suggestion: delete v.rstrt'
+          end if
+          ierr = -150
+          return ! abort solver, return to call
+        else if (k2.gt.nstart) then ! vfile from different iter
             nstart = k2
         end if ! vfile pass all checks
       else !no restart available or possible
@@ -6831,12 +6968,29 @@ contains
       if (check) then
         call array_read_rstrt_size(sname,k3,k4,iverb,ierr)
         if (ierr.ne.0) then ! no restart available
-          ierr = 0
-          irestart = -abs(irestart)
+          if (iverb.ge.0) then
+            print *, 'v.save failed to read'
+            print *, 'error variable = ',ierr
+            print *, 'suggestion: delete v.save'
+          end if
+          ierr = -150
+          return ! abort solver, return to call
         else if (k3.ne.nbasis) then ! sfile not in this basis
-          irestart = -abs(irestart)
+          if (iverb.ge.0) then
+            print *, 'v.save basis size does not match problem'
+            print *, 'restart from save failed'
+            print *, 'suggestion: delete v.save'
+          end if
+          ierr = -150
+          return ! abort solver, return to call
         else if (k4.le.0) then ! not possible number of vectors
-          irestart = -abs(irestart)
+          if (iverb.ge.0) then
+            print *, 'v.save does not have any vectors'
+            print *, 'restart from save failed'
+            print *, 'suggestion: delete v.save'
+          end if
+          ierr = -150
+          return ! abort solver, return to call
         else ! sfile passes all checks, using sfile
           if ((nstart.gt.k4).and.(k4.ge.nroots)) then 
           ! expanding with new vectors may lead to linear dependence!!
@@ -6867,13 +7021,6 @@ contains
       maxiter = floor((real((nbasis-nstart),kind=kind_float)/&
   &     nroots+real(1,kind=kind_float)),kind=kind_integer)
     end if
-
-!! define file name for restart files
-    vname = trim(id_string)//'v.rstrt'
-    wname = trim(id_string)//'w.rstrt'
-    rname = trim(id_string)//'r.rstrt'
-    sname = trim(id_string)//'v.save'
-
 
 ! Set initial subspace size
     nsubspace = nstart
@@ -7056,13 +7203,30 @@ contains
       inquire(file=wname,exist=check)
       if (check) then
         call array_read_rstrt_size(wname,k1,k2,iverb,ierr)
-        if (ierr.ne.0) then ! no wfile
-          irestart = -abs(irestart)
-          ierr = 0
+        if (ierr.ne.0) then ! wfile broken
+          if (iverb.ge.0) then
+            print *, 'w.rstrt failed to read'
+            print *, 'error variable = ',ierr
+            print *, 'suggestion: delete w.rstrt'
+          end if
+          ierr = -150
+          return ! abort solver, return to call
         else if (k1.ne.nbasis) then ! wfile not in this basis
-          irestart = -abs(irestart)
+          if (iverb.ge.0) then
+            print *, 'w.rstrt basis size does not match problem'
+            print *, 'restart failed'
+            print *, 'suggestion: delete w.rstrt'
+          end if
+          ierr = -150
+          return ! abort solver, return to call
         else if (k2.gt.nstart) then ! wfile not matching vfile?
-          irestart = -abs(irestart)
+          if (iverb.ge.0) then
+            print *, 'w.rstrt vectors do not match v.rstrt'
+            print *, 'restart failed'
+            print *, 'suggestion: delete w.rstrt'
+          end if
+          ierr = -150
+          return ! abort solver, return to call
         end if
       else ! no wfile
         irestart = -abs(irestart)
@@ -7155,18 +7319,35 @@ contains
     end if
 
 !! if restart for rhs is allowed, look for restart r files
-!! invert irestart to generate new basis vectors
+!! invert irestart to generate new proj-rhs vectors
     if (irestart.ge.4) then
       inquire(file=rname,exist=check)
       if (check) then
         call array_read_rstrt_size(rname,k1,k2,iverb,ierr)
-        if (ierr.ne.0) then ! no rfile
-          irestart = -abs(irestart)
-          ierr = 0
-        else if (k1.gt.nstart) then ! rfile not matching vfile?
-          irestart = -abs(irestart)
-        else if (k2.ne.nrhs) then ! rfile not matching problem?
-          irestart = -abs(irestart)
+        if (ierr.ne.0) then ! rfile broken
+          if (iverb.ge.0) then
+            print *, 'r.rstrt failed to read'
+            print *, 'error variable = ',ierr
+            print *, 'suggestion: delete r.rstrt'
+          end if
+          ierr = -150
+          return ! abort solver, return to call
+        else if (k1.ne.nstart) then ! rfile not in this basis
+          if (iverb.ge.0) then
+            print *, 'r.rstrt basis size does not match start'
+            print *, 'restart failed'
+            print *, 'suggestion: delete r.rstrt'
+          end if
+          ierr = -150
+          return ! abort solver, return to call
+        else if (k2.gt.nrhs) then ! rfile not matching rhs?
+          if (iverb.ge.0) then
+            print *, 'r.rstrt vectors do not match rhs'
+            print *, 'restart failed'
+            print *, 'suggestion: delete r.rstrt'
+          end if
+          ierr = -150
+          return ! abort solver, return to call
         end if
       else ! no rfile
         irestart = -abs(irestart)
@@ -7233,7 +7414,7 @@ contains
       call krylov_unique(nstart,nrhs,&
   &     proj_rhs(1:nstart,1:nrhs),iverb,ierr)
       if (ierr.ne.0) then
-        if (iverb.gt.0) then
+        if (iverb.ge.0) then
           print *, 'projecting rhs failed'
           print *, '  the rhs could be identical'
           print *, '   otherwise the basis could be the problem'
