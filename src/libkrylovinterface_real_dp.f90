@@ -204,6 +204,16 @@ module libkrylovinterface_real_dp
 !! abstract type for krylov_problem function for problem_a
 !! function to determining parameters of the problem to be solved
   type, abstract :: libkrylov_problem_a_real_dp
+    integer(lkl_int_rdp_k) :: nbasis
+    integer(lkl_int_rdp_k) :: nroots
+    integer(lkl_int_rdp_k) :: minstart
+    integer(lkl_int_rdp_k) :: maxstart
+    real(lkl_real_dp_k) :: threshold
+    integer(lkl_int_rdp_k) :: maxiter
+    character(len=22) :: id_string
+    character(len=32), pointer :: precon_string
+    integer(lkl_int_rdp_k) :: iverb
+    integer(lkl_int_rdp_k) :: irestart
   contains
     procedure(libkrylov_problem_a_intrfc_rdp), deferred :: lkl_problem_a
   end type libkrylov_problem_a_real_dp
@@ -232,6 +242,26 @@ module libkrylovinterface_real_dp
 !! and does what the user wants with them
 !! wheter printing or passing out of the solver
   type, abstract :: libkrylov_output_a_real_dp
+!!  rows of solutions, nbasis
+    integer(lkl_int_rdp_k) :: n1
+!!  size of subspace , not used
+    integer(lkl_int_rdp_k) :: n2
+!!  columns of solutions, nroots
+    integer(lkl_int_rdp_k) :: n3
+!!  number of converged solutions, nconverged
+    integer(lkl_int_rdp_k) :: n4
+!!  array for which solutions are converged
+    logical, allocatable :: jconverged(:)
+!!  eigenvalues
+    real(lkl_real_dp_k), allocatable :: roots(:)
+!!  functional
+    real(lkl_real_dp_k), allocatable :: lagrangian(:)
+!!  residual norms of each vector
+    real(lkl_real_dp_k), allocatable :: euc_norm(:)
+!!  residual norm of all vectors
+    real(lkl_real_dp_k) :: fro_norm
+!!  id_string 
+    character(len=22) :: id_string
   contains
     procedure(libkrylov_output_a_intrfc_rdp), deferred :: lkl_output_a
   end type libkrylov_output_a_real_dp

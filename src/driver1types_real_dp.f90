@@ -52,16 +52,16 @@ module driver1types
 !! character string for preconditioner selection
 ! pointer to target set outside of solver
 ! must be set before calling solver
-    character(len=32), pointer :: precon_string => null()
+!    character(len=32), pointer :: precon_string => null()
 ! size of the matrix problem
 ! must be set before calling solver
     integer(kind_integer) :: n_size
 ! restart level integer
 ! must be set before calling solver
-    integer(kind_integer) :: irestart
+!    integer(kind_integer) :: irestart
 ! number of roots to be solved
 ! must be set before calling solver
-    integer(kind_integer) :: nroots
+!    integer(kind_integer) :: nroots
  contains
     procedure :: lkl_problem_a => eval_kl_problem_a
   end type kl_problem_a
