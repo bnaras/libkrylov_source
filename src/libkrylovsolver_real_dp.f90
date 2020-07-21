@@ -26,10 +26,10 @@ contains
 
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
-  subroutine problem_a_real_dp(krylov_approx,krylov_start,&
-    & krylov_problem_a,&
+  subroutine problem_a_real_dp(krylov_approx2,krylov_start,&
+    & krylov_problem_a,krylov_approx,&
     & krylov_guess,krylov_mvp,&
-    & krylov_output_a,ierr)
+    & krylov_solutions,krylov_output_a,ierr)
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
 !
@@ -62,19 +62,21 @@ contains
 !--------------------------------------------------------------------
     implicit none
 !--------------------------------------------------------------------
-! Input functions
+! Input functions and arrays
 !--------------------------------------------------------------------
-    class(libkrylov_vector_real_dp) ::    krylov_approx
+    class(libkrylov_vector_real_dp) ::    krylov_approx2
     class(libkrylov_start_real_dp) ::     krylov_start
     class(libkrylov_problem_a_real_dp) :: krylov_problem_a
+    real(lkl_real_dp_k), intent(in) :: krylov_approx(:)
     class(libkrylov_guess_real_dp) ::     krylov_guess
     class(libkrylov_mvp_real_dp) ::       krylov_mvp
+    type(base_rdp), intent(inout) :: krylov_solutions(:,:)
     class(libkrylov_output_a_real_dp) ::  krylov_output_a
 !! variable for error variable
     integer(lkl_int_rdp_k), intent(inout) :: ierr 
 !--------------------------------------------------------------------
 
-    call problem_a_solver(krylov_approx,krylov_start,&
+    call problem_a_solver(krylov_approx2,krylov_start,&
   &  krylov_problem_a,&
   &  krylov_guess,krylov_mvp,&
   &  krylov_output_a,ierr)

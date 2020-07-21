@@ -37,6 +37,14 @@ module libkrylovinterface_real_dp
   integer, parameter :: lkl_int_rdp_k = 8
 
 !--------------------------------------------------------------------
+! Base type for arrays 
+!--------------------------------------------------------------------
+
+  type :: base_rdp
+    real(lkl_real_dp_k) :: element
+  end type base_rdp
+
+!--------------------------------------------------------------------
 
 !--------------------------------------------------------------------
 ! abstract type and interface for interacting 
