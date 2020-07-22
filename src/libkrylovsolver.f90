@@ -2294,9 +2294,11 @@ contains
 
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
-  subroutine problem_a_solver(krylov_approx,krylov_start,&
+  subroutine problem_a_solver1(&
     & krylov_problem_a,&
+    & approx_spectra,krylov_start,&
     & krylov_guess,krylov_mvp,&
+    & full_solutions,&
     & krylov_output_a,ierr)
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
@@ -2336,9 +2338,9 @@ contains
 !--------------------------------------------------------------------
 ! Input functions
 !--------------------------------------------------------------------
-    class(libkrylov_vector_subroutine) ::    krylov_approx
-    class(libkrylov_start_subroutine) ::     krylov_start
+!    class(libkrylov_vector_subroutine) ::    krylov_approx
     class(libkrylov_problem_a_subroutine) :: krylov_problem_a
+    class(libkrylov_start_subroutine) ::     krylov_start
     class(libkrylov_guess_subroutine) ::     krylov_guess
     class(libkrylov_mvp_subroutine) ::       krylov_mvp
     class(libkrylov_output_a_subroutine) ::  krylov_output_a
@@ -2367,25 +2369,26 @@ contains
 ! info to be created by the krylov_a_problem and not changed after
 ! most of these are used to allocate type(array)
 ! THESE DEFAULT VALUES SHOULD BE OVERWRITTEN BY DRIVERS
-    integer(kind_integer) :: nbasis,nroots = 1
+    integer(kind_integer) :: nbasis,nroots
 !< size of basis = nbasis = n
 !< number of guess solutions = nstart = q(1)
 !< number of solutions desired = nroots = p
-    integer(kind_integer) :: minstart,maxstart = 1
+    integer(kind_integer) :: minstart,maxstart
 !< starting basis size thresholds, minimum and maximum
-    real(kind_float) :: threshold = real(8,kind=kind_float)
+    real(kind_float) :: threshold
 !< threshold = x , numerical approximation 10^(-x)>n~0
 !< only for user convergence thresholds
-    integer(kind_integer) :: maxiter = 25
+    integer(kind_integer) :: maxiter 
+    integer(kind_integer) :: totalmaxiter
 !< maximum number of subspace iterations 
-    character(len=22) :: id_string = 'libkrylov_a'
+    character(len=22) :: id_string
 !< id = ID of the calculation
-    character(len=32) :: precon_string = 'davidson'
+    character(len=32) :: precon_string
 !< precon = option for preconditioner
 !< used only for dumping output
-    integer(kind_integer) :: iverb = 0
+    integer(kind_integer) :: iverb
 !< verbosity level
-    integer(kind_integer) :: irestart = 0
+    integer(kind_integer) :: irestart
 !< restart level (how often restart is dumped on disk,
 !< and what is checked)
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2405,9 +2408,9 @@ contains
 !! Arrays that are allocated after krylov problem
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !! filled in with the guess of the spectrum
-    real(kind_float), allocatable :: approx_spectra(:)
+    real(kind_float), intent(in) :: approx_spectra(:)
 !< approximation of spectra of problem = approx_spectra = D
-    logical, allocatable :: jconverged(:)
+!    logical :: jconverged(:)
 !< Indicates which roots are converged
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !! filled in with before iterations, expanded in expand
@@ -2434,20 +2437,20 @@ contains
 !< V**dagger AV = rayleigh
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !! filled in at krylov_a_ritz
-    real(kind_float), allocatable :: roots(:) 
+!    real(kind_float), pointer :: roots(:) => null()
     type(base), allocatable ::  solutions(:,:)
-    type(base), allocatable ::  lagrangian(:)
+!    type(base), pointer ::  lagrangian(:)
 !< roots = eigenvalues of current subspace calculation that are relevant = omega
 !< solutions = eigenvectors of current subspace calculation that are relevant = x
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !! filled in between ritz and norms
-    type(base), allocatable :: full_solutions(:,:)
+    type(base), intent(inout) :: full_solutions(:,:)
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !! filled in at krylov_a_norms
     real(kind_float) :: dominance
     type(base), allocatable :: residuals(:,:)
-    real(kind_float), allocatable :: euc_norm(:)
-    real(kind_float) :: fro_norm
+!    real(kind_float), pointer :: euc_norm(:) => null()
+!    real(kind_float), pointer :: fro_norm => null()
     real(kind_float) :: largest_euc_norm
     integer(kind_integer) :: nresiduals = 0
 !< dominance = inverse of nbasis in real variable, for Davidson warning
@@ -2459,7 +2462,7 @@ contains
 !< nresiduals = number of non-zero residuals in the current iteration = nresidue
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !! filled in at convergence check
-    integer(kind_integer) :: nconverged = 0
+!    integer(kind_integer), pointer :: nconverged => null()
 !< number of converged solutions = nconverged
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !! filled in before extend
@@ -2495,25 +2498,37 @@ contains
 
 !! Begin solver!
 
+    nbasis = krylov_problem_a%nbasis
+    nroots = krylov_problem_a%nroots
+    minstart = krylov_problem_a%minstart
+    maxstart = krylov_problem_a%maxstart
+    threshold = krylov_problem_a%threshold
+    maxiter = krylov_problem_a%maxiter
+    totalmaxiter = krylov_problem_a%totalmaxiter
+    id_string = krylov_problem_a%id_string
+    precon_string = krylov_problem_a%precon_string
+    iverb = krylov_problem_a%iverb
+    irestart = krylov_problem_a%irestart
+
   ! Determine details of davidson problem to be solved
   ! USER-DEFINED FUNCTION
-    call krylov_problem_a%lkl_problem_a(nbasis,nroots,&
-  &   minstart,maxstart,threshold,maxiter,&
-  &   id_string,precon_string,iverb,irestart,ierr)
-    if (ierr.ne.0) then
-      if (iverb.ge.0) then
-        print *, 'class(user_krylov_a_problem_subroutine) function failed'
-        print *, 'error variable = ',ierr
-      end if  
-      ierr = -70
-      return ! abort solver, return to call
-    end if
+!    call krylov_problem_a%lkl_problem_a(nbasis,nroots,&
+!  &   minstart,maxstart,threshold,maxiter,&
+!  &   id_string,precon_string,iverb,irestart,ierr)
+!    if (ierr.ne.0) then
+!      if (iverb.ge.0) then
+!        print *, 'class(user_krylov_a_problem_subroutine) function failed'
+!        print *, 'error variable = ',ierr
+!      end if  
+!      ierr = -70
+!      return ! abort solver, return to call
+!    end if
 
     if (iverb.ge.0) then
       print *, '////////////////////////////////////////////////'
       print *, 'Non-Orthonormal Krylov Subspace Solver'
       print *, '////////////////////////////////////////////////'
-      print *, ' Solving problem type problem_a'
+      print *, ' Solver1 for problem type problem_a'
       print *, '////////////////////////////////////////////////'
       print *, ' '
       if (iverb.ge.3) then
@@ -2535,12 +2550,14 @@ contains
       return ! abort solver, return to call
     end if
 
-! force at least one root to be solved
+! check input nroots
     if (nroots.le.0) then
-      nroots = 1
-      if (iverb.ge.4) then
-        print *, 'desired roots less than one, setting to one'
-      end if
+      if (iverb.ge.0) then
+        print *, 'number of roots less than zero'
+        print *, 'solver failed'
+      end if  
+      ierr = -1002
+      return ! abort solver, return to call
     end if
 
 ! ensure nroots are less than the basis size
@@ -2571,20 +2588,20 @@ contains
     end if
 
 
-! allocate diagonal first to determine some features of problem
-! to set nstart
-    allocate(approx_spectra(nbasis))
-
-! fill approx spectra
-    call krylov_approx%vector_fill(nbasis,approx_spectra,ierr)
-    if (ierr.ne.0) then
-      if (iverb.ge.0) then
-        print *, 'class(user_float_subroutine)function for approx failed'
-        print *, 'error variable = ',ierr
-      end if
-      ierr = -65
-      return ! abort solver, return to call
-    end if
+!! allocate diagonal first to determine some features of problem
+!! to set nstart
+!    allocate(approx_spectra(nbasis))
+!
+!! fill approx spectra
+!    call krylov_approx%vector_fill(nbasis,approx_spectra,ierr)
+!    if (ierr.ne.0) then
+!      if (iverb.ge.0) then
+!        print *, 'class(user_float_subroutine)function for approx failed'
+!        print *, 'error variable = ',ierr
+!      end if
+!      ierr = -65
+!      return ! abort solver, return to call
+!    end if
 
     call krylov_start%lkl_start(nbasis,nroots,&
   &        approx_spectra,nstart,ierr)
@@ -2732,18 +2749,18 @@ contains
     allocate(basis_vectors(nbasis,maxsubspace)) !maximum
     allocate(mvproduct(nbasis,maxsubspace)) !maximum
     allocate(avproduct(nbasis,maxsubspace)) !maximum
-    allocate(lagrangian(nroots))
+!    allocate(lagrangian(nroots))
     allocate(solutions(maxsubspace,nroots)) !maximum
     allocate(overlap(maxsubspace,maxsubspace)) !maximum
     allocate(cholesky(maxsubspace,maxsubspace)) !maximum
     allocate(rayleigh(maxsubspace,maxsubspace)) !maximum
     allocate(rayleigh_sq(maxsubspace,maxsubspace)) !maximum
-    allocate(roots(nroots))
+!    allocate(roots(nroots))
     allocate(diag_overlap(maxsubspace)) !maximum
-    allocate(full_solutions(nbasis,nroots))
+!    allocate(full_solutions(nbasis,nroots))
     allocate(residuals(nbasis,nroots)) !maximum
-    allocate(euc_norm(nroots))
-    allocate(jconverged(nroots))
+!    allocate(euc_norm(nroots))
+!    allocate(jconverged(nroots))
 
 
 !! zero out important quantities (may be redundant)
@@ -3003,7 +3020,7 @@ contains
 ! SOLVER LOOP
     jter = 0
     kter = 0
-    do iter = 1, maxiter
+    do iter = 1, totalmaxiter
 
 ! Check for kill file
       inquire(file=kill_file_string,exist=check)
@@ -3034,7 +3051,8 @@ contains
   &     rayleigh_sq(1:nsubspace,1:nsubspace),&
   &     cholesky(1:nsubspace,1:nsubspace),&
   &     overlap(1:nsubspace,1:nsubspace),diag_overlap(1:nsubspace),&
-  &     roots,lagrangian,solutions(1:nsubspace,1:nroots),iverb,ierr)
+  &     krylov_output_a%roots,krylov_output_a%lagrangian,&
+  &     solutions(1:nsubspace,1:nroots),iverb,ierr)
       if (ierr.ne.0) then
         if (iverb.ge.0) then
           print *, 'krylov ritz(subspace solve) calculation failed'
@@ -3056,22 +3074,22 @@ contains
   &      nbasis)
 
 !! compare threshold again difference in approx_spectra and roots,
-      if (iverb.ge.3) then
-        print *, '' 
-        print *, 'determining stability of' 
-        print *, ' Davidson-based preconditioning'
-        do k = 1, nroots
-          do j = 1, nbasis
-            if (abs(approx_spectra(j)-roots(k)).lt.dominance) then
-              print *, 'potential problem:'
-              print *, 'diagonal element', j,' ',approx_spectra(j)
-              print *, 'root', k,' ',roots(k)
-            end if
-          end do
-        end do
-        print *, 'end stability check' 
-        print *, '' 
-      end if
+!      if (iverb.ge.3) then
+!        print *, '' 
+!        print *, 'determining stability of' 
+!        print *, ' Davidson-based preconditioning'
+!        do k = 1, nroots
+!          do j = 1, nbasis
+!            if (abs(approx_spectra(j)-roots(k)).lt.dominance) then
+!              print *, 'potential problem:'
+!              print *, 'diagonal element', j,' ',approx_spectra(j)
+!              print *, 'root', k,' ',roots(k)
+!            end if
+!          end do
+!        end do
+!        print *, 'end stability check' 
+!        print *, '' 
+!      end if
 
 ! call krylov norms subroutine
       call krylov_a_norms(nbasis,nsubspace,nroots,&
@@ -3079,9 +3097,9 @@ contains
   &     basis_vectors(1:nbasis,1:nsubspace),full_solutions,& 
   &     solutions(1:nsubspace,1:nroots),&
   &     overlap(1:nsubspace,1:nsubspace),&
-  &     roots,approx_spectra,&
-  &     residuals,euc_norm,largest_euc_norm,&
-  &     fro_norm,nresiduals,iverb,ierr)
+  &     krylov_output_a%roots,approx_spectra,&
+  &     residuals,krylov_output_a%euc_norm,largest_euc_norm,&
+  &     krylov_output_a%fro_norm,nresiduals,iverb,ierr)
       if (ierr.ne.0) then
         if (iverb.ge.0) then
           print *, 'krylov norms calculation failed'
@@ -3095,7 +3113,7 @@ contains
       call krylov_a_residue(nbasis,nsubspace,nroots,&
   &     mvproduct(1:nbasis,1:nsubspace),full_solutions,&
   &     solutions(1:nsubspace,1:nroots),&
-  &     roots,&
+  &     krylov_output_a%roots,&
   &     approx_spectra,precon_string,&
   &     residuals,&
   &     largest_sv,&
@@ -3112,21 +3130,21 @@ contains
       end if
 
 ! determine convergence of solutions based on euclidean norm
-      nconverged = 0
-      jconverged = .false.
+      krylov_output_a%nconverged = 0
+      krylov_output_a%jconverged = .false.
       do j = 1 , nroots
-        if ((-threshold).gt.log10(euc_norm(j))) then
-          nconverged = nconverged + 1
-          jconverged(j) = .true.
+        if ((-threshold).gt.log10(krylov_output_a%euc_norm(j))) then
+          krylov_output_a%nconverged = krylov_output_a%nconverged + 1
+          krylov_output_a%jconverged(j) = .true.
         end if
       end do
       if (iverb.ge.2) then
-        print *, 'converged vectors: ', nconverged
+        print *, 'converged vectors: ', krylov_output_a%nconverged
       end if
 
 ! determine convergence of solutions based on frobenius norm
 ! The stricter test, this is done before check by euclidean norms
-      if ((-threshold).gt.log10(fro_norm)) then
+      if ((-threshold).gt.log10(krylov_output_a%fro_norm)) then
         if (iverb.ge.1) then
           print *, 'Converged by frobenius norm!'
         end if
@@ -3134,7 +3152,7 @@ contains
       end if
 
 ! determine convergence of solutions based on nconverged
-      if (nconverged.ge.nroots) then
+      if (krylov_output_a%nconverged.ge.nroots) then
         if (iverb.ge.1) then
           print *, 'Converged by euclidean norm!'
         end if
@@ -3147,9 +3165,9 @@ contains
       end if
 
 ! check that more iterations are allowed before extending subspace
-      if (iter.eq.maxiter) then
+      if (iter.eq.totalmaxiter) then
         if (iverb.ge.0) then
-          print *, 'failed to converge within max number of iterations'
+          print *, 'failed to converge within max total number of iterations'
         end if
         exit ! This exits subspace loop
       end if
@@ -3179,55 +3197,67 @@ contains
         print *, ' '
       end if
 
-! call krylov extend subroutine, after saving prev_nsubspace
-      prev_nsubspace = nsubspace
-      nsubspace = nsubspace + nresiduals  
-      call krylov_extend(nbasis,nsubspace,&
-  &     nresiduals,prev_nsubspace,&
-  &     residuals(1:nbasis,1:nresiduals),&
-  &     basis_vectors(1:nbasis,1:nsubspace),&
-  &     overlap(1:nsubspace,1:nsubspace),&
-  &     diag_overlap(1:nsubspace),iverb,ierr)
-      if (ierr.ne.0) then
-        if (iverb.ge.0) then
-          print *, 'krylov subspace expansion failed'
-          print *, 'error variable = ',ierr
-          print *, 'using previous subspace solutions for print'
-        end if
-        nsubspace = prev_nsubspace
-        ierr = 0
-        exit ! This exits subspace loop
-      end if
+      if (kter.lt.maxiter) then ! possible to expand subspace
 
-      if (iverb.ge.6) then
-        do j = 1, nresiduals
-          do k = 1, nsubspace
-            print *, 'inner product of residual: ', j
-            print *, ' and basis vector: ',k
-            print *, overlap(k,j+nsubspace)
+  ! call krylov extend subroutine, after saving prev_nsubspace
+        prev_nsubspace = nsubspace
+        nsubspace = nsubspace + nresiduals  
+        call krylov_extend(nbasis,nsubspace,&
+    &     nresiduals,prev_nsubspace,&
+    &     residuals(1:nbasis,1:nresiduals),&
+    &     basis_vectors(1:nbasis,1:nsubspace),&
+    &     overlap(1:nsubspace,1:nsubspace),&
+    &     diag_overlap(1:nsubspace),iverb,ierr)
+        if (ierr.ne.0) then
+          if (iverb.ge.0) then
+            print *, 'krylov subspace expansion failed'
+            print *, 'error variable = ',ierr
+            print *, 'using previous subspace solutions for print'
+          end if
+          nsubspace = prev_nsubspace
+          ierr = 0
+          exit ! This exits subspace loop
+        end if
+  
+        if (iverb.ge.6) then
+          do j = 1, nresiduals
+            do k = 1, nsubspace
+              print *, 'inner product of residual: ', j
+              print *, ' and basis vector: ',k
+              print *, overlap(k,j+nsubspace)
+            end do
           end do
-        end do
+        end if
+  
+  ! call for cholesky decomposition of overlap matrix as a check,
+  ! if it passes proceed to expand other subspace objects
+        call krylov_cholesky(nsubspace,&
+    &      overlap(1:nsubspace,1:nsubspace),&
+    &      diag_overlap(1:nsubspace),& 
+    &      cholesky(1:nsubspace,1:nsubspace),cond,iverb,ierr)
+        if (ierr.ne.0) then !cholesky failed, attempt rescue
+          if (iverb.ge.0) then
+            print *, 'Cholesky decomposition failed'
+          end if
+        end if
+  ! Force restart if cond is less than threshold
+        if ((logeps).gt.log10(cond)) then
+          if (iverb.ge.1) then
+            print *, 'Condition number exceeds inverse machine precision'
+          end if
+          ierr = -24
+        end if
+      else ! Force restart if kter .eq. maxiter
+        if (iverb.ge.1) then
+          print *, 'Maximum iterations before restart reached'
+        end if
+        ierr = -23
       end if
 
-! call for cholesky decomposition of overlap matrix as a check,
-! if it passes proceed to expand other subspace objects
-      call krylov_cholesky(nsubspace,&
-  &      overlap(1:nsubspace,1:nsubspace),&
-  &      diag_overlap(1:nsubspace),& 
-  &      cholesky(1:nsubspace,1:nsubspace),cond,iverb,ierr)
-! Force restart if cond is less than threshold
-      if ((logeps).gt.log10(cond)) then
-        if (iverb.ge.1) then
-          print *, 'Condition number exceeds inverse machine precision'
-        end if
-        ierr = -24
-      end if
-      if (ierr.ne.0) then !cholesky failed, attempt rescue
+      if (ierr.ne.0) then !restart triggered
         if (iverb.ge.0) then
-          print *, 'new krylov subspace unstable'
-          print *, 'attempting to stabilize'
+          print *, 'attempting restart!'
         end if
-!!!!  Drastic restart implementation.
         ierr = 0
 !! Putting X(full solutions) as new previous V(basis)
         basis_vectors(1:nbasis,1:nroots) = &
@@ -3306,16 +3336,7 @@ contains
           ierr = 0
           return ! abort solver, return to call 
         end if
-      else if (ierr.ne.0) then !krylov_check failed irrecoverably
-        if (iverb.ge.0) then
-          print *, 'new krylov subspace failed stability check'
-          print *, 'error variable = ',ierr
-          print *, 'using previous subspace solutions for print'
-        end if
-        nsubspace = prev_nsubspace
-        ierr = 0
-        exit ! This exits subspace loop
-      else ! cholesky decomposition is stable, expand subspace
+      else ! no restart, standard expansion of other subspace objects
   ! call user defined matrix vector product
         associate(interfacing_bv => basis_vectors%element,& 
   &           interfacing_mv => mvproduct%element)
@@ -3409,23 +3430,19 @@ contains
       if (iverb.ge.0) then
         print *, 'quality of values unknown,'
         print *, 'old save file not overwritten,'
-        print *, 'class(libkrylov_a_output_subroutine) not called'
+!        print *, 'class(libkrylov_a_output_subroutine) not called'
       end if
     else ! iterations exited with no serious errors, possible useful data!
       if (irestart.ge.1) then ! user asked for save files
         call array_print_rstrt(sname,nbasis,nroots,&
   &       full_solutions(1:nbasis,1:nroots),iverb,ierr)
         if (ierr.eq.0) then ! save file printed! safe to delete restart
-          if (irestart.ge.2) then
-            call array_del_rstrt(vname,iverb,ierr) 
+          call array_del_rstrt(vname,iverb,ierr) 
               ! no check for ierr, no action on fail
-            ierr = 0
-            if (irestart.ge.3) then
-              call array_del_rstrt(wname,iverb,ierr)
+          ierr = 0
+          call array_del_rstrt(wname,iverb,ierr)
               ! no check for ierr, no action on fail
-            ierr = 0
-            end if
-          end if
+          ierr = 0
         else ! something wrong with printing save, don't delete files
           if (iverb.ge.0) then
             print *, 'unable to print save file'
@@ -3434,52 +3451,52 @@ contains
           ierr = 0
         end if
       end if
-!! call user output function
-      associate(interfacing_lg => lagrangian%element,&
-  &             interfacing_fs => full_solutions%element)
-        call krylov_output_a%lkl_output_a(nbasis,nsubspace,nroots,&
-  &       nconverged,jconverged,&
-  &       roots(1:nroots),interfacing_lg(1:nroots),&
-  &       interfacing_fs(1:nbasis,1:nroots),&
-  &       euc_norm(1:nroots),fro_norm,id_string,ierr)
-      end associate
-!! final ierr check and adjustments
-      if (ierr.ne.0) then
-        if (iverb.ge.0) then
-          print *, 'class(user_krylov_output_subroutine) function failed'
-        end if
-        ierr = -20
-      else if (nconverged.le.0) then !only if ierr .eq. 0
+!!! call user output function
+!      associate(interfacing_lg => lagrangian%element,&
+!  &             interfacing_fs => full_solutions%element)
+!        call krylov_output_a%lkl_output_a(nbasis,nsubspace,nroots,&
+!  &       nconverged,jconverged,&
+!  &       roots(1:nroots),interfacing_lg(1:nroots),&
+!  &       interfacing_fs(1:nbasis,1:nroots),&
+!  &       euc_norm(1:nroots),fro_norm,id_string,ierr)
+!      end associate
+!!! final ierr check and adjustments
+!      if (ierr.ne.0) then
+!        if (iverb.ge.0) then
+!          print *, 'class(user_krylov_output_subroutine) function failed'
+!        end if
+!        ierr = -20
+      if (krylov_output_a%nconverged.le.0) then !only if ierr .eq. 0
         if (iverb.ge.0) then
           print *, 'solver produced no solutions' 
         end if
         ierr = -15
-      else if (nconverged.lt.nroots) then 
+      else if (krylov_output_a%nconverged.lt.nroots) then 
 !< only if ierr.eq.0.and.nconverged.gt.0 
         if (iverb.ge.1) then
           print *, 'not all desired solutions produced'
           print *, 'ierr contains number of solutions printed'
         end if
-        ierr = nconverged
+        ierr = krylov_output_a%nconverged
       end if
     end if
 
     deallocate(basis_vectors)
     deallocate(mvproduct)
     deallocate(avproduct)
-    deallocate(approx_spectra)
-    deallocate(lagrangian)
+!    deallocate(approx_spectra)
+!    deallocate(lagrangian)
     deallocate(solutions)
-    deallocate(full_solutions)
+!    deallocate(full_solutions)
     deallocate(overlap)
     deallocate(cholesky)
     deallocate(rayleigh)
     deallocate(rayleigh_sq)
-    deallocate(roots)
+!    deallocate(roots)
     deallocate(diag_overlap)
     deallocate(residuals)
-    deallocate(euc_norm)
-    deallocate(jconverged)
+!    deallocate(euc_norm)
+!    deallocate(jconverged)
 
     if (iverb.ge.0) then
       print *, '////////////////////////////////////////////////'
@@ -3489,7 +3506,7 @@ contains
 
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
-  end subroutine problem_a_solver
+  end subroutine problem_a_solver1
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
 
