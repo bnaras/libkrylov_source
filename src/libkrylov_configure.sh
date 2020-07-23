@@ -14,7 +14,8 @@ then
 fi
 set -e
 # set autoconf-archive macro path
-echo 'Finding an installation of autoconf-archive macros'
+echo 'Finding an installation of additional autoconf-archive macros required'
+
 echo 'if not installed, please Ctrl+c, find a path you like and enter:'
 echo 'git clone --depth 1 --branch v2019.01.06 https://github.com/autoconf-archive/autoconf-archive.git'
 echo 'Please enter a file path to your autoconf archive macros'
