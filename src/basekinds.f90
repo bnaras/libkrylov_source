@@ -18,7 +18,7 @@ module basekinds
 !--------------------------------------------------------------------
 ! Modules and Global Variables
 !--------------------------------------------------------------------
-! Blank
+  use libkrylovinterface
 !--------------------------------------------------------------------
 !
   implicit none
@@ -37,7 +37,7 @@ module basekinds
   & kind_double = selected_real_kind(2*precision(16.0_kind_single))
 
 !! 8 byte parameter for integers (long)
-  integer, parameter :: kind_integer = 8
+!  integer, parameter :: kind_integer = 8
 
 !--------------------------------------------------------------------
 

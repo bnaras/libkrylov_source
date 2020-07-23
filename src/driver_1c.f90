@@ -44,15 +44,15 @@ program krylovdriver_1c
 !--------------------------------------------------------------------
 !  Input Subroutines
 !--------------------------------------------------------------------
-  type(kl_problem_c) :: krylov_problem
-  type(kl_approx) :: krylov_approx
+  type(libkrylov_problem_c_subroutine) :: krylov_problem
+!  type(kl_approx) :: krylov_approx
   type(lkl_s_elec_gas) :: krylov_s_eg
   type(lkl_s_ext_in) :: krylov_s_ext_in
-  type(kl_rhs) :: krylov_rhs
-  type(kl_omega) :: krylov_omega
+!  type(kl_rhs) :: krylov_rhs
+!  type(kl_omega) :: krylov_omega
   type(lkl_g_unit_vec) :: krylov_g_uv
   type(kl_mvp) :: krylov_mvp
-  type(kl_output_c) :: krylov_output
+  type(libkrylov_output_c_subroutine) :: krylov_output
 !--------------------------------------------------------------------
 ! Local Variables for Subroutines and reading problem
 !--------------------------------------------------------------------
@@ -63,8 +63,10 @@ program krylovdriver_1c
 ! contains the matrix of problem, read in from file
   type(base), target, allocatable :: krylov_a(:,:)
   real(kind_float), target, allocatable :: krylov_d(:)
+  type(base), allocatable :: krylov_x(:,:)
 ! contains the frequencies of the problem, read in from file
   real(kind_float), target, allocatable :: krylov_o(:)
+  real(kind_float), allocatable :: print_freq(:)
 ! contains the rhs of problem, read in from file
   type(base), target, allocatable :: krylov_p(:,:)
 ! character string to become id_string in solver
@@ -73,6 +75,7 @@ program krylovdriver_1c
   character(len=32) :: filename_string = ''
 ! character string for type in file, for checking
   character(len=32) :: filetype_string = ''
+  logical :: unique_rhs_omega = .false.
 ! integers for reading size of problem from file
 ! which becomes nbasis via krylov_problem%n_size
   integer(kind_integer) :: n1 = 0
@@ -83,6 +86,15 @@ program krylovdriver_1c
   integer(kind_integer) :: n4 = 0
   integer(kind_integer) :: n5 = 0
   integer(kind_integer) :: j,k = 0
+  integer(kind_integer) :: nbasis,nomega,nrhs,nroots,irestart = 0
+! file name for eigenvectors
+  character(len=32) :: vector_string
+! file name for frequencies
+  character(len=32) :: freq_string
+! file name for roots included unconverged ones
+  character(len=32) :: data_string
+! file name for lagrangian string
+  character(len=32) :: lagr_string
 !--------------------------------------------------------------------
 ! Error Parameter
 !--------------------------------------------------------------------
@@ -91,9 +103,9 @@ program krylovdriver_1c
 
 !! set default options
   preconditioner = 'davidson'
-  krylov_problem%irestart = 0
+  irestart = 0
   krylov_s_ext_in%nstart = 0
-  krylov_problem%one_rhs_per_omega = .false.
+  unique_rhs_omega = .false.
 !! checking command line options:
   counter = command_argument_count()
 !! loop over command line
@@ -131,10 +143,10 @@ program krylovdriver_1c
         stop
       else if (input.eq.'-test') then
         ierr = 20
-        call problem_c_solver(krylov_approx,krylov_s_eg, &
-  &       krylov_rhs,krylov_omega, &
-  &       krylov_problem,krylov_g_uv,krylov_mvp, &
-  &       krylov_output,ierr)
+        call problem_c_solver1(&
+  &     krylov_problem,krylov_d,krylov_o,krylov_p, &
+  &     krylov_s_eg,krylov_g_uv,krylov_mvp, &
+  &     krylov_x,krylov_output,ierr)
         stop
       else if (input.eq.'-precon') then
         k = k + 1
@@ -146,7 +158,7 @@ program krylovdriver_1c
         k = k + 1
         call get_command_argument(k,value=input2,status=ierr)
         if (ierr.ne.0) stop
-        read(input2,*,iostat=ierr) krylov_problem%irestart
+        read(input2,*,iostat=ierr) irestart
         if (ierr.ne.0) stop
         print *, 'restart level: ',input2
       else if (input.eq.'-nstart') then
@@ -186,26 +198,26 @@ program krylovdriver_1c
     stop
   end if
 
-  if (n1.gt.n2) then
-    krylov_problem%n_size = n1
+  if (n1.ge.n2) then
+    nbasis = n2
   else
-    krylov_problem%n_size = n2 
+    nbasis = n1 
   end if
 
 !! allocate array to contain problem
-  allocate(krylov_a(krylov_problem%n_size,krylov_problem%n_size))
-  allocate(krylov_d(krylov_problem%n_size))
+  allocate(krylov_a(nbasis,nbasis))
+  allocate(krylov_d(nbasis))
 
 !! read problem array
-  call array_read_base(filename_string,krylov_problem%n_size,&
-  &    krylov_problem%n_size,krylov_a,ierr)
+  call array_read_base(filename_string,nbasis,&
+  &    nbasis,krylov_a,ierr)
 
   if (ierr.ne.0) then
     print *, 'solver failed as problem can not be read!'
     stop
   end if
 
-  do j = 1, krylov_problem%n_size
+  do j = 1, nbasis
     krylov_d(j) = krylov_a(j,j)
     krylov_a(j,j) = real(0,kind=kind_float)
   end do
@@ -227,15 +239,15 @@ program krylovdriver_1c
       stop
     end if
     if (n1.gt.n3) then
-      krylov_problem%n_omega = n3
+      nomega = n3
     else
       print *, 'solver failed as too many frequencies given!'
       stop
     end if
   !! allocate array to contain problem
-    allocate(krylov_o(krylov_problem%n_omega))
+    allocate(krylov_o(nomega))
   !! read problem array size
-    call array_read_float(filename_string,krylov_problem%n_omega,&
+    call array_read_float(filename_string,nomega,&
   &   krylov_o,ierr)
     if (ierr.ne.0) then
       print *, 'solver failed as frequencies can not be read!'
@@ -257,7 +269,7 @@ program krylovdriver_1c
     stop
   end if
 
-  if (n4.ne.krylov_problem%n_size) then
+  if (n4.ne.nbasis) then
     print *, 'solver failed as rhs basis does not match problem!'
     stop
   end if
@@ -267,25 +279,29 @@ program krylovdriver_1c
     stop
   end if
 
-  krylov_problem%one_rhs_per_omega = .false.
+  unique_rhs_omega = .false.
   if ((n5*n3).gt.n1) then
     if (n5.eq.n3) then
       print *, 'solver forced to solve only one rhs per frequency'
-      krylov_problem%one_rhs_per_omega = .true.
+      unique_rhs_omega = .true.
+      nroots = n5
     else ! n5 .ne. n3
       print *, 'solver failed as too many rhs*freq given!'
       stop
     end if
+  else
+    nroots = n5*nomega
   end if 
 
-  krylov_problem%n_rhs = n5 
+  nrhs = n5 
 
 !! allocate array to contain problem
-  allocate(krylov_p(krylov_problem%n_size,krylov_problem%n_rhs))
+  allocate(krylov_p(nbasis,nrhs))
+  allocate(krylov_x(nbasis,nroots))
 
 !! read problem array
-  call array_read_base(filename_string,krylov_problem%n_size,&
-  &    krylov_problem%n_rhs,krylov_p,ierr)
+  call array_read_base(filename_string,nbasis,&
+  &    nrhs,krylov_p,ierr)
 
   if (ierr.ne.0) then
     print *, 'solver failed as rhs can not be read!'
@@ -293,33 +309,81 @@ program krylovdriver_1c
   end if
 
 ! set pointers to local variables required for input subroutines
-  krylov_problem%problem_string => c1_string
-  krylov_problem%precon_string => preconditioner
-  krylov_approx%krylov_d => krylov_d
+  krylov_problem%nbasis = nbasis
+  krylov_problem%nrhs = nrhs
+  krylov_problem%nomega = nomega
+  krylov_problem%unique_rhs_omega = unique_rhs_omega
+  krylov_problem%precon_string = preconditioner
+  krylov_problem%id_string = c1_string
+  krylov_problem%minstart = nroots
+  krylov_problem%nstart = 0
+  krylov_problem%maxstart = nbasis
+!! NAMBI make type dependent 
+  krylov_problem%threshold = real(8,kind=kind_float)
+  krylov_problem%maxiter = 30 
+  krylov_problem%totalmaxiter = 80
+  krylov_problem%iverb = 5
+  krylov_problem%irestart = irestart
+
+  krylov_output%nbasis = nbasis
+  krylov_output%nroots = nroots
+  allocate(krylov_output%lagrangian(nroots))
+  allocate(krylov_output%jconverged(nroots))
+  allocate(krylov_output%euc_norm(nroots))
   krylov_mvp%krylov_a => krylov_a
-  krylov_omega%krylov_o => krylov_o
-  krylov_rhs%krylov_p => krylov_p
+
 
 ! call solver with function to calculate nstart based on electron gas
   if (krylov_s_ext_in%nstart.le.0) then
-    call problem_c_solver(krylov_approx,krylov_s_eg, &
-  &   krylov_rhs,krylov_omega, &
-  &   krylov_problem,krylov_g_uv,krylov_mvp, &
-  &   krylov_output,ierr)
+    call problem_c_solver1(&
+  &   krylov_problem,krylov_d,krylov_o,krylov_p, &
+  &   krylov_s_eg,krylov_g_uv,krylov_mvp, &
+  &   krylov_x,krylov_output,ierr)
   else ! use input for nstart
-    call problem_c_solver(krylov_approx,krylov_s_eg, &
-  &   krylov_rhs,krylov_omega, &
-  &   krylov_problem,krylov_g_uv,krylov_mvp, &
-  &   krylov_output,ierr)
+    call problem_c_solver1(&
+  &   krylov_problem,krylov_d,krylov_o,krylov_p, &
+  &   krylov_s_ext_in,krylov_g_uv,krylov_mvp, &
+  &   krylov_x,krylov_output,ierr)
   end if
 
   print *, 'final ierr value = ',ierr
 
+!! file names
+  vector_string = trim(c1_string)//'_vecs'
+  data_string = trim(c1_string)//'_allr'
+  lagr_string = trim(c1_string)//'_lagr'
+  freq_string = trim(c1_string)//'_indx'
+
+  allocate(print_freq(nroots))
+
+  if (unique_rhs_omega) then
+    print_freq = krylov_o
+  else
+    do j = 1, nomega
+      print_freq(1+(j-1)*nrhs:j*nrhs) = krylov_o(j)
+    end do
+  end if
+
+!! print to file
+  call array_print_base(vector_string,nbasis,nroots,krylov_x,ierr)
+
+!! print to file
+  call array_print_base(lagr_string,1,nroots,krylov_output%lagrangian,ierr)
+
+!! print to file
+  call array_print_float(freq_string,nroots,print_freq,ierr)
+
+
 ! no post calculation operations, everything done within solver
   deallocate(krylov_a)
   deallocate(krylov_d)
+  deallocate(krylov_x)
   deallocate(krylov_o)
   deallocate(krylov_p)
+  deallocate(krylov_output%lagrangian)
+  deallocate(krylov_output%jconverged)
+  deallocate(krylov_output%euc_norm)
+  deallocate(print_freq)
 
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------

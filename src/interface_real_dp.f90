@@ -14,6 +14,9 @@ module libkrylovinterface
 ! Modules and Global Varaibles
 !--------------------------------------------------------------------
   use libkrylovinterface_real_dp , only: &
+  &   base => base_rdp, &
+  &   kind_float => lkl_real_dp_k, &
+  &   kind_integer => lkl_int_rdp_k, &
   &   libkrylov_matrix_subroutine => libkrylov_matrix_real_dp, &
   &   libkrylov_vector_subroutine => libkrylov_vector_real_dp, &
   &   libkrylov_start_subroutine => libkrylov_start_real_dp, &

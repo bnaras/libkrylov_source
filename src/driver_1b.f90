@@ -44,14 +44,14 @@ program krylovdriver_1b
 !--------------------------------------------------------------------
 !  Input Subroutines
 !--------------------------------------------------------------------
-  type(kl_problem_b) :: krylov_problem
-  type(kl_approx) :: krylov_approx
+  type(libkrylov_problem_b_subroutine) :: krylov_problem
+!  type(kl_approx) :: krylov_approx
   type(lkl_s_elec_gas) :: krylov_s_eg
   type(lkl_s_ext_in) :: krylov_s_ext_in
-  type(kl_rhs) :: krylov_rhs
+!  type(kl_rhs) :: krylov_rhs
   type(lkl_g_unit_vec) :: krylov_g_uv
   type(kl_mvp) :: krylov_mvp
-  type(kl_output_b) :: krylov_output
+  type(libkrylov_output_b_subroutine) :: krylov_output
 !--------------------------------------------------------------------
 ! Local Variables for Subroutines and reading problem
 !--------------------------------------------------------------------
@@ -62,6 +62,7 @@ program krylovdriver_1b
 ! contains the matrix of problem, read in from file
   type(base), target, allocatable :: krylov_a(:,:)
   real(kind_float), target, allocatable :: krylov_d(:)
+  type(base), allocatable :: krylov_x(:,:)
 ! contains the rhs of problem, read in from file
   type(base), target, allocatable :: krylov_p(:,:)
 ! character string to become id_string in solver
@@ -78,6 +79,13 @@ program krylovdriver_1b
   integer(kind_integer) :: n3 = 0
   integer(kind_integer) :: n4 = 0
   integer(kind_integer) :: j,k = 0
+  integer(kind_integer) :: nbasis,nrhs,irestart = 0
+! file name for eigenvectors
+  character(len=32) :: vector_string
+! file name for roots included unconverged ones
+  character(len=32) :: data_string
+! file name for lagrangian string
+  character(len=32) :: lagr_string
 !--------------------------------------------------------------------
 ! Error Parameter
 !--------------------------------------------------------------------
@@ -86,7 +94,7 @@ program krylovdriver_1b
 
 !! set default options
   preconditioner = 'davidson'
-  krylov_problem%irestart = 0
+  irestart = 0
   krylov_s_ext_in%nstart = 0
 !! checking command line options:
   counter = command_argument_count()
@@ -125,10 +133,10 @@ program krylovdriver_1b
         stop
       else if (input.eq.'-test') then
         ierr = 20
-        call problem_b_solver(krylov_approx,krylov_s_eg, &
-  &       krylov_rhs, &
-  &       krylov_problem,krylov_g_uv,krylov_mvp, &
-  &       krylov_output,ierr)
+        call problem_b_solver1(&
+  &     krylov_problem,krylov_d,krylov_p,&
+  &     krylov_s_eg,krylov_g_uv,krylov_mvp, &
+  &     krylov_x,krylov_output,ierr)
         stop
       else if (input.eq.'-precon') then
         k = k + 1
@@ -140,7 +148,7 @@ program krylovdriver_1b
         k = k + 1
         call get_command_argument(k,value=input2,status=ierr)
         if (ierr.ne.0) stop
-        read(input2,*,iostat=ierr) krylov_problem%irestart
+        read(input2,*,iostat=ierr) irestart
         if (ierr.ne.0) stop
         print *, 'restart level: ',input2
       else if (input.eq.'-nstart') then
@@ -179,26 +187,26 @@ program krylovdriver_1b
     stop
   end if
 
-  if (n1.gt.n2) then
-    krylov_problem%n_size = n1
+  if (n1.ge.n2) then
+    nbasis = n2
   else
-    krylov_problem%n_size = n2 
+    nbasis = n1 
   end if
 
 !! allocate array to contain problem
-  allocate(krylov_a(krylov_problem%n_size,krylov_problem%n_size))
-  allocate(krylov_d(krylov_problem%n_size))
+  allocate(krylov_a(nbasis,nbasis))
+  allocate(krylov_d(nbasis))
 
 !! read problem array
-  call array_read_base(filename_string,krylov_problem%n_size,&
-  &    krylov_problem%n_size,krylov_a,ierr)
+  call array_read_base(filename_string,nbasis,&
+  &    nbasis,krylov_a,ierr)
 
   if (ierr.ne.0) then
     print *, 'solver failed as problem can not be read!'
     stop
   end if
 
-  do j = 1, krylov_problem%n_size
+  do j = 1, nbasis
     krylov_d(j) = krylov_a(j,j)
     krylov_a(j,j) = real(0,kind=kind_float)
   end do
@@ -218,7 +226,7 @@ program krylovdriver_1b
     stop
   end if
 
-  if (n3.ne.krylov_problem%n_size) then
+  if (n3.ne.nbasis) then
     print *, 'solver failed as rhs basis does not match problem!'
     stop
   end if
@@ -228,14 +236,15 @@ program krylovdriver_1b
     stop
   end if
 
-  krylov_problem%n_rhs = n4
+  nrhs = n4
 
 !! allocate array to contain problem
-  allocate(krylov_p(krylov_problem%n_size,krylov_problem%n_rhs))
+  allocate(krylov_p(nbasis,nrhs))
+  allocate(krylov_x(nbasis,nrhs))
 
 !! read problem array
-  call array_read_base(filename_string,krylov_problem%n_size,&
-  &    krylov_problem%n_rhs,krylov_p,ierr)
+  call array_read_base(filename_string,nbasis,&
+  &    nrhs,krylov_p,ierr)
 
   if (ierr.ne.0) then
     print *, 'solver failed as rhs can not be read!'
@@ -243,32 +252,63 @@ program krylovdriver_1b
   end if
 
 ! set pointers to local variables required for input subroutines
-  krylov_problem%problem_string => b1_string
-  krylov_problem%precon_string => preconditioner
-  krylov_approx%krylov_d => krylov_d
+  krylov_problem%nbasis = nbasis
+  krylov_problem%nrhs = nrhs
+  krylov_problem%precon_string = preconditioner
+  krylov_problem%id_string = b1_string
+  krylov_problem%minstart = nrhs
+  krylov_problem%nstart = 0
+  krylov_problem%maxstart = nbasis
+!! NAMBI make type dependent 
+  krylov_problem%threshold = real(8,kind=kind_float)
+  krylov_problem%maxiter = 30
+  krylov_problem%totalmaxiter = 80
+  krylov_problem%iverb = 5
+  krylov_problem%irestart = irestart
+
+  krylov_output%nbasis = nbasis
+  krylov_output%nrhs = nrhs
+  allocate(krylov_output%lagrangian(nrhs))
+  allocate(krylov_output%jconverged(nrhs))
+  allocate(krylov_output%euc_norm(nrhs))
   krylov_mvp%krylov_a => krylov_a
-  krylov_rhs%krylov_p => krylov_p
 
 ! call solver with function to calculate nstart based on electron gas
   if (krylov_s_ext_in%nstart.le.0) then
 ! call solver
-    call problem_b_solver(krylov_approx,krylov_s_eg, &
-  &   krylov_rhs, &
-  &   krylov_problem,krylov_g_uv,krylov_mvp, &
-  &   krylov_output,ierr)
+    call problem_b_solver1(&
+  &   krylov_problem,krylov_d,krylov_p,&
+  &   krylov_s_eg,krylov_g_uv,krylov_mvp, &
+  &   krylov_x,krylov_output,ierr)
   else ! use input nstart
-    call problem_b_solver(krylov_approx,krylov_s_ext_in, &
-  &   krylov_rhs, &
-  &   krylov_problem,krylov_g_uv,krylov_mvp, &
-  &   krylov_output,ierr)
+    call problem_b_solver1(&
+  &   krylov_problem,krylov_d,krylov_p,&
+  &   krylov_s_ext_in,krylov_g_uv,krylov_mvp, &
+  &   krylov_x,krylov_output,ierr)
   end if
 
   print *, 'final ierr value = ',ierr
+
+!! file names
+  vector_string = trim(b1_string)//'_vecs'
+  data_string = trim(b1_string)//'_allr'
+  lagr_string = trim(b1_string)//'_lagr'
+
+! print to file
+ call array_print_base(vector_string,nbasis,nrhs,krylov_x,ierr)
+
+! print to file
+ call array_print_base(lagr_string,1,nrhs,krylov_output%lagrangian,ierr)
+
 
 ! no post calculation operations, everything done within solver
   deallocate(krylov_a)
   deallocate(krylov_d)
   deallocate(krylov_p)
+  deallocate(krylov_x)
+  deallocate(krylov_output%lagrangian)
+  deallocate(krylov_output%jconverged)
+  deallocate(krylov_output%euc_norm)
 
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------

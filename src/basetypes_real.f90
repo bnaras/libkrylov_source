@@ -19,6 +19,7 @@ module basetypes
 !--------------------------------------------------------------------
 ! Modules and Global Variables
 !--------------------------------------------------------------------
+  use libkrylovinterface
 ! contains definition of single and double precision, and kind_integer
   use basekinds
 ! contains the precision parameter kind_float and related parameters
@@ -63,9 +64,9 @@ module basetypes
 ! where the elements are real
 !--------------------------------------------------------------------
 
-  type :: base
-    real(kind_float) :: element
-  end type base
+!  type :: base
+!    real(kind_float) :: element
+!  end type base
 
 !--------------------------------------------------------------------
 
