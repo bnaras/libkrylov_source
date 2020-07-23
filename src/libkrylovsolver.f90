@@ -3010,7 +3010,8 @@ contains
       print *, 'number of desired solutions:  ',nroots
       print *, 'initial subspace:  ',nstart
       print *, 'full vector space: ',nbasis
-      print *, 'maximum number of iterations: ',maxiter
+      print *, 'number of iterations before restart: ',maxiter
+      print *, 'maximum number of iterations: ',totalmaxiter
       print *, 'preconditioner type: ',precon_string
       print *, ''
     end if
@@ -6399,6 +6400,7 @@ contains
           end do
         end do
       else
+        m = 0
         do j = 1, nomega
           do k = 1, nrhs
             do l = 1, nbasis
@@ -6437,6 +6439,7 @@ contains
           end do
         end do
       else
+        m = 0
         do j = 1, nomega
           do k = 1, nrhs
             call gdot(nbasis,dmvx(1:nbasis,k+m),1,&
@@ -6549,9 +6552,12 @@ contains
 
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
-  subroutine problem_c_solver(krylov_approx,krylov_start,krylov_rhs,&
-    & krylov_omega,krylov_problem_c,krylov_guess,&
-    & krylov_mvp,krylov_output_c,ierr)
+  subroutine problem_c_solver1(&
+    & krylov_problem_c,&
+    & approx_spectra,omega,rhs,krylov_start,&
+    & krylov_guess,krylov_mvp,&
+    & full_solutions,&
+    & krylov_output_c,ierr)
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
 !
@@ -6591,10 +6597,7 @@ contains
 !--------------------------------------------------------------------
 ! Input functions
 !--------------------------------------------------------------------
-    class(libkrylov_vector_subroutine) ::          krylov_approx
     class(libkrylov_start_subroutine) ::  krylov_start
-    class(libkrylov_matrix_subroutine) ::      krylov_rhs
-    class(libkrylov_vector_subroutine) ::          krylov_omega
     class(libkrylov_problem_c_subroutine) :: krylov_problem_c
     class(libkrylov_guess_subroutine) ::     krylov_guess
     class(libkrylov_mvp_subroutine) ::       krylov_mvp
@@ -6631,6 +6634,7 @@ contains
 !< threshold = x , numerical approximation 10^(-x)>n~0
 !< only for user convergence thresholds
     integer(kind_integer) :: maxiter = 25
+    integer(kind_integer) :: totalmaxiter = 25
 !< maximum number of subspace iterations 
     logical :: unique_rhs_omega = .false.
 !< if there is a unique rhs provided for each omega.
@@ -6667,13 +6671,13 @@ contains
 !! Arrays that are allocated after krylov problem
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !! filled in with the guess of the spectrum
-    real(kind_float), allocatable :: approx_spectra(:)
+    real(kind_float), intent(in) :: approx_spectra(:)
 !< approximation of spectra of problem = approx_spectra = D
-    real(kind_float), allocatable :: omega(:) 
+    real(kind_float), intent(in) :: omega(:) 
 !< frequencies to be solved for = omega
-    type(base), allocatable :: rhs(:,:)
+    type(base), intent(in) :: rhs(:,:)
 !< RHS of problem = rhs = P
-    logical, allocatable :: jconverged(:)
+!    logical, allocatable :: jconverged(:)
 !< logical for determining which roots are converged
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !! filled in with before iterations, expanded in expand
@@ -6707,12 +6711,12 @@ contains
     type(base), allocatable ::  lagrangian(:)
 !< solutions = eigenvectors of current subspace calculation that are relevant = x
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    type(base), allocatable :: full_solutions(:,:)
+    type(base), intent(inout) :: full_solutions(:,:)
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !! filled in at krylov_a_norms
     type(base), allocatable :: residuals(:,:)
-    real(kind_float), allocatable :: euc_norm(:)
-    real(kind_float) :: fro_norm
+ !   real(kind_float), allocatable :: euc_norm(:)
+ !   real(kind_float) :: fro_norm
     real(kind_float) :: largest_euc_norm
     real(kind_float) :: largest_sv
     integer(kind_integer) :: nresiduals = 0
@@ -6724,7 +6728,7 @@ contains
 !< nresiduals = number of non-zero residuals in the current iteration = nresidue
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !! filled in at convergence check
-    integer(kind_integer) :: nconverged = 0
+!    integer(kind_integer) :: nconverged = 0
 !< number of converged solutions = nconverged
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !! filled in before extend
@@ -6761,25 +6765,38 @@ contains
 
 !! Begin solver!
 
-  ! Determine details of davidson problem to be solved
-  ! USER-DEFINED FUNCTION
-    call krylov_problem_c%lkl_problem_c(nbasis,nomega,nrhs,&
-  &   minstart,maxstart,threshold,maxiter,unique_rhs_omega,&
-  &   id_string,precon_string,iverb,irestart,ierr)
-    if (ierr.ne.0) then
-      if (iverb.ge.0) then
-        print *, 'class(user_krylov_c_problem_subroutine) function failed'
-        print *, 'error variable = ',ierr
-      end if  
-      ierr = -70
-      return ! abort solver, return to call
-    end if
-
+    nbasis = krylov_problem_c%nbasis
+    nomega = krylov_problem_c%nomega
+    nrhs = krylov_problem_c%nrhs
+    minstart = krylov_problem_c%minstart
+    nstart = krylov_problem_c%nstart
+    maxstart = krylov_problem_c%maxstart
+    threshold = krylov_problem_c%threshold
+    maxiter = krylov_problem_c%maxiter
+    totalmaxiter = krylov_problem_c%totalmaxiter
+    id_string = krylov_problem_c%id_string
+    precon_string = krylov_problem_c%precon_string
+    iverb = krylov_problem_c%iverb
+    irestart = krylov_problem_c%irestart
+!  ! Determine details of davidson problem to be solved
+!  ! USER-DEFINED FUNCTION
+!    call krylov_problem_c%lkl_problem_c(nbasis,nomega,nrhs,&
+!  &   minstart,maxstart,threshold,maxiter,unique_rhs_omega,&
+!  &   id_string,precon_string,iverb,irestart,ierr)
+!    if (ierr.ne.0) then
+!      if (iverb.ge.0) then
+!        print *, 'class(user_krylov_c_problem_subroutine) function failed'
+!        print *, 'error variable = ',ierr
+!      end if  
+!      ierr = -70
+!      return ! abort solver, return to call
+!    end if
+!
   if (iverb.ge.0) then
     print *, '////////////////////////////////////////////////'
     print *, 'Non-Orthonormal Krylov Subspace Solver'
     print *, '////////////////////////////////////////////////'
-    print *, ' Solving problem type problem_c'
+    print *, ' Solver 1 for problem type problem_c'
     print *, '////////////////////////////////////////////////'
     print *, ' '
     if (iverb.ge.3) then
@@ -6887,18 +6904,18 @@ contains
 
 ! allocate diagonal first to determine some features of problem
 ! to set nstart
-    allocate(approx_spectra(nbasis))
+!    allocate(approx_spectra(nbasis))
 
-! fill approx spectra
-    call krylov_approx%vector_fill(nbasis,approx_spectra,ierr)
-    if (ierr.ne.0) then
-      if (iverb.ge.0) then
-        print *, 'class(user_float_subroutine)function for approx failed'
-        print *, 'error variable = ',ierr
-      end if
-      ierr = -65
-      return ! abort solver, return to call
-    end if
+!! fill approx spectra
+!    call krylov_approx%vector_fill(nbasis,approx_spectra,ierr)
+!    if (ierr.ne.0) then
+!      if (iverb.ge.0) then
+!        print *, 'class(user_float_subroutine)function for approx failed'
+!        print *, 'error variable = ',ierr
+!      end if
+!      ierr = -65
+!      return ! abort solver, return to call
+!    end if
 
     call krylov_start%lkl_start(nbasis,nroots,&
   &        approx_spectra,nstart,ierr)
@@ -7047,20 +7064,20 @@ contains
     allocate(basis_vectors(nbasis,maxsubspace)) !maximum
     allocate(mvproduct(nbasis,maxsubspace)) !maximum
     allocate(avproduct(nbasis,maxsubspace)) !maximum
-    allocate(rhs(nbasis,nrhs))
+!    allocate(rhs(nbasis,nrhs))
     allocate(proj_rhs(maxsubspace,nrhs)) !maximum
     allocate(rayleigh(maxsubspace,maxsubspace)) !maximum
     allocate(rayleigh_sq(maxsubspace,maxsubspace)) !maximum
     allocate(lagrangian(nroots))
     allocate(solutions(maxsubspace,nroots)) !maximum
-    allocate(full_solutions(nbasis,nroots))
+!    allocate(full_solutions(nbasis,nroots))
     allocate(overlap(maxsubspace,maxsubspace)) !maximum
     allocate(cholesky(maxsubspace,maxsubspace)) !maximum
-    allocate(omega(nomega)) 
+!    allocate(omega(nomega)) 
     allocate(diag_overlap(maxsubspace)) !maximum
     allocate(residuals(nbasis,nroots)) !maximum
-    allocate(euc_norm(nroots))
-    allocate(jconverged(nroots))
+!    allocate(euc_norm(nroots))
+!    allocate(jconverged(nroots))
 
 
 !! zero out important quantities
@@ -7069,27 +7086,27 @@ contains
     diag_overlap = real(0,kind=kind_float)
     
 
-    associate(interfacing_rhs => rhs%element)
-      call krylov_rhs%matrix_fill(nbasis,nrhs,interfacing_rhs,ierr)
-    end associate
-    if (ierr.ne.0) then
-      if (iverb.ge.0) then
-        print *, 'class(user_base_subroutine)function rhs failed'
-        print *, 'error variable = ',ierr
-      end if
-      ierr = -59
-      return ! abort solver, return to call
-    end if
-
-    call krylov_omega%vector_fill(nomega,omega,ierr)
-    if (ierr.ne.0) then
-      if (iverb.ge.0) then
-        print *, 'class(user_base_subroutine)function omega failed'
-        print *, 'error variable = ',ierr
-      end if
-      ierr = -58
-      return ! abort solver, return to call
-    end if
+!    associate(interfacing_rhs => rhs%element)
+!      call krylov_rhs%matrix_fill(nbasis,nrhs,interfacing_rhs,ierr)
+!    end associate
+!    if (ierr.ne.0) then
+!      if (iverb.ge.0) then
+!        print *, 'class(user_base_subroutine)function rhs failed'
+!        print *, 'error variable = ',ierr
+!      end if
+!      ierr = -59
+!      return ! abort solver, return to call
+!    end if
+!
+!    call krylov_omega%vector_fill(nomega,omega,ierr)
+!    if (ierr.ne.0) then
+!      if (iverb.ge.0) then
+!        print *, 'class(user_base_subroutine)function omega failed'
+!        print *, 'error variable = ',ierr
+!      end if
+!      ierr = -58
+!      return ! abort solver, return to call
+!    end if
 
     if (irestart.ge.2) then !read restart if possible
       if (iverb.ge.2) then
@@ -7446,14 +7463,15 @@ contains
       print *, 'convergence criteria: 10^(-',threshold,')'
       print *, 'initial subspace:  ',nstart
       print *, 'full vector space: ',nbasis
-      print *, 'maximum number of iterations: ',maxiter
+      print *, 'number of iterations before restart: ',maxiter
+      print *, 'maximum number of iterations: ',totalmaxiter
       print *, ' '
     end if
 
 ! SOLVER LOOP
     jter = 0
     kter = 0
-    do iter = 1, maxiter
+    do iter = 1, totalmaxiter
 
 
 ! Check for kill file
@@ -7485,7 +7503,7 @@ contains
   &     cholesky(1:nsubspace,1:nsubspace),&
   &     proj_rhs(1:nsubspace,1:nrhs),&
   &     overlap(1:nsubspace,1:nsubspace),diag_overlap(1:nsubspace),&
-  &     omega,lagrangian,solutions(1:nsubspace,1:nroots),iverb,ierr)
+  &     omega,krylov_output_c%lagrangian,solutions(1:nsubspace,1:nroots),iverb,ierr)
       if (ierr.ne.0) then
         if (iverb.ge.0) then
           print *, 'krylov ritz(subspace solve) calculation failed'
@@ -7510,8 +7528,8 @@ contains
   &     solutions(1:nsubspace,1:nroots),&
   &     overlap(1:nsubspace,1:nsubspace),&
   &     omega,rhs,approx_spectra,&
-  &     residuals,euc_norm,largest_euc_norm,&
-  &     fro_norm,nresiduals,iverb,ierr)
+  &     residuals,krylov_output_c%euc_norm,largest_euc_norm,&
+  &     krylov_output_c%fro_norm,nresiduals,iverb,ierr)
       if (ierr.ne.0) then
         if (iverb.ge.0) then
           print *, 'krylov norms calculation failed'
@@ -7542,21 +7560,21 @@ contains
       end if
 
 ! determine convergence of solutions based on euclidean norm
-      nconverged = 0
-      jconverged = .false.
+      krylov_output_c%nconverged = 0
+      krylov_output_c%jconverged = .false.
       do j = 1 , nroots
-        if ((-threshold).gt.log10(euc_norm(j))) then
-          nconverged = nconverged + 1
-          jconverged(j) = .true.
+        if ((-threshold).gt.log10(krylov_output_c%euc_norm(j))) then
+          krylov_output_c%nconverged = krylov_output_c%nconverged + 1
+          krylov_output_c%jconverged(j) = .true.
         end if
       end do
       if (iverb.ge.2) then
-        print *, 'converged vectors: ', nconverged
+        print *, 'converged vectors: ', krylov_output_c%nconverged
       end if
 
 ! determine convergence of solutions based on frobenius norm
 ! The stricter test, this is done before check by euclidean norms
-      if ((-threshold).gt.log10(fro_norm)) then
+      if ((-threshold).gt.log10(krylov_output_c%fro_norm)) then
         if (iverb.ge.1) then
           print *, 'Converged by frobenius norm!'
         end if
@@ -7564,7 +7582,7 @@ contains
       end if
 
 ! determine convergence of solutions based on nconverged
-      if (nconverged.ge.nroots) then
+      if (krylov_output_c%nconverged.ge.nroots) then
         if (iverb.ge.1) then
           print *, 'Converged by euclidean norm!'
         end if
@@ -7577,7 +7595,7 @@ contains
       end if
 
 ! check that more iterations are allowed before extending subspace
-      if (iter.eq.maxiter) then
+      if (iter.eq.totalmaxiter) then
         if (iverb.ge.0) then
           print *, 'failed to converge within max number of iterations'
         end if
@@ -7605,30 +7623,37 @@ contains
         exit ! exit subspace loop
       end if
 
-! call krylov extend subroutine, after saving prev_nsubspace
-      prev_nsubspace = nsubspace
-      nsubspace = nsubspace + nresiduals  
-      call krylov_extend(nbasis,nsubspace,&
-  &     nresiduals,prev_nsubspace,&
-  &     residuals(1:nbasis,1:nresiduals),&
-  &     basis_vectors(1:nbasis,1:nsubspace),&
-  &     overlap(1:nsubspace,1:nsubspace),&
-  &     diag_overlap(1:nsubspace),iverb,ierr)
-      if (ierr.ne.0) then
-        if (iverb.ge.0) then
-          print *, 'krylov subspace expansion failed'
-          print *, 'error variable = ',ierr
-          print *, 'using previous subspace solutions for print'
+      if (kter.lt.maxiter) then
+  ! call krylov extend subroutine, after saving prev_nsubspace
+        prev_nsubspace = nsubspace
+        nsubspace = nsubspace + nresiduals  
+        call krylov_extend(nbasis,nsubspace,&
+    &     nresiduals,prev_nsubspace,&
+    &     residuals(1:nbasis,1:nresiduals),&
+    &     basis_vectors(1:nbasis,1:nsubspace),&
+    &     overlap(1:nsubspace,1:nsubspace),&
+    &     diag_overlap(1:nsubspace),iverb,ierr)
+        if (ierr.ne.0) then
+          if (iverb.ge.0) then
+            print *, 'krylov subspace expansion failed'
+            print *, 'error variable = ',ierr
+            print *, 'using previous subspace solutions for print'
+          end if
+          nsubspace = prev_nsubspace
+          ierr = 0
+          exit ! This exits subspace loop
         end if
-        nsubspace = prev_nsubspace
-        ierr = 0
-        exit ! This exits subspace loop
+  
+  ! cholesky decomposition of matrix
+        call krylov_cholesky(nsubspace,overlap(1:nsubspace,1:nsubspace),&
+    &     diag_overlap(1:nsubspace),& 
+    &     cholesky(1:nsubspace,1:nsubspace),cond,iverb,ierr)
+      else
+        if (iverb.ge.1) then
+          print *, 'static restart due to number of iterations'
+        end if
+        ierr = -23
       end if
-
-! cholesky decomposition of matrix
-      call krylov_cholesky(nsubspace,overlap(1:nsubspace,1:nsubspace),&
-  &     diag_overlap(1:nsubspace),& 
-  &     cholesky(1:nsubspace,1:nsubspace),cond,iverb,ierr)
 ! Force restart if cond is less than threshold
       if ((logeps).gt.log10(cond)) then
         if (iverb.ge.1) then
@@ -7636,10 +7661,10 @@ contains
         end if
         ierr = -24
       end if
+
       if (ierr.ne.0) then !cholesky failed, attempt rescue
         if (iverb.ge.0) then
-          print *, 'new krylov subspace unstable'
-          print *, 'attempting to stabilize'
+          print *, 'restart triggered'
         end if
 !!!!  Drastic restart implementation.
         ierr = 0
@@ -7878,21 +7903,15 @@ contains
         call array_print_rstrt(sname,nbasis,nroots,&
   &       full_solutions(1:nbasis,1:nroots),iverb,ierr)
         if (ierr.eq.0) then ! save file printed! safe to delete restart
-          if (irestart.ge.2) then
-            call array_del_rstrt(vname,iverb,ierr)
-            ! no check for ierr, no action on fail
-            ierr = 0
-            if (irestart.ge.3) then
-              call array_del_rstrt(wname,iverb,ierr)
-              ! no check for ierr, no action on fail
-              ierr = 0
-              if (irestart.ge.4) then
-                call array_del_rstrt(rname,iverb,ierr)
-                ! no check for ierr, no action on fail
-                ierr = 0
-              end if
-            end if
-          end if
+          call array_del_rstrt(vname,iverb,ierr)
+          ! no check for ierr, no action on fail
+          ierr = 0
+          call array_del_rstrt(wname,iverb,ierr)
+          ! no check for ierr, no action on fail
+          ierr = 0
+          call array_del_rstrt(rname,iverb,ierr)
+          ! no check for ierr, no action on fail  
+          ierr = 0
         else ! something wrong with printing save, don't delete files
           if (iverb.ge.0) then
             print *, 'unable to print save file'
@@ -7901,54 +7920,54 @@ contains
           ierr = 0
         end if
       end if
-!! call user output function
-      associate(interfacing_rhs => rhs%element, &
-  &             interfacing_lg => lagrangian%element, &
-  &             interfacing_fs => full_solutions%element)
-        call krylov_output_c%lkl_output_c(nbasis,nsubspace,nomega,nrhs,&
-  &       nroots,nconverged,jconverged,omega,interfacing_rhs,&
-  &       interfacing_lg(1:nroots),&
-  &       interfacing_fs(1:nbasis,1:nroots),&
-  &       euc_norm(1:nroots),fro_norm,id_string,ierr)
-      end associate
+!!! call user output function
+!      associate(interfacing_rhs => rhs%element, &
+!  &             interfacing_lg => lagrangian%element, &
+!  &             interfacing_fs => full_solutions%element)
+!        call krylov_output_c%lkl_output_c(nbasis,nsubspace,nomega,nrhs,&
+!  &       nroots,nconverged,jconverged,omega,interfacing_rhs,&
+!  &       interfacing_lg(1:nroots),&
+!  &       interfacing_fs(1:nbasis,1:nroots),&
+!  &       euc_norm(1:nroots),fro_norm,id_string,ierr)
+!      end associate
 !! final ierr check and adjustments
       if (ierr.ne.0) then
         if (iverb.ge.0) then
           print *, 'class(user_krylov_output_subroutine) function failed'
         end if
         ierr = -20
-      else if (nconverged.le.0) then !only if ierr .eq. 0
+      else if (krylov_output_c%nconverged.le.0) then !only if ierr .eq. 0
         if (iverb.ge.0) then
           print *, 'solver produced no solutions'
         end if
         ierr = -15
-      else if (nconverged.lt.nroots) then !only if output function works
+      else if (krylov_output_c%nconverged.lt.nroots) then !only if output function works
         if (iverb.ge.1) then
           print *, 'not all desired solutions produced'
           print *, 'ierr contains number of solutions printed'
         end if
-        ierr = nconverged
+        ierr = krylov_output_c%nconverged
       end if
     end if
 
     deallocate(basis_vectors)
     deallocate(mvproduct)
     deallocate(avproduct)
-    deallocate(approx_spectra)
-    deallocate(rhs)
+!    deallocate(approx_spectra)
+!    deallocate(rhs)
     deallocate(proj_rhs)
     deallocate(rayleigh)
     deallocate(rayleigh_sq)
     deallocate(lagrangian)
     deallocate(solutions)
-    deallocate(full_solutions)
+!    deallocate(full_solutions)
     deallocate(overlap)
     deallocate(cholesky)
-    deallocate(omega)
+!    deallocate(omega)
     deallocate(diag_overlap)
     deallocate(residuals)
-    deallocate(euc_norm)
-    deallocate(jconverged)
+!    deallocate(euc_norm)
+!    deallocate(jconverged)
 
     if (iverb.ge.0) then
       print *, '////////////////////////////////////////////////'
@@ -7958,7 +7977,7 @@ contains
 
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
-  end subroutine problem_c_solver
+  end subroutine problem_c_solver1
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
 

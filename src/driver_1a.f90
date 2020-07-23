@@ -75,14 +75,13 @@ program krylovdriver_1a
   integer(kind_integer) :: j,k = 0
   integer(kind_integer) :: nbasis,nroots,irestart = 0
 ! file name for eigenvectors
-    character(len=32) :: vector_string
+  character(len=32) :: vector_string
 ! file name for eigenvalues
-    character(len=32) :: values_string
+  character(len=32) :: values_string
 ! file name for roots included unconverged ones
-    character(len=32) :: data_string
+  character(len=32) :: data_string
 ! file name for lagrangian string
-    character(len=32) :: lagr_string
-
+  character(len=32) :: lagr_string
 !--------------------------------------------------------------------
 ! Error Parameter
 !--------------------------------------------------------------------
@@ -195,10 +194,10 @@ program krylovdriver_1a
     stop
   end if
 
-  if (n1.gt.n2) then
-    nbasis = n1
+  if (n1.ge.n2) then
+    nbasis = n2
   else
-    nbasis = n2 
+    nbasis = n1 
   end if
 
 !! allocate array to contain problem
@@ -232,7 +231,6 @@ program krylovdriver_1a
   krylov_problem%threshold = real(8,kind=kind_float)
   krylov_problem%maxiter = 30
   krylov_problem%totalmaxiter = 80
-  krylov_problem%id_string = "problem_a_solver_1"
   krylov_problem%iverb = 5
   krylov_problem%irestart = irestart
 
@@ -282,6 +280,7 @@ program krylovdriver_1a
 
   deallocate(krylov_a)
   deallocate(krylov_d)
+  deallocate(krylov_x)
   deallocate(krylov_output%roots)
   deallocate(krylov_output%lagrangian)
   deallocate(krylov_output%jconverged)

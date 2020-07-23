@@ -31,7 +31,7 @@ module libkrylovinterface_real_dp
 
 !! double precision parameter
   integer, parameter :: &
-  & lkl_real_dp_k = 8
+  & lkl_real_dp_k = selected_real_kind(2*precision(16e0))
 
 !! 8 byte parameter for integers 
   integer, parameter :: lkl_int_rdp_k = 8
@@ -254,7 +254,7 @@ module libkrylovinterface_real_dp
   type :: libkrylov_output_a_real_dp
 !!  rows of solutions, nbasis
     integer(lkl_int_rdp_k) :: nbasis
-!!  size of subspace , not used
+!!  number of roots
     integer(lkl_int_rdp_k) :: nroots
 !!  number of converged solutions, nconverged
     integer(lkl_int_rdp_k) :: nconverged
@@ -374,78 +374,106 @@ module libkrylovinterface_real_dp
 
 !! abstract type for krylov_problem function for problem_c
 !! function to determining parameters of the problem to be solved
-  type, abstract :: libkrylov_problem_c_real_dp
-  contains
-    procedure(libkrylov_problem_c_intrfc_rdp), deferred :: lkl_problem_c
+  type :: libkrylov_problem_c_real_dp
+    integer(lkl_int_rdp_k) :: nbasis
+    integer(lkl_int_rdp_k) :: nomega
+    integer(lkl_int_rdp_k) :: nrhs
+    logical :: unique_rhs_omega
+    integer(lkl_int_rdp_k) :: minstart
+    integer(lkl_int_rdp_k) :: nstart
+    integer(lkl_int_rdp_k) :: maxstart
+    real(lkl_real_dp_k) :: threshold
+    integer(lkl_int_rdp_k) :: maxiter
+    integer(lkl_int_rdp_k) :: totalmaxiter
+    character(len=22) :: id_string
+    character(len=32) :: precon_string
+    integer(lkl_int_rdp_k) :: iverb
+    integer(lkl_int_rdp_k) :: irestart
+!  contains
+!    procedure(libkrylov_problem_c_intrfc_rdp), deferred :: lkl_problem_c
   end type libkrylov_problem_c_real_dp
-  abstract interface
-    subroutine libkrylov_problem_c_intrfc_rdp(data,nbasis,nomega,nrhs,&
-  &   minstart,maxstart,threshold,maxiter,unique_rhs_omega,&
-  &   id_string,precon_string,iverb,irestart,ierr)
-      import :: lkl_int_rdp_k, libkrylov_problem_c_real_dp, lkl_real_dp_k
-      class(libkrylov_problem_c_real_dp) :: data
-      integer(lkl_int_rdp_k), intent(inout) :: nbasis
-      integer(lkl_int_rdp_k), intent(inout) :: nomega
-      integer(lkl_int_rdp_k), intent(inout) :: nrhs
-      integer(lkl_int_rdp_k), intent(inout) :: minstart
-      integer(lkl_int_rdp_k), intent(inout) :: maxstart
-      real(lkl_real_dp_k), intent(inout) :: threshold
-      integer(lkl_int_rdp_k), intent(inout) :: maxiter
-      logical, intent(inout) :: unique_rhs_omega
-      character(len=22), intent(inout) :: id_string
-      character(len=32), intent(inout) :: precon_string
-      integer(lkl_int_rdp_k), intent(inout) :: iverb
-      integer(lkl_int_rdp_k), intent(inout) :: irestart
-      integer(lkl_int_rdp_k), intent(inout) :: ierr
-    end subroutine libkrylov_problem_c_intrfc_rdp
-  end interface
+!  abstract interface
+!    subroutine libkrylov_problem_c_intrfc_rdp(data,nbasis,nomega,nrhs,&
+!  &   minstart,maxstart,threshold,maxiter,unique_rhs_omega,&
+!  &   id_string,precon_string,iverb,irestart,ierr)
+!      import :: lkl_int_rdp_k, libkrylov_problem_c_real_dp, lkl_real_dp_k
+!      class(libkrylov_problem_c_real_dp) :: data
+!      integer(lkl_int_rdp_k), intent(inout) :: nbasis
+!      integer(lkl_int_rdp_k), intent(inout) :: nomega
+!      integer(lkl_int_rdp_k), intent(inout) :: nrhs
+!      integer(lkl_int_rdp_k), intent(inout) :: minstart
+!      integer(lkl_int_rdp_k), intent(inout) :: maxstart
+!      real(lkl_real_dp_k), intent(inout) :: threshold
+!      integer(lkl_int_rdp_k), intent(inout) :: maxiter
+!      logical, intent(inout) :: unique_rhs_omega
+!      character(len=22), intent(inout) :: id_string
+!      character(len=32), intent(inout) :: precon_string
+!      integer(lkl_int_rdp_k), intent(inout) :: iverb
+!      integer(lkl_int_rdp_k), intent(inout) :: irestart
+!      integer(lkl_int_rdp_k), intent(inout) :: ierr
+!    end subroutine libkrylov_problem_c_intrfc_rdp
+!  end interface
 
 !! abstract type for krylov_output function of problem_c
 !! function that takes the output from the solver
 !! and does what the user wants with them
 !! wheter printing or passing out of the solver
-  type, abstract :: libkrylov_output_c_real_dp
-  contains
-    procedure(libkrylov_output_c_intrfc_rdp), deferred :: lkl_output_c
+  type :: libkrylov_output_c_real_dp
+!!  rows of solutions, nbasis
+    integer(lkl_int_rdp_k) :: nbasis
+!!  number of solutions
+    integer(lkl_int_rdp_k) :: nroots
+!!  number of converged solutions, nconverged
+    integer(lkl_int_rdp_k) :: nconverged
+!!  array for which solutions are converged
+    logical, allocatable :: jconverged(:)
+!!  functional
+    type(base_rdp), allocatable :: lagrangian(:)
+!!  residual norms of each vector
+    real(lkl_real_dp_k), allocatable :: euc_norm(:)
+!!  residual norm of all vectors
+    real(lkl_real_dp_k) :: fro_norm
+!  contains
+!    procedure(libkrylov_output_c_intrfc_rdp), deferred :: lkl_output_c
   end type libkrylov_output_c_real_dp
-  abstract interface
-    subroutine libkrylov_output_c_intrfc_rdp(data,n1,n2,n3,n4,n5,n6,&
-  &   jconverged,omega,rhs,lagrangian,solutions,&
-  &   euc_norm,fro_norm,id_string,ierr)
-      import :: lkl_int_rdp_k, libkrylov_output_c_real_dp, lkl_real_dp_k
-      class(libkrylov_output_c_real_dp) :: data
-!!    rows of solutions, nbasis
-      integer(lkl_int_rdp_k), intent(in) :: n1
-!!    size of subspace , not used
-      integer(lkl_int_rdp_k), intent(in) :: n2
-!!    number of frequencies, nomega
-      integer(lkl_int_rdp_k), intent(in) :: n3
-!!    number of rhs, nrhs
-      integer(lkl_int_rdp_k), intent(in) :: n4
-!!    columns of solutions, nroots
-      integer(lkl_int_rdp_k), intent(in) :: n5
-!!    number of solutions converged
-      integer(lkl_int_rdp_k), intent(in) :: n6
-!!    array for which solutions are converged
-      logical, intent(in) :: jconverged(n5)
-!!    frequencies
-      real(lkl_real_dp_k), intent(in) :: omega(n3)
-!!    rhs
-      real(lkl_real_dp_k), intent(in) :: rhs(n1,n4)
-!!    lagrangian
-      real(lkl_real_dp_k), intent(in) :: lagrangian(n5)
-!!    solutions on the full space, stored on mvproduct
-      real(lkl_real_dp_k), intent(in) :: solutions(n1,n5)
-!!    residual norms of each vector
-      real(lkl_real_dp_k), intent(in) :: euc_norm(n5)
-!!    residual norm of all vectors
-      real(lkl_real_dp_k), intent(in) :: fro_norm
-!!    id_string 
-      character(len=22), intent(in) :: id_string
-!!    error variable
-      integer(lkl_int_rdp_k), intent(inout) :: ierr
-    end subroutine libkrylov_output_c_intrfc_rdp
-  end interface
+!  abstract interface
+!    subroutine libkrylov_output_c_intrfc_rdp(data,n1,n2,n3,n4,n5,n6,&
+!  &   jconverged,omega,rhs,lagrangian,solutions,&
+!  &   euc_norm,fro_norm,id_string,ierr)
+!      import :: lkl_int_rdp_k, libkrylov_output_c_real_dp, lkl_real_dp_k
+!      class(libkrylov_output_c_real_dp) :: data
+!!!    rows of solutions, nbasis
+!      integer(lkl_int_rdp_k), intent(in) :: n1
+!!!    size of subspace , not used
+!      integer(lkl_int_rdp_k), intent(in) :: n2
+!!!    number of frequencies, nomega
+!      integer(lkl_int_rdp_k), intent(in) :: n3
+!!!    number of rhs, nrhs
+!      integer(lkl_int_rdp_k), intent(in) :: n4
+!!!    columns of solutions, nroots
+!      integer(lkl_int_rdp_k), intent(in) :: n5
+!!!    number of solutions converged
+!      integer(lkl_int_rdp_k), intent(in) :: n6
+!!!    array for which solutions are converged
+!      logical, intent(in) :: jconverged(n5)
+!!!    frequencies
+!      real(lkl_real_dp_k), intent(in) :: omega(n3)
+!!!    rhs
+!      real(lkl_real_dp_k), intent(in) :: rhs(n1,n4)
+!!!    lagrangian
+!      real(lkl_real_dp_k), intent(in) :: lagrangian(n5)
+!!!    solutions on the full space, stored on mvproduct
+!      real(lkl_real_dp_k), intent(in) :: solutions(n1,n5)
+!!!    residual norms of each vector
+!      real(lkl_real_dp_k), intent(in) :: euc_norm(n5)
+!!!    residual norm of all vectors
+!      real(lkl_real_dp_k), intent(in) :: fro_norm
+!!!    id_string 
+!      character(len=22), intent(in) :: id_string
+!!!    error variable
+!      integer(lkl_int_rdp_k), intent(inout) :: ierr
+!    end subroutine libkrylov_output_c_intrfc_rdp
+!  end interface
 
 !--------------------------------------------------------------------
 
@@ -572,6 +600,148 @@ contains
     deallocate(output_a%euc_norm)
 !--------------------------------------------------------------------
   end subroutine lkl_destr_a_1_rdp
+!--------------------------------------------------------------------
+
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+  subroutine lkl_constr_c_1_rdp(nbasis,nomega,nrhs,unique,problem_c,&
+   &   approx_spectra,omega,base_rhs,base_solutions,output_c)
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Description:
+!--------------------------------------------------------------------
+!! Constructor required for problem a solver 1
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Modules and Global Variables
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+!
+    implicit none
+!
+!--------------------------------------------------------------------
+! External data (IDEALLY EMPTY)
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Input Parameters
+!--------------------------------------------------------------------
+!!   nbasis
+    integer(lkl_int_rdp_k), intent(in) :: nbasis
+!!   nomega
+    integer(lkl_int_rdp_k), intent(in) :: nomega
+!!   nrhs
+    integer(lkl_int_rdp_k), intent(in) :: nrhs
+!!   is nroots not nomega*nrhs
+    logical, intent(in) :: unique 
+!--------------------------------------------------------------------
+! Output Parameters
+!--------------------------------------------------------------------
+!!  problem parameters
+    class(libkrylov_problem_c_real_dp), intent(out) :: problem_c
+!!  approximate spectra
+    real(lkl_real_dp_k), allocatable :: approx_spectra(:)
+!!  input frequencies
+    real(lkl_real_dp_k), allocatable :: omega(:)
+!!  rhs in type base
+    type(base_rdp), allocatable :: base_rhs(:,:)
+!!  solutions in type base
+    type(base_rdp), allocatable :: base_solutions(:,:)
+!!  output parameters
+    class(libkrylov_output_c_real_dp) :: output_c
+!--------------------------------------------------------------------
+!  Local Variables
+!--------------------------------------------------------------------
+    integer(lkl_int_rdp_k) :: nroots
+!--------------------------------------------------------------------
+
+    if (unique) then
+      if (nomega.ne.nrhs) stop
+      nroots = nrhs
+    else
+      nroots = nomega*nrhs
+    end if
+
+    problem_c%nbasis = nbasis
+    problem_c%nomega = nomega
+    problem_c%nrhs = nrhs
+    problem_c%unique_rhs_omega = unique
+    problem_c%minstart = nroots
+    problem_c%nstart = 0
+    problem_c%maxstart = nbasis
+    problem_c%threshold = real(8,kind=lkl_real_dp_k)
+    problem_c%maxiter = 25
+    problem_c%totalmaxiter = 25
+    problem_c%id_string = "problem_c_solver_1"
+    problem_c%precon_string = "davidson"
+    problem_c%iverb = 5
+    problem_c%irestart = 0
+    allocate(approx_spectra(nbasis))
+    allocate(omega(nomega))
+    allocate(base_rhs(nbasis,nrhs))
+    allocate(base_solutions(nbasis,nroots))
+    output_c%nbasis = nbasis
+    output_c%nroots = nroots
+    allocate(output_c%lagrangian(nroots))
+    allocate(output_c%jconverged(nroots))
+    allocate(output_c%euc_norm(nroots))
+!--------------------------------------------------------------------
+  end subroutine lkl_constr_c_1_rdp
+!--------------------------------------------------------------------
+
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+  subroutine lkl_destr_c_1_rdp(&
+   &   approx_spectra,omega,base_rhs,base_solutions,output_c)
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Description:
+!--------------------------------------------------------------------
+!! Destructor required for problem a solver 1
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Modules and Global Variables
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+!
+    implicit none
+!
+!--------------------------------------------------------------------
+! External data (IDEALLY EMPTY)
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Output Parameters
+!--------------------------------------------------------------------
+!!  approximate spectra
+    real(lkl_real_dp_k), allocatable :: approx_spectra(:)
+!!  input frequency
+    real(lkl_real_dp_k), allocatable :: omega(:)
+!!  rhs
+    type(base_rdp), allocatable :: base_rhs(:,:)
+!!  solutions in type base
+    type(base_rdp), allocatable :: base_solutions(:,:)
+!!  output parameters
+    class(libkrylov_output_c_real_dp) :: output_c
+!--------------------------------------------------------------------
+!  Local Variables
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+    deallocate(approx_spectra)
+    deallocate(omega)
+    deallocate(base_rhs)
+    deallocate(base_solutions)
+    deallocate(output_c%lagrangian)
+    deallocate(output_c%jconverged)
+    deallocate(output_c%euc_norm)
+!--------------------------------------------------------------------
+  end subroutine lkl_destr_c_1_rdp
 !--------------------------------------------------------------------
 
 
