@@ -135,7 +135,12 @@ program krylovdriver_1a
         stop
       else if (input.eq.'-test') then
         ierr = 20
-        print *, 'implement this next'
+        call problem_a_solver1(&
+  &       krylov_problem, &
+  &       krylov_d,krylov_s_ext_in, &
+  &       krylov_g_uv,krylov_mvp, &
+  &       krylov_x, &
+  &       krylov_output,ierr)
         stop
       else if (input.eq.'-precon') then
         k = k + 1

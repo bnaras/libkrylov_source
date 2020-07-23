@@ -2472,26 +2472,27 @@ contains
 !--------------------------------------------------------------------
 
     if (ierr.ne.0) then
-      print *, 'libkrylov problem_a_solver called'
+      print *, 'libkrylov problem_a_solver1 called'
       print *, 'with non-zero ierr arguement'
       print *, ''
       print *, 'seeing this message indicates that:'
       print *, " Compiler has accepted the solver's input types,"
-      print *, ' types which contain encapsulated functions'
+      print *, ' some which contain encapsulated functions'
       print *, ' with matching interfaces to the solver'
       print *, ''
       print *, 'This message does not mean that the input arguments:'
       print *, '1. have been compiled'
-      print *, '2. have all pointers assigned'
+      print *, '2. have all pointers/values assigned'
       print *, '3. do not demand more memory than available'
       print *, ''
       print *, 'describing each input arguments:'
-      print *, 'first argument, contains vector subroutine for approximate spectra'
-      print *, 'second argument, contains start subroutine for nstart'
-      print *, 'third argument, problem_a subroutine for parameters'
+      print *, 'first argument, derived type contains problem parameters'
+      print *, 'second argument, contains real array of matrix D'
+      print *, 'third argument, contains start subroutine for nstart'
       print *, 'fourth argument, guess subroutine for initial basis vectors'
       print *, 'fifth argument, mvp subroutine for MV product'
-      print *, 'sixth argument, output subroutine for transferring output'
+      print *, 'sixth argument, derived type array for solution vectors'
+      print *, 'seventh argument, derived type for other output'
       ierr = -1200
       return
     end if
@@ -4324,28 +4325,30 @@ contains
 !--------------------------------------------------------------------
 
     if (ierr.ne.0) then
-      print *, 'libkrylov problem_b_solver called'
+      print *, 'libkrylov problem_b_solver1 called'
       print *, 'with non-zero ierr arguement'
       print *, ''
       print *, 'seeing this message indicates that:'
       print *, " Compiler has accepted the solver's input types,"
-      print *, ' types which contain encapsulated functions'
+      print *, ' some which contain encapsulated functions'
       print *, ' with matching interfaces to the solver'
       print *, ''
       print *, 'This message does not mean that the input arguments:'
       print *, '1. have been compiled'
-      print *, '2. have all pointers assigned'
+      print *, '2. have all pointers/values assigned'
       print *, '3. do not demand more memory than available'
       print *, ''
       print *, 'describing each input arguments:'
-      print *, 'first argument, contains vector subroutine for approximate spectra'
-      print *, 'second argument, contains start subroutine for nstart'
-      print *, 'third argument, contains vector subroutine for rhs'
-      print *, 'fourth argument, problem_b subroutine for parameters'
+      print *, 'first argument, derived type contains problem parameters'
+      print *, 'second argument, contains real array of matrix D'
+      print *, 'third argument, derived type array for rhs'
+      print *, 'fourth argument, contains start subroutine for nstart'
       print *, 'fifth argument, guess subroutine for initial basis vectors'
       print *, 'sixth argument, mvp subroutine for MV product'
-      print *, 'seventh argument, output subroutine for transferring output'
-      stop
+      print *, 'seventh argument, derived type array for solution vectors'
+      print *, 'eighth argument, derived type for other output'
+      ierr = -1200
+      return
     end if
 
 !! Begin solver!
@@ -6732,7 +6735,7 @@ contains
 !--------------------------------------------------------------------
 
     if (ierr.ne.0) then
-      print *, 'libkrylov problem_c_solver called'
+      print *, 'libkrylov problem_c_solver1 called'
       print *, 'with non-zero ierr arguement'
       print *, ''
       print *, 'seeing this message indicates that:'
@@ -6742,18 +6745,19 @@ contains
       print *, ''
       print *, 'This message does not mean that the input arguments:'
       print *, '1. have been compiled'
-      print *, '2. have all pointers assigned'
+      print *, '2. have all pointers/values assigned'
       print *, '3. do not demand more memory than available'
       print *, ''
       print *, 'describing each input arguments:'
-      print *, 'first argument, contains vector subroutine for approximate spectra'
-      print *, 'second argument, contains start subroutine for nstart'
-      print *, 'third argument, contains vector subroutine for rhs'
-      print *, 'fourth argument, contains vector subroutine for omega'
-      print *, 'fifth argument, problem_c subroutine for parameters'
+      print *, 'first argument, derived type contains problem parameters'
+      print *, 'second argument, contains real array of matrix D'
+      print *, 'third argument, contains real array for input frequencies'
+      print *, 'fourth argument, derived type array for rhs'
+      print *, 'fifth argument, contains start subroutine for nstart'
       print *, 'sixth argument, guess subroutine for initial basis vectors'
       print *, 'seventh argument, mvp subroutine for MV product'
-      print *, 'eighth argument, output subroutine for transferring output'
+      print *, 'eighth argument, derived type array for solution vectors'
+      print *, 'ninth argument, derived type for other output'
       ierr = -1200
       return
     end if
