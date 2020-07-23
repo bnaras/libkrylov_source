@@ -14,6 +14,12 @@ module libkrylovinterface2
 ! Modules and Global Varaibles
 !--------------------------------------------------------------------
   use libkrylovinterface_real_dp , only: &
+  &   lkl_constr_a_1 => lkl_constr_a_1_rdp, &
+  &   lkl_destr_a_1 => lkl_destr_a_1_rdp, &
+  &   lkl_constr_b_1 => lkl_constr_b_1_rdp, &
+  &   lkl_destr_b_1 => lkl_destr_b_1_rdp, &
+  &   lkl_constr_c_1 => lkl_constr_c_1_rdp, &
+  &   lkl_destr_c_1 => lkl_destr_c_1_rdp, &
   &   quicksort_stl_float => quicksort_stl_float_rdp, &
   &   lkl_s_elec_gas => lkl_s_elec_gas_rdp, &
   &   lkl_start_elec_gas => lkl_start_elec_gas_rdp, &

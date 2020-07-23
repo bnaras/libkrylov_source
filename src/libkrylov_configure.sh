@@ -13,6 +13,28 @@ then
   exit 0
 fi
 set -e
+# set autoconf-archive macro path
+echo 'Finding an installation of autoconf-archive macros'
+echo 'if not installed, please Ctrl+c, find a path you like and enter:'
+echo 'git clone --depth 1 --branch v2019.01.06 https://github.com/autoconf-archive/autoconf-archive.git'
+echo 'Please enter a file path to your autoconf archive macros'
+echo 'which usually look like "/a/path/like/autoconf-archive/m4" :'
+read autoconf_path
+for (( ; ; ))
+do
+  if [[ $autoconf_path == "" ]];
+  then
+    echo '$AUTOCONF_MACRO is empty'
+    echo "A path to the autoconf-archive installation's macro must be entered."
+    echo '(Otherwise, Ctrl+c to terminate bash)'
+    read autoconf_path
+  else
+    break
+  fi        
+done
+AUTOCONF_MACRO=$autoconf_path
+echo '$AUTOCONF_MACRO entered is'
+echo $AUTOCONF_MACRO
 # Select building with BLAS
 echo 'Build with external BLAS/LAPack libraries?'
 echo ' Please enter >yes< or >no<'
@@ -64,15 +86,14 @@ do
 # generate Makefile.am
         echo ''
         echo 'generating Makefile.am from templates'
-        cat Makefile_shared.am > Makefile.am
+        sed "s|Placeholder|$AUTOCONF_MACRO|g" Makefile_shared.am > Makefile.am
         cat Makefile_mkl_template.am >> Makefile.am
 # copy configure.ac without blas/lapack searches
-        echo 'copying configure.ac from template'
-        cp configure_blas_free.ac configure.ac
+        echo 'generating configure.ac from template'
+        sed "s|Placeholder|$AUTOCONF_MACRO|g" configure_blas_free.ac > configure.ac
         echo '----------copied MKL autoconf files----------'
-        autoreconf --verbose --install --force
+        autoreconf --verbose --install --force -I $AUTOCONF_MACRO
         echo '----------autoconf for MKL done----------'
-        ./configure --help
         ./configure --prefix=$PWD
         break
       fi
@@ -80,13 +101,13 @@ do
       then
 # generate Makefile.am
         echo 'generating Makefile.am from templates'
-        cat Makefile_shared.am > Makefile.am
+        sed "s|Placeholder|$AUTOCONF_MACRO|g" Makefile_shared.am > Makefile.am
         cat Makefile_blas_template.am >> Makefile.am
 # copy configure.ac without blas/lapack searches
-        echo 'copying configure.ac from template'
-        cp configure_blas.ac configure.ac
+        echo 'generating configure.ac from template'
+        sed "s|Placeholder|$AUTOCONF_MACRO|g" configure_blas.ac > configure.ac
         echo '----------copied BLAS/LAPack configure files----------'
-        autoreconf --verbose --install --force
+        autoreconf --verbose --install --force -I $AUTOCONF_MACRO
         echo '----------autoconf for external BLAS/LAPack library done----------'
         echo 'Please enter a desired BLAS library file path'
         echo '(Optional, can be used to point to a specific library)'
@@ -94,7 +115,6 @@ do
         echo 'Please enter a LAPack library file path'
         echo '(Optional, can be used to point to a specific library)'
         read answer4
-        ./configure --help
         ./configure --prefix=$PWD --with-blas=$answer3 --with-lapack=$answer4
         break
       fi
@@ -109,13 +129,13 @@ do
     exit 1
 # generate Makefile.am
     echo 'generating Makefile.am from templates'
-    cat Makefile_shared.am > Makefile.am
+    sed "s|Placeholder|$AUTOCONF_MACRO|g" Makefile_shared.am > Makefile.am
     cat Makefile_blas_free_template.am >> Makefile.am
 # copy configure.ac without blas/lapack searches
-    echo 'copying configure.ac from template'
-    cp configure_blas_free.ac configure.ac
+    echo 'generating configure.ac from template'
+    sed "s|Placeholder|$AUTOCONF_MACRO|g" configure_blas_free.ac > configure.ac
     echo '----------copied external-library-free autoconf files----------'
-    autoreconf --verbose --install --force
+    autoreconf --verbose --install --force -I $AUTOCONF_MACRO
     echo '----------autoconf without external library done----------'
     ./configure --help
     ./configure --prefix=$PWD
