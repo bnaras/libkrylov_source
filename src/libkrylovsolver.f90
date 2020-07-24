@@ -1698,7 +1698,7 @@ contains
     one_kb = real(1,kind=kind_float)
     zero_kb = real(0,kind=kind_float)
 !! compute svavx 
-    call ggemm('n','n',nsubspace,nroots,nsubspace,&
+    call ghemm('l','u',nsubspace,nroots,&
   &   one_kb,overlap,nsubspace,&
   &   vavx,nsubspace,zero_kb,&
   &   svavx,nsubspace)
@@ -1712,7 +1712,7 @@ contains
     one_kb = real(1,kind=kind_float)
     zero_kb = real(0,kind=kind_float)
 !! compute vvx 
-    call ggemm('n','n',nsubspace,nroots,nsubspace,&
+    call ghemm('l','u',nsubspace,nroots,&
   &   one_kb,overlap,nsubspace,&
   &   solutions,nsubspace,zero_kb,&
   &   vvx,nsubspace)
@@ -5713,7 +5713,7 @@ contains
     one_kb = real(1,kind=kind_float)
     zero_kb = real(0,kind=kind_float)
 !! compute vvx 
-    call ggemm('n','n',nsubspace,nroots,nsubspace,&
+    call ghemm('l','u',nsubspace,nroots,&
   &   one_kb,overlap,nsubspace,&
   &   solutions,nsubspace,zero_kb,&
   &   vvx,nsubspace)
