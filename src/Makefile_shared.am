@@ -1,6 +1,6 @@
 #shared section
 #suggestion from autoconf
-ACLOCAL_AMFLAGS = -Iautoconf-archive/m4
+#ACLOCAL_AMFLAGS = -I Placeholder
 # Real Single precision
 # library
 real_sp_libdir = $(PWD)/real_sp_lib
