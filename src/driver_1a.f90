@@ -74,6 +74,8 @@ program krylovdriver_1a
   integer(kind_integer) :: n2 = 0
   integer(kind_integer) :: j,k = 0
   integer(kind_integer) :: nbasis,nroots,irestart = 0
+  integer(kind_integer) :: maxiter,totalmaxiter = 0
+  logical :: no_stop
 ! file name for eigenvectors
   character(len=32) :: vector_string
 ! file name for eigenvalues
@@ -91,8 +93,11 @@ program krylovdriver_1a
 !! set default options
   preconditioner = 'davidson'
   irestart = 0
-  nroots = 5
+  nroots = 0
   krylov_s_ext_in%nstart = 0
+  maxiter = 0
+  totalmaxiter = 0
+  no_stop = .false.
 !! checking command line options:
   counter = command_argument_count()
 !! loop over command line
@@ -118,16 +123,29 @@ program krylovdriver_1a
         print *, '               default option: davidson'
         print *, ''
         print *, '-irestart     select restart level'
-        print *, '               available options: 0 - 4'
+        print *, '               available options: 0 - 3'
+        print *, '               1 enables saving and using the solution vectors'
+        print *, '               2 saves the basis vectors if calculation is killed'
+        print *, '               3 saves the MV vectors if calculation is killed'
         print *, '               default option: 0'
         print *, ''
         print *, '-nroots       select number of roots to solve'
+        print *, '               options: less than full space'
         print *, '               default option: nbasis for nbasis < 17'
         print *, '               default option: 2 for 16 < nbasis < 50'
         print *, '               default option: 5 for 200 < nbasis'
         print *, ''
         print *, '-nstart       select size of initial subspace'
-        print *, '               default option: estimated'
+        print *, '               options: less than full space'
+        print *, '               default option: determined by solver'
+        print *, ''
+        print *, '-maxiter       select number of iterations before restart'
+        print *, '               default option: 30'
+        print *, ''
+        print *, '-totalmaxiter  select number of iterations before exit'
+        print *, '               default option: 80'
+        print *, ''
+        print *, '-no-stop       set threshold to machine precision'
         print *, ''
         print *, '-test         call solver with ierr .ne. 0'
         print *, '               to see subroutine description'
@@ -145,30 +163,46 @@ program krylovdriver_1a
       else if (input.eq.'-precon') then
         k = k + 1
         call get_command_argument(k,value=input2,status=ierr)
-        if (ierr.ne.0) stop
+        if (ierr.ne.0) exit
         preconditioner = input2
         print *, 'preconditioner: ',input2
       else if (input.eq.'-irestart') then
         k = k + 1
         call get_command_argument(k,value=input2,status=ierr)
-        if (ierr.ne.0) stop
+        if (ierr.ne.0) exit
         read(input2,*,iostat=ierr) irestart
-        if (ierr.ne.0) stop
+        if (ierr.ne.0) exit
         print *, 'restart level: ',input2
       else if (input.eq.'-nroots') then
         k = k + 1
         call get_command_argument(k,value=input2,status=ierr)
-        if (ierr.ne.0) stop
+        if (ierr.ne.0) exit
         read(input2,*,iostat=ierr) nroots
         print *, 'number of roots: ',input2
-        if (ierr.ne.0) stop
+        if (ierr.ne.0) exit
       else if (input.eq.'-nstart') then
         k = k + 1
         call get_command_argument(k,value=input2,status=ierr)
-        if (ierr.ne.0) stop
+        if (ierr.ne.0) exit
         read(input2,*,iostat=ierr) krylov_s_ext_in%nstart
         print *, 'starting subspace size: ',input2
-        if (ierr.ne.0) stop
+        if (ierr.ne.0) exit
+      else if (input.eq.'-maxiter') then
+        k = k + 1
+        call get_command_argument(k,value=input2,status=ierr)
+        if (ierr.ne.0) exit
+        read(input2,*,iostat=ierr) maxiter
+        print *, 'maximum iterations before restart: ',input2
+        if (ierr.ne.0) exit
+      else if (input.eq.'-totalmaxiter') then
+        k = k + 1
+        call get_command_argument(k,value=input2,status=ierr)
+        if (ierr.ne.0) exit
+        read(input2,*,iostat=ierr) totalmaxiter
+        print *, 'maximum iterations before exit: ',input2
+        if (ierr.ne.0) exit
+      else if (input.eq.'-no-stop') then
+        no_stop = .true.
       else if (input.eq.'>') then
         exit
       else if (input.eq.'>>') then
@@ -178,6 +212,10 @@ program krylovdriver_1a
       if (k.gt.counter) exit
     end do
   end if 
+  if (ierr.ne.0) then
+    print *, 'faulty input!'
+    stop
+  end if
 
 !! setting up the problem before calling solver
 
@@ -203,6 +241,16 @@ program krylovdriver_1a
     nbasis = n2
   else
     nbasis = n1 
+  end if
+
+  if (nroots.le.0) then
+    if (nbasis.le.16) then
+      nroots = 16
+    else if (nbasis.le.50) then
+      nroots = 2
+    else
+      nroots = 5
+    end if
   end if
 
 !! allocate array to contain problem
@@ -232,10 +280,21 @@ program krylovdriver_1a
   krylov_problem%minstart = nroots
   krylov_problem%nstart = 0
   krylov_problem%maxstart = nbasis
-!! NAMBI make type dependent
-  krylov_problem%threshold = real(8,kind=kind_float)
-  krylov_problem%maxiter = 30
-  krylov_problem%totalmaxiter = 80
+  if (no_stop) then
+    krylov_problem%threshold = real(-logeps,kind=kind_float)
+  else
+    krylov_problem%threshold = real(-logeps/2,kind=kind_float)
+  end if
+  if (maxiter.le.0) then
+    krylov_problem%maxiter = 30
+  else
+    krylov_problem%maxiter = maxiter
+  end if 
+  if (totalmaxiter.le.0) then
+    krylov_problem%totalmaxiter = 80
+  else
+    krylov_problem%totalmaxiter = totalmaxiter
+  end if 
   krylov_problem%iverb = 5
   krylov_problem%irestart = irestart
 
