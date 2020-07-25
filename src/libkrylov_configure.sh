@@ -14,25 +14,73 @@ then
 fi
 set -e
 # set autoconf-archive macro path
-echo 'Finding an installation of autoconf-archive macros'
-echo 'if not installed, please Ctrl+c, find a path you like and enter:'
+echo 'Finding an installation of additional autoconf-archive macros is required.'
+echo ''
+echo 'For manual installation, please enter <exit> to exit the script,' 
+echo 'find a path you like and enter:'
 echo 'git clone --depth 1 --branch v2019.01.06 https://github.com/autoconf-archive/autoconf-archive.git'
-echo 'Please enter a file path to your autoconf archive macros'
-echo 'which usually look like "/a/path/like/autoconf-archive/m4" :'
-read autoconf_path
+echo ''
+echo 'Entering <Default> will prompt the above clone in the directory:'
+echo 'src/autoconf-archive/'
+echo ''
+echo 'Entering <Manual>, will ask for a file path to a'
+echo 'autoconf-archive macros.'
+echo ''
+echo '    If <Default> has previously been entered and' 
+echo '     autoconf-archive is installed in the default location,'
+echo '     please enter <Manual>,' 
+echo '     and the following file path:'
+echo '     autoconf-archive/autoconf-archive/m4'
+echo ''
+echo 'Searching for autoconf-archive macros.'
+echo 'Please enter an avaiable option: <exit>, <Default> or <Manual>'
+echo ''
+read macro_option
 for (( ; ; ))
 do
-  if [[ $autoconf_path == "" ]];
+  if [[ $macro_option == "exit" ]];
   then
-    echo '$AUTOCONF_MACRO is empty'
-    echo "A path to the autoconf-archive installation's macro must be entered."
-    echo '(Otherwise, Ctrl+c to terminate bash)'
-    read autoconf_path
-  else
+    exit 1
+  elif [[ $macro_option == "Default" ]];
+  then
+    mkdir autoconf-archive
+    cd autoconf-archive
+    echo 'cloning autoconf-archive!'
+    git clone --depth 1 --branch v2019.01.06 https://github.com/autoconf-archive/autoconf-archive.git
+    cd ..  
+    AUTOCONF_MACRO=autoconf-archive/autoconf-archive/m4  
     break
+  elif [[ $macro_option == "Manual" ]];
+  then
+    break
+  else
+    echo 'Please enter an avaiable option: <exit>, <Default> or <Manual>'
+    read autoconf_path
   fi        
 done
-AUTOCONF_MACRO=$autoconf_path
+if [[ $macro_option == "Manual" ]];
+then
+  echo 'Please enter a file path to autoconf-archive macros'
+  echo 'which usually look like "/a/path/like/autoconf-archive/m4" :'
+  echo '(enter <exit> to exit the script)' 
+  read autoconf_path
+  for (( ; ; ))
+  do
+    if [[ $autoconf_path == "" ]];
+    then
+      echo '$AUTOCONF_MACRO is empty'
+      echo "A path to the autoconf-archive installation's macro must be entered."
+      echo '(Otherwise, enter <exit> to terminate script)'
+      read autoconf_path
+    elif [[ $autoconf_path == "exit" ]];
+    then
+      exit 1
+    else
+      AUTOCONF_MACRO=$autoconf_path
+      break
+    fi        
+  done
+fi
 echo '$AUTOCONF_MACRO entered is'
 echo $AUTOCONF_MACRO
 # Select building with BLAS

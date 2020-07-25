@@ -31,10 +31,18 @@ module libkrylovinterface_real_sp
 
 !! single precision parameter
   integer, parameter :: &
-  & lkl_real_sp_k = 4
+  & lkl_real_sp_k = kind(16e0)
 
 !! 8 byte parameter for integers 
   integer, parameter :: lkl_int_rsp_k = 8
+
+!--------------------------------------------------------------------
+! Base type for arrays 
+!--------------------------------------------------------------------
+
+  type :: base_rsp
+    real(lkl_real_sp_k) :: element
+  end type base_rsp
 
 !--------------------------------------------------------------------
 
@@ -204,28 +212,28 @@ module libkrylovinterface_real_sp
 !! abstract type for krylov_problem function for problem_a
 !! function to determining parameters of the problem to be solved
   type, abstract :: libkrylov_problem_a_real_sp
-  contains
-    procedure(libkrylov_problem_a_intrfc_rsp), deferred :: lkl_problem_a
+!  contains
+!    procedure(libkrylov_problem_a_intrfc_rsp), deferred :: lkl_problem_a
   end type libkrylov_problem_a_real_sp
-  abstract interface
-    subroutine libkrylov_problem_a_intrfc_rsp(data,nbasis,nroots,&
-  &   minstart,maxstart,threshold,maxiter,&
-  &   id_string,precon_string,iverb,irestart,ierr)
-      import :: lkl_int_rsp_k, libkrylov_problem_a_real_sp, lkl_real_sp_k
-      class(libkrylov_problem_a_real_sp) :: data
-      integer(lkl_int_rsp_k), intent(inout) :: nbasis
-      integer(lkl_int_rsp_k), intent(inout) :: nroots
-      integer(lkl_int_rsp_k), intent(inout) :: minstart
-      integer(lkl_int_rsp_k), intent(inout) :: maxstart
-      real(lkl_real_sp_k), intent(inout) :: threshold
-      integer(lkl_int_rsp_k), intent(inout) :: maxiter
-      character(len=22), intent(inout) :: id_string
-      character(len=32), intent(inout) :: precon_string
-      integer(lkl_int_rsp_k), intent(inout) :: iverb
-      integer(lkl_int_rsp_k), intent(inout) :: irestart
-      integer(lkl_int_rsp_k), intent(inout) :: ierr
-    end subroutine libkrylov_problem_a_intrfc_rsp
-  end interface
+!  abstract interface
+!    subroutine libkrylov_problem_a_intrfc_rsp(data,nbasis,nroots,&
+!  &   minstart,maxstart,threshold,maxiter,&
+!  &   id_string,precon_string,iverb,irestart,ierr)
+!      import :: lkl_int_rsp_k, libkrylov_problem_a_real_sp, lkl_real_sp_k
+!      class(libkrylov_problem_a_real_sp) :: data
+!      integer(lkl_int_rsp_k), intent(inout) :: nbasis
+!      integer(lkl_int_rsp_k), intent(inout) :: nroots
+!      integer(lkl_int_rsp_k), intent(inout) :: minstart
+!      integer(lkl_int_rsp_k), intent(inout) :: maxstart
+!      real(lkl_real_sp_k), intent(inout) :: threshold
+!      integer(lkl_int_rsp_k), intent(inout) :: maxiter
+!      character(len=22), intent(inout) :: id_string
+!      character(len=32), intent(inout) :: precon_string
+!      integer(lkl_int_rsp_k), intent(inout) :: iverb
+!      integer(lkl_int_rsp_k), intent(inout) :: irestart
+!      integer(lkl_int_rsp_k), intent(inout) :: ierr
+!    end subroutine libkrylov_problem_a_intrfc_rsp
+!  end interface
 
 !! abstract type for krylov_output function of problem_a
 !! function that takes the output from the solver
