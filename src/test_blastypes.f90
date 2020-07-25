@@ -42,6 +42,7 @@ program test_blastypes
   type(base) :: z_array2(n,n)
   type(base) :: z_array3(n,n)
   type(base) :: z_array4(n,n)
+  type(base) :: z_array5(n,n)
   type(base) :: z_vector1(n)
   type(base) :: z_vector2(n)
   type(base) :: tau(n)
@@ -334,10 +335,10 @@ program test_blastypes
   write(unit=funit,fmt=*) 'test ggemm', &
   &', calculate for hermitian conjugate matrix multiplication'
 !! call ggemm on test input onto tes output
-  call ggemm('c','n',n,n,n,z1,z_array1,n,z_array1,n,z2,z_array4,n)
+  call ggemm('c','n',n,n,n,z1,z_array1,n,z_array2,n,z2,z_array4,n)
 !! write the explanation of the function using formula 
   write(unit=funit,fmt=*) 'type(base) z_array4', &
-  &' = z1 * (z_array1^H) * z_array1 +  z2 * z_array4'
+  &' = z1 * (z_array2^H) * z_array1 +  z2 * z_array4'
 !! explain the output z_array4
   write(unit=funit,fmt=*) 'z_array4 should be a diagonal matrix', &
   & ' with 3,12,27 on the diagonal'
@@ -377,6 +378,71 @@ program test_blastypes
 !! if false, write subroutine ggemm tested to output and output file
     write(unit=funit,fmt=*) 'tested subtoutine ggemm'
     print *, 'tested subroutine ggemm'
+  end if
+
+!!!testing ghemm
+!! using do loops to fill in the test input
+!! z_array1 and z_array2, z1 and z2
+  z_array1 = real(0,kind=kind_float)
+  do j1 = 1, n
+    z_array1(j1,j1) = real(j1,kind=kind_float)
+  end do
+  z_array2 = real(0,kind=kind_float)
+  do j1 = 1, n
+    z_array2(j1,j1) = real(j1,kind=kind_float)
+  end do
+  z1 = real(3,kind=kind_float)
+  z2 = real(0,kind=kind_float)
+!! set origin value of r_test and r_ref to real number 0
+  r_test = real(0,kind=kind_float)
+  r_ref = real(0,kind=kind_float)
+!! write ghemm and operation
+  write(unit=funit,fmt=*) 'test ghemm', &
+  &', calculate for symmetric matrix multiplication'
+!! call ghemm on test input onto tes output
+  call ghemm('l','u',n,n,z1,z_array1,n,z_array2,n,z2,z_array5,n)
+!! write the explanation of the function using formula 
+  write(unit=funit,fmt=*) 'type(base) z_array5', &
+  &' = z1 * z_array1 * z_array2 +  z2 * z_array5'
+!! explain the output z_array4
+  write(unit=funit,fmt=*) 'z_array5 should be a diagonal matrix', &
+  & ' with 3,12,27 on the diagonal'
+!! write start to check each element
+!! in both test array and reference
+  write(unit=funit,fmt=*) 'test ghemm',&
+  &' on symmetric matrix, for each element'
+!! using do loops to assign z_array4 element by element to r_test
+!! assign r_ref to be a diagonal matrix with 3,12,27 on diagonal
+  do j2 = 1, n 
+    do j1 = 1,n
+      r_test = z_array5(j1,j2)
+      if (j1.eq.j2) then
+        r_ref = real(3,kind=kind_float) * real(j2,kind=kind_float) * &
+  & real(j2,kind=kind_float)
+      else
+        r_ref = real(0,kind=kind_float)
+      end if
+!! using if statement to take the absolute difference 
+!! between elements in test array and elements in reference
+!! to see whether it isis greater than eps
+      if (abs(r_test-r_ref).gt.eps) then
+!! if true, write the test failed
+!! and the position of the element that failed the test
+        write(unit=funit,fmt=*) 'failed for elements', j1, j2
+!! set logical check = .true. 
+        check = .true.
+      end if
+    end do
+  end do
+!! check value of logical check
+  if (check) then
+!! if true, write subroutine ggemm failed to output and output file
+    write(unit=funit,fmt=*) 'subroutine ghemm failed'
+    print *, 'subroutine ghemm failed'
+  else
+!! if false, write subroutine ggemm tested to output and output file
+    write(unit=funit,fmt=*) 'tested subtoutine ghemm'
+    print *, 'tested subroutine ghemm'
   end if
 
 
