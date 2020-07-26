@@ -28,9 +28,7 @@ echo 'autoconf-archive macros.'
 echo ''
 echo '    If <Default> has previously been entered and' 
 echo '     autoconf-archive is installed in the default location,'
-echo '     please enter <Manual>,' 
-echo '     and the following file path:'
-echo '     autoconf-archive/autoconf-archive/m4'
+echo '     please enter <Use_Default>.' 
 echo ''
 echo 'Searching for autoconf-archive macros.'
 echo 'Please enter an avaiable option: <exit>, <Default> or <Manual>'
@@ -48,6 +46,10 @@ do
     echo 'cloning autoconf-archive!'
     git clone --depth 1 --branch v2019.01.06 https://github.com/autoconf-archive/autoconf-archive.git
     cd ..  
+    AUTOCONF_MACRO=autoconf-archive/autoconf-archive/m4  
+    break
+  elif [[ $macro_option == "Use_Default" ]];
+  then
     AUTOCONF_MACRO=autoconf-archive/autoconf-archive/m4  
     break
   elif [[ $macro_option == "Manual" ]];
