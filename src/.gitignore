@@ -57,6 +57,7 @@ config.log
 
 # ignore userconfig
 userlibraryconfig
+usermacrolocation
 
 # ignore compiled executables
 *_real_sp

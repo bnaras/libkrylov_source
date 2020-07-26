@@ -31,10 +31,18 @@ module libkrylovinterface_cmplx_sp
 
 !! single precision parameter
   integer, parameter :: &
-  & lkl_cmplx_sp_k = 4
+  & lkl_cmplx_sp_k = kind(16e0)
 
 !! 8 byte parameter for integers 
   integer, parameter :: lkl_int_csp_k = 8
+
+!--------------------------------------------------------------------
+! Base type for arrays 
+!--------------------------------------------------------------------
+
+  type :: base_csp
+    complex(lkl_cmplx_sp_k) :: element
+  end type base_csp
 
 !--------------------------------------------------------------------
 
@@ -198,225 +206,520 @@ module libkrylovinterface_cmplx_sp
     procedure :: lkl_guess => lkl_guess_unit_vec_csp
   end type lkl_g_unit_vec_csp
 
+  type, extends(libkrylov_mvp_cmplx_sp) :: lkl_mvp_n_mul_csp
+! external data required for the function
+! contains the matrix problem
+! pointer to target set outside of solver
+! shared with kl_approx, must be set before calling solver
+    complex(lkl_cmplx_sp_k), pointer :: matrix(:,:) => null()
+  contains
+    procedure :: lkl_mvp => lkl_mvp_naive_multiply_csp
+  end type lkl_mvp_n_mul_csp
+
 !--------------------------------------------------------------------
 
 !--------------------------------------------------------------------
 ! Abstract types for functions specific to solvers
 !--------------------------------------------------------------------
 
-!! abstract type for krylov_problem function for problem_a
-!! function to determining parameters of the problem to be solved
-  type, abstract :: libkrylov_problem_a_cmplx_sp
-  contains
-    procedure(libkrylov_problem_a_intrfc_csp), deferred :: lkl_problem_a
+!! type for krylov_problem function for problem_a
+!! to determine parameters of the problem to be solved
+  type :: libkrylov_problem_a_cmplx_sp
+    integer(lkl_int_csp_k) :: nbasis
+    integer(lkl_int_csp_k) :: nroots
+    integer(lkl_int_csp_k) :: minstart
+    integer(lkl_int_csp_k) :: nstart
+    integer(lkl_int_csp_k) :: maxstart
+    real(lkl_cmplx_sp_k) :: threshold
+    integer(lkl_int_csp_k) :: maxiter
+    integer(lkl_int_csp_k) :: totalmaxiter
+    character(len=22) :: id_string
+    character(len=32) :: precon_string
+    integer(lkl_int_csp_k) :: iverb
+    integer(lkl_int_csp_k) :: irestart
   end type libkrylov_problem_a_cmplx_sp
-  abstract interface
-    subroutine libkrylov_problem_a_intrfc_csp(data,nbasis,nroots,&
-  &   minstart,maxstart,threshold,maxiter,&
-  &   id_string,precon_string,iverb,irestart,ierr)
-      import :: lkl_int_csp_k, libkrylov_problem_a_cmplx_sp, lkl_cmplx_sp_k
-      class(libkrylov_problem_a_cmplx_sp) :: data
-      integer(lkl_int_csp_k), intent(inout) :: nbasis
-      integer(lkl_int_csp_k), intent(inout) :: nroots
-      integer(lkl_int_csp_k), intent(inout) :: minstart
-      integer(lkl_int_csp_k), intent(inout) :: maxstart
-      real(lkl_cmplx_sp_k), intent(inout) :: threshold
-      integer(lkl_int_csp_k), intent(inout) :: maxiter
-      character(len=22), intent(inout) :: id_string
-      character(len=32), intent(inout) :: precon_string
-      integer(lkl_int_csp_k), intent(inout) :: iverb
-      integer(lkl_int_csp_k), intent(inout) :: irestart
-      integer(lkl_int_csp_k), intent(inout) :: ierr
-    end subroutine libkrylov_problem_a_intrfc_csp
-  end interface
 
-!! abstract type for krylov_output function of problem_a
+!! type for krylov_output function of problem_a
 !! function that takes the output from the solver
-!! and does what the user wants with them
-!! wheter printing or passing out of the solver
-  type, abstract :: libkrylov_output_a_cmplx_sp
-  contains
-    procedure(libkrylov_output_a_intrfc_csp), deferred :: lkl_output_a
+  type :: libkrylov_output_a_cmplx_sp
+!!  rows of solutions, nbasis
+    integer(lkl_int_csp_k) :: nbasis
+!!  number of roots
+    integer(lkl_int_csp_k) :: nroots
+!!  number of converged solutions, nconverged
+    integer(lkl_int_csp_k) :: nconverged
+!!  array for which solutions are converged
+    logical, allocatable :: jconverged(:)
+!!  eigenvalues
+    real(lkl_cmplx_sp_k), allocatable :: roots(:)
+!!  functional
+    type(base_csp), allocatable :: lagrangian(:)
+!!  residual norms of each vector
+    real(lkl_cmplx_sp_k), allocatable :: euc_norm(:)
+!!  residual norm of all vectors
+    real(lkl_cmplx_sp_k) :: fro_norm
   end type libkrylov_output_a_cmplx_sp
-  abstract interface
-    subroutine libkrylov_output_a_intrfc_csp(data,n1,n2,n3,n4,&
-  &   jconverged,roots,lagrangian,solutions,&
-  &   euc_norm,fro_norm,id_string,ierr)
-      import :: lkl_int_csp_k, libkrylov_output_a_cmplx_sp, lkl_cmplx_sp_k
-      class(libkrylov_output_a_cmplx_sp) :: data
-!!    rows of solutions, nbasis
-      integer(lkl_int_csp_k), intent(in) :: n1
-!!    size of subspace , not used
-      integer(lkl_int_csp_k), intent(in) :: n2
-!!    columns of solutions, nroots
-      integer(lkl_int_csp_k), intent(in) :: n3
-!!    number of converged solutions, nconverged
-      integer(lkl_int_csp_k), intent(in) :: n4
-!!    array for which solutions are converged
-      logical, intent(in) :: jconverged(n3)
-!!    eigenvalues
-      real(lkl_cmplx_sp_k), intent(in) :: roots(n3)
-!!    functional
-      complex(lkl_cmplx_sp_k), intent(in) :: lagrangian(n3)
-!!    solutions on the full space, stored on mvproduct
-      complex(lkl_cmplx_sp_k), intent(in) :: solutions(n1,n3)
-!!    residual norms of each vector
-      real(lkl_cmplx_sp_k), intent(in) :: euc_norm(n3)
-!!    residual norm of all vectors
-      real(lkl_cmplx_sp_k), intent(in) :: fro_norm
-!!    id_string 
-      character(len=22), intent(in) :: id_string
-!!    error variable
-      integer(lkl_int_csp_k), intent(inout) :: ierr
-    end subroutine libkrylov_output_a_intrfc_csp
-  end interface
 
-!! abstract type for krylov_problem function for problem_b
 !! function to determining parameters of the problem to be solved
-  type, abstract :: libkrylov_problem_b_cmplx_sp
-  contains
-    procedure(libkrylov_problem_b_intrfc_csp), deferred :: lkl_problem_b
+  type :: libkrylov_problem_b_cmplx_sp
+    integer(lkl_int_csp_k) :: nbasis
+    integer(lkl_int_csp_k) :: nrhs
+    integer(lkl_int_csp_k) :: minstart
+    integer(lkl_int_csp_k) :: nstart
+    integer(lkl_int_csp_k) :: maxstart
+    real(lkl_cmplx_sp_k) :: threshold
+    integer(lkl_int_csp_k) :: maxiter
+    integer(lkl_int_csp_k) :: totalmaxiter
+    character(len=22) :: id_string
+    character(len=32) :: precon_string
+    integer(lkl_int_csp_k) :: iverb
+    integer(lkl_int_csp_k) :: irestart
   end type libkrylov_problem_b_cmplx_sp
-  abstract interface
-    subroutine libkrylov_problem_b_intrfc_csp(data,nbasis,nrhs,&
-  &   minstart,maxstart,threshold,maxiter,&
-  &   id_string,precon_string,iverb,irestart,ierr)
-      import :: lkl_int_csp_k, libkrylov_problem_b_cmplx_sp, lkl_cmplx_sp_k
-      class(libkrylov_problem_b_cmplx_sp) :: data
-      integer(lkl_int_csp_k), intent(inout) :: nbasis
-      integer(lkl_int_csp_k), intent(inout) :: nrhs
-      integer(lkl_int_csp_k), intent(inout) :: minstart
-      integer(lkl_int_csp_k), intent(inout) :: maxstart
-      real(lkl_cmplx_sp_k), intent(inout) :: threshold
-      integer(lkl_int_csp_k), intent(inout) :: maxiter
-      character(len=22), intent(inout) :: id_string
-      character(len=32), intent(inout) :: precon_string
-      integer(lkl_int_csp_k), intent(inout) :: iverb
-      integer(lkl_int_csp_k), intent(inout) :: irestart
-      integer(lkl_int_csp_k), intent(inout) :: ierr
-    end subroutine libkrylov_problem_b_intrfc_csp
-  end interface
 
-!! abstract type for krylov_output function of problem_b
-!! function that takes the output from the solver
-!! and does what the user wants with them
-!! wheter printing or passing out of the solver
-  type, abstract :: libkrylov_output_b_cmplx_sp
-  contains
-    procedure(libkrylov_output_b_intrfc_csp), deferred :: lkl_output_b
+!! type for krylov_output function of problem_b
+!! that takes the output from the solver
+  type :: libkrylov_output_b_cmplx_sp
+!!  rows of solutions, nbasis
+    integer(lkl_int_csp_k) :: nbasis
+!!  number of solutions
+    integer(lkl_int_csp_k) :: nrhs
+!!  number of converged solutions, nconverged
+    integer(lkl_int_csp_k) :: nconverged
+!!  array for which solutions are converged
+    logical, allocatable :: jconverged(:)
+!!  functional
+    type(base_csp), allocatable :: lagrangian(:)
+!!  residual norms of each vector
+    real(lkl_cmplx_sp_k), allocatable :: euc_norm(:)
+!!  residual norm of all vectors
+    real(lkl_cmplx_sp_k) :: fro_norm
   end type libkrylov_output_b_cmplx_sp
-  abstract interface
-    subroutine libkrylov_output_b_intrfc_csp(data,n1,n2,n3,n4,&
-  &   jconverged,rhs,lagrangian,solutions,&
-  &   euc_norm,fro_norm,id_string,ierr)
-      import :: lkl_int_csp_k, libkrylov_output_b_cmplx_sp, lkl_cmplx_sp_k
-      class(libkrylov_output_b_cmplx_sp) :: data
-!!    rows of solutions, nbasis
-      integer(lkl_int_csp_k), intent(in) :: n1
-!!    size of subspace , not used
-      integer(lkl_int_csp_k), intent(in) :: n2
-!!    columns of solutions, nrhs
-      integer(lkl_int_csp_k), intent(in) :: n3
-!!    number of converged solutions, nconverged
-      integer(lkl_int_csp_k), intent(in) :: n4
-!!    array for which solutions are converged
-      logical, intent(in) :: jconverged(n3)
-!!    rhs
-      complex(lkl_cmplx_sp_k), intent(in) :: rhs(n1,n3)
-!!    functional
-      complex(lkl_cmplx_sp_k), intent(in) :: lagrangian(n3)
-!!    solutions on the full space, stored on mvproduct
-      complex(lkl_cmplx_sp_k), intent(in) :: solutions(n1,n3)
-!!    residual norms of each vector
-      real(lkl_cmplx_sp_k), intent(in) :: euc_norm(n3)
-!!    residual norm of all vectors
-      real(lkl_cmplx_sp_k), intent(in) :: fro_norm
-!!    id_string 
-      character(len=22), intent(in) :: id_string
-!!    error variable
-      integer(lkl_int_csp_k), intent(inout) :: ierr
-    end subroutine libkrylov_output_b_intrfc_csp
-  end interface
 
-!! abstract type for krylov_problem function for problem_c
+!! type for krylov_problem function for problem_c
 !! function to determining parameters of the problem to be solved
-  type, abstract :: libkrylov_problem_c_cmplx_sp
-  contains
-    procedure(libkrylov_problem_c_intrfc_csp), deferred :: lkl_problem_c
+  type :: libkrylov_problem_c_cmplx_sp
+    integer(lkl_int_csp_k) :: nbasis
+    integer(lkl_int_csp_k) :: nomega
+    integer(lkl_int_csp_k) :: nrhs
+    logical :: unique_rhs_omega
+    integer(lkl_int_csp_k) :: minstart
+    integer(lkl_int_csp_k) :: nstart
+    integer(lkl_int_csp_k) :: maxstart
+    real(lkl_cmplx_sp_k) :: threshold
+    integer(lkl_int_csp_k) :: maxiter
+    integer(lkl_int_csp_k) :: totalmaxiter
+    character(len=22) :: id_string
+    character(len=32) :: precon_string
+    integer(lkl_int_csp_k) :: iverb
+    integer(lkl_int_csp_k) :: irestart
   end type libkrylov_problem_c_cmplx_sp
-  abstract interface
-    subroutine libkrylov_problem_c_intrfc_csp(data,nbasis,nomega,nrhs,&
-  &   minstart,maxstart,threshold,maxiter,unique_rhs_omega,&
-  &   id_string,precon_string,iverb,irestart,ierr)
-      import :: lkl_int_csp_k, libkrylov_problem_c_cmplx_sp, lkl_cmplx_sp_k
-      class(libkrylov_problem_c_cmplx_sp) :: data
-      integer(lkl_int_csp_k), intent(inout) :: nbasis
-      integer(lkl_int_csp_k), intent(inout) :: nomega
-      integer(lkl_int_csp_k), intent(inout) :: nrhs
-      integer(lkl_int_csp_k), intent(inout) :: minstart
-      integer(lkl_int_csp_k), intent(inout) :: maxstart
-      real(lkl_cmplx_sp_k), intent(inout) :: threshold
-      integer(lkl_int_csp_k), intent(inout) :: maxiter
-      logical, intent(inout) :: unique_rhs_omega
-      character(len=22), intent(inout) :: id_string
-      character(len=32), intent(inout) :: precon_string
-      integer(lkl_int_csp_k), intent(inout) :: iverb
-      integer(lkl_int_csp_k), intent(inout) :: irestart
-      integer(lkl_int_csp_k), intent(inout) :: ierr
-    end subroutine libkrylov_problem_c_intrfc_csp
-  end interface
 
-!! abstract type for krylov_output function of problem_c
-!! function that takes the output from the solver
-!! and does what the user wants with them
-!! wheter printing or passing out of the solver
-  type, abstract :: libkrylov_output_c_cmplx_sp
-  contains
-    procedure(libkrylov_output_c_intrfc_csp), deferred :: lkl_output_c
+!! type for krylov_output function of problem_c
+!! that takes the output from the solver
+  type :: libkrylov_output_c_cmplx_sp
+!!  rows of solutions, nbasis
+    integer(lkl_int_csp_k) :: nbasis
+!!  number of solutions
+    integer(lkl_int_csp_k) :: nroots
+!!  number of converged solutions, nconverged
+    integer(lkl_int_csp_k) :: nconverged
+!!  array for which solutions are converged
+    logical, allocatable :: jconverged(:)
+!!  functional
+    type(base_csp), allocatable :: lagrangian(:)
+!!  residual norms of each vector
+    real(lkl_cmplx_sp_k), allocatable :: euc_norm(:)
+!!  residual norm of all vectors
+    real(lkl_cmplx_sp_k) :: fro_norm
   end type libkrylov_output_c_cmplx_sp
-  abstract interface
-    subroutine libkrylov_output_c_intrfc_csp(data,n1,n2,n3,n4,n5,n6,&
-  &   jconverged,omega,rhs,lagrangian,solutions,&
-  &   euc_norm,fro_norm,id_string,ierr)
-      import :: lkl_int_csp_k, libkrylov_output_c_cmplx_sp, lkl_cmplx_sp_k
-      class(libkrylov_output_c_cmplx_sp) :: data
-!!    rows of solutions, nbasis
-      integer(lkl_int_csp_k), intent(in) :: n1
-!!    size of subspace , not used
-      integer(lkl_int_csp_k), intent(in) :: n2
-!!    number of frequencies, nomega
-      integer(lkl_int_csp_k), intent(in) :: n3
-!!    number of rhs, nrhs
-      integer(lkl_int_csp_k), intent(in) :: n4
-!!    columns of solutions, nroots
-      integer(lkl_int_csp_k), intent(in) :: n5
-!!    number of solutions converged
-      integer(lkl_int_csp_k), intent(in) :: n6
-!!    array for which solutions are converged
-      logical, intent(in) :: jconverged(n5)
-!!    omega
-      real(lkl_cmplx_sp_k), intent(in) :: omega(n3)
-!!    rhs
-      complex(lkl_cmplx_sp_k), intent(in) :: rhs(n1,n4)
-!!    lagrangian
-      complex(lkl_cmplx_sp_k), intent(in) :: lagrangian(n5)
-!!    solutions on the full space, stored on mvproduct
-      complex(lkl_cmplx_sp_k), intent(in) :: solutions(n1,n5)
-!!    residual norms of each vector
-      real(lkl_cmplx_sp_k), intent(in) :: euc_norm(n5)
-!!    residual norm of all vectors
-      real(lkl_cmplx_sp_k), intent(in) :: fro_norm
-!!    id_string 
-      character(len=22), intent(in) :: id_string
-!!    error variable
-      integer(lkl_int_csp_k), intent(inout) :: ierr
-    end subroutine libkrylov_output_c_intrfc_csp
-  end interface
 
 !--------------------------------------------------------------------
 
 !--------------------------------------------------------------------
 contains
+!--------------------------------------------------------------------
+
+!--------------------------------------------------------------------
+! Constructors and Destructors for libkrylov solvers
+!--------------------------------------------------------------------
+
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+  subroutine lkl_constr_a_1_csp(nbasis,nroots,problem_a,&
+   &   approx_spectra,base_solutions,output_a)
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Description:
+!--------------------------------------------------------------------
+!! Constructor required for problem a solver 1
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Modules and Global Variables
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+!
+    implicit none
+!
+!--------------------------------------------------------------------
+! External data (IDEALLY EMPTY)
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Input Parameters
+!--------------------------------------------------------------------
+!!   nbasis
+    integer(lkl_int_csp_k), intent(in) :: nbasis
+!!   nroots
+    integer(lkl_int_csp_k), intent(in) :: nroots
+!--------------------------------------------------------------------
+! Output Parameters
+!--------------------------------------------------------------------
+!!  problem parameters
+    class(libkrylov_problem_a_cmplx_sp), intent(out) :: problem_a
+!!  approximate spectra
+    real(lkl_cmplx_sp_k), allocatable :: approx_spectra(:)
+!!  solutions in type base
+    type(base_csp), allocatable :: base_solutions(:,:)
+!!  output parameters
+    class(libkrylov_output_a_cmplx_sp) :: output_a
+!--------------------------------------------------------------------
+!  Local Variables
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+    problem_a%nbasis = nbasis
+    problem_a%nroots = nroots
+    problem_a%minstart = nroots
+    problem_a%nstart = 0
+    problem_a%maxstart = nbasis
+    problem_a%threshold = real(4,kind=lkl_cmplx_sp_k)
+    problem_a%maxiter = 5
+    problem_a%totalmaxiter = 25
+    problem_a%id_string = "problem_a_solver_1"
+    problem_a%precon_string = "davidson"
+    problem_a%iverb = 5
+    problem_a%irestart = 0
+    allocate(approx_spectra(nbasis))
+    allocate(base_solutions(nbasis,nroots))
+    output_a%nbasis = nbasis
+    output_a%nroots = nroots
+    allocate(output_a%roots(nroots))
+    allocate(output_a%lagrangian(nroots))
+    allocate(output_a%jconverged(nroots))
+    allocate(output_a%euc_norm(nroots))
+!--------------------------------------------------------------------
+  end subroutine lkl_constr_a_1_csp
+!--------------------------------------------------------------------
+
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+  subroutine lkl_destr_a_1_csp(&
+   &   approx_spectra,base_solutions,output_a)
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Description:
+!--------------------------------------------------------------------
+!! Destructor required for problem a solver 1
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Modules and Global Variables
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+!
+    implicit none
+!
+!--------------------------------------------------------------------
+! External data (IDEALLY EMPTY)
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Output Parameters
+!--------------------------------------------------------------------
+!!  approximate spectra
+    real(lkl_cmplx_sp_k), allocatable :: approx_spectra(:)
+!!  solutions in type base
+    type(base_csp), allocatable :: base_solutions(:,:)
+!!  output parameters
+    class(libkrylov_output_a_cmplx_sp) :: output_a
+!--------------------------------------------------------------------
+!  Local Variables
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+    deallocate(approx_spectra)
+    deallocate(base_solutions)
+    deallocate(output_a%roots)
+    deallocate(output_a%lagrangian)
+    deallocate(output_a%jconverged)
+    deallocate(output_a%euc_norm)
+!--------------------------------------------------------------------
+  end subroutine lkl_destr_a_1_csp
+!--------------------------------------------------------------------
+
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+  subroutine lkl_constr_b_1_csp(nbasis,nrhs,problem_b,&
+   &   approx_spectra,base_rhs,base_solutions,output_b)
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Description:
+!--------------------------------------------------------------------
+!! Constructor required for problem b solver 1
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Modules and Global Variables
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+!
+    implicit none
+!
+!--------------------------------------------------------------------
+! External data (IDEALLY EMPTY)
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Input Parameters
+!--------------------------------------------------------------------
+!!   nbasis
+    integer(lkl_int_csp_k), intent(in) :: nbasis
+!!   nrhs
+    integer(lkl_int_csp_k), intent(in) :: nrhs
+!--------------------------------------------------------------------
+! Output Parameters
+!--------------------------------------------------------------------
+!!  problem parameters
+    class(libkrylov_problem_b_cmplx_sp), intent(out) :: problem_b
+!!  approximate spectra
+    real(lkl_cmplx_sp_k), allocatable :: approx_spectra(:)
+!!  rhs in type base
+    type(base_csp), allocatable :: base_rhs(:,:)
+!!  solutions in type base
+    type(base_csp), allocatable :: base_solutions(:,:)
+!!  output parameters
+    class(libkrylov_output_b_cmplx_sp) :: output_b
+!--------------------------------------------------------------------
+    problem_b%nbasis = nbasis
+    problem_b%nrhs = nrhs
+    problem_b%minstart = nrhs
+    problem_b%nstart = 0
+    problem_b%maxstart = nbasis
+    problem_b%threshold = real(4,kind=lkl_cmplx_sp_k)
+    problem_b%maxiter = 25
+    problem_b%totalmaxiter = 25
+    problem_b%id_string = "problem_b_solver_1"
+    problem_b%precon_string = "approx_spectra"
+    problem_b%iverb = 5
+    problem_b%irestart = 0
+    allocate(approx_spectra(nbasis))
+    allocate(base_rhs(nbasis,nrhs))
+    allocate(base_solutions(nbasis,nrhs))
+    output_b%nbasis = nbasis
+    output_b%nrhs = nrhs
+    allocate(output_b%lagrangian(nrhs))
+    allocate(output_b%jconverged(nrhs))
+    allocate(output_b%euc_norm(nrhs))
+!--------------------------------------------------------------------
+  end subroutine lkl_constr_b_1_csp
+!--------------------------------------------------------------------
+
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+  subroutine lkl_destr_b_1_csp(&
+   &   approx_spectra,base_rhs,base_solutions,output_b)
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Description:
+!--------------------------------------------------------------------
+!! Destructor required for problem b solver 1
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Modules and Global Variables
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+!
+    implicit none
+!
+!--------------------------------------------------------------------
+! External data (IDEALLY EMPTY)
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Output Parameters
+!--------------------------------------------------------------------
+!!  approximate spectra
+    real(lkl_cmplx_sp_k), allocatable :: approx_spectra(:)
+!!  input frequency
+    real(lkl_cmplx_sp_k), allocatable :: omega(:)
+!!  rhs
+    type(base_csp), allocatable :: base_rhs(:,:)
+!!  solutions in type base
+    type(base_csp), allocatable :: base_solutions(:,:)
+!!  output parameters
+    class(libkrylov_output_b_cmplx_sp) :: output_b
+!--------------------------------------------------------------------
+!  Local Variables
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+    deallocate(approx_spectra)
+    deallocate(base_rhs)
+    deallocate(base_solutions)
+    deallocate(output_b%lagrangian)
+    deallocate(output_b%jconverged)
+    deallocate(output_b%euc_norm)
+!--------------------------------------------------------------------
+  end subroutine lkl_destr_b_1_csp
+!--------------------------------------------------------------------
+
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+  subroutine lkl_constr_c_1_csp(nbasis,nomega,nrhs,unique,problem_c,&
+   &   approx_spectra,omega,base_rhs,base_solutions,output_c)
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Description:
+!--------------------------------------------------------------------
+!! Constructor required for problem c solver 1
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Modules and Global Variables
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+!
+    implicit none
+!
+!--------------------------------------------------------------------
+! External data (IDEALLY EMPTY)
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Input Parameters
+!--------------------------------------------------------------------
+!!   nbasis
+    integer(lkl_int_csp_k), intent(in) :: nbasis
+!!   nomega
+    integer(lkl_int_csp_k), intent(in) :: nomega
+!!   nrhs
+    integer(lkl_int_csp_k), intent(in) :: nrhs
+!!   is nroots not nomega*nrhs
+    logical, intent(in) :: unique 
+!--------------------------------------------------------------------
+! Output Parameters
+!--------------------------------------------------------------------
+!!  problem parameters
+    class(libkrylov_problem_c_cmplx_sp), intent(out) :: problem_c
+!!  approximate spectra
+    real(lkl_cmplx_sp_k), allocatable :: approx_spectra(:)
+!!  input frequencies
+    real(lkl_cmplx_sp_k), allocatable :: omega(:)
+!!  rhs in type base
+    type(base_csp), allocatable :: base_rhs(:,:)
+!!  solutions in type base
+    type(base_csp), allocatable :: base_solutions(:,:)
+!!  output parameters
+    class(libkrylov_output_c_cmplx_sp) :: output_c
+!--------------------------------------------------------------------
+!  Local Variables
+!--------------------------------------------------------------------
+    integer(lkl_int_csp_k) :: nroots
+!--------------------------------------------------------------------
+
+    if (unique) then
+      if (nomega.ne.nrhs) stop
+      nroots = nrhs
+    else
+      nroots = nomega*nrhs
+    end if
+
+    problem_c%nbasis = nbasis
+    problem_c%nomega = nomega
+    problem_c%nrhs = nrhs
+    problem_c%unique_rhs_omega = unique
+    problem_c%minstart = nroots
+    problem_c%nstart = 0
+    problem_c%maxstart = nbasis
+    problem_c%threshold = real(4,kind=lkl_cmplx_sp_k)
+    problem_c%maxiter = 25
+    problem_c%totalmaxiter = 25
+    problem_c%id_string = "problem_c_solver_1"
+    problem_c%precon_string = "davidson"
+    problem_c%iverb = 5
+    problem_c%irestart = 0
+    allocate(approx_spectra(nbasis))
+    allocate(omega(nomega))
+    allocate(base_rhs(nbasis,nrhs))
+    allocate(base_solutions(nbasis,nroots))
+    output_c%nbasis = nbasis
+    output_c%nroots = nroots
+    allocate(output_c%lagrangian(nroots))
+    allocate(output_c%jconverged(nroots))
+    allocate(output_c%euc_norm(nroots))
+!--------------------------------------------------------------------
+  end subroutine lkl_constr_c_1_csp
+!--------------------------------------------------------------------
+
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+  subroutine lkl_destr_c_1_csp(&
+   &   approx_spectra,omega,base_rhs,base_solutions,output_c)
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Description:
+!--------------------------------------------------------------------
+!! Destructor required for problem c solver 1
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Modules and Global Variables
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+!
+    implicit none
+!
+!--------------------------------------------------------------------
+! External data (IDEALLY EMPTY)
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Output Parameters
+!--------------------------------------------------------------------
+!!  approximate spectra
+    real(lkl_cmplx_sp_k), allocatable :: approx_spectra(:)
+!!  input frequency
+    real(lkl_cmplx_sp_k), allocatable :: omega(:)
+!!  rhs
+    type(base_csp), allocatable :: base_rhs(:,:)
+!!  solutions in type base
+    type(base_csp), allocatable :: base_solutions(:,:)
+!!  output parameters
+    class(libkrylov_output_c_cmplx_sp) :: output_c
+!--------------------------------------------------------------------
+!  Local Variables
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+    deallocate(approx_spectra)
+    deallocate(omega)
+    deallocate(base_rhs)
+    deallocate(base_solutions)
+    deallocate(output_c%lagrangian)
+    deallocate(output_c%jconverged)
+    deallocate(output_c%euc_norm)
+!--------------------------------------------------------------------
+  end subroutine lkl_destr_c_1_csp
 !--------------------------------------------------------------------
 
 !--------------------------------------------------------------------
@@ -840,6 +1143,57 @@ contains
   end subroutine lkl_guess_unit_vec_csp
 !--------------------------------------------------------------------
 
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+  subroutine lkl_mvp_naive_multiply_csp(data,n1,n2,&
+  &     basis_vectors,mvproduct,ierr)
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Description:
+!--------------------------------------------------------------------
+!< This subroutine does the matrix vector product directly
+!< and does the matrix-vector products naively and explicitly.
+!< using a BLAS call
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Modules and Global Variables
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+! Implicit None statement
+!--------------------------------------------------------------------
+    implicit none
+!--------------------------------------------------------------------
+! External data (defined in the interface above)
+!--------------------------------------------------------------------
+    class(lkl_mvp_n_mul_csp) :: data
+!--------------------------------------------------------------------
+! Variables
+!--------------------------------------------------------------------
+! matching interface defined in krylovtypes_a
+   integer(lkl_int_csp_k), intent(in) :: n1
+   integer(lkl_int_csp_k), intent(in) :: n2
+   complex(lkl_cmplx_sp_k), intent(inout) :: basis_vectors(n1,n2)
+   complex(lkl_cmplx_sp_k), intent(inout) :: mvproduct(n1,n2)
+   integer(lkl_int_csp_k), intent(inout) :: ierr
+!--------------------------------------------------------------------
+! Local Variables
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+
+!! calculate matrix-vector product
+   call cgemm('n','n',n1,n2,n1,&
+  &   cmplx(1,kind=lkl_cmplx_sp_k),data%matrix,n1,&
+  &   basis_vectors,n1,cmplx(0,kind=lkl_cmplx_sp_k),&
+  &   mvproduct,n1)
+
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+  end subroutine lkl_mvp_naive_multiply_csp
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
 
 !--------------------------------------------------------------------
 

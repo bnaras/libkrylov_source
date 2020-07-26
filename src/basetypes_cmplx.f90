@@ -68,9 +68,9 @@ module basetypes
 ! kind_float is defined in floatformat_dp.f90
 !--------------------------------------------------------------------
 
-  type :: base
-    complex(kind_float) :: element
-  end type base
+!  type :: base
+!    complex(kind_float) :: element
+!  end type base
 
 !--------------------------------------------------------------------
 

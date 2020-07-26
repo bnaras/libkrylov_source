@@ -303,7 +303,7 @@ contains
     allocate(vt(n2,n2))
 
 !! assign original vectors to q
-    q = vectors
+    q = vectors(1:n1,1:n2)
 
 !! do QR decomposition
     call ggeqrf(n1,n2,q,n1,tau,ierr)
@@ -6248,7 +6248,6 @@ contains
      end do
     end if
 
-    m = 0
     if (precon_string.eq.'none') then
 
       if (nroots.eq.nomega) then ! one omega per root
@@ -6260,6 +6259,7 @@ contains
           end do
         end do
       else
+        m = 0
         do j = 1, nomega
           do k = 1, nrhs
             do l = 1, nbasis
@@ -6284,6 +6284,7 @@ contains
           end do
         end do
       else
+        m = 0
         do j = 1, nomega
           do k = 1, nrhs
             do l = 1, nbasis
@@ -6308,6 +6309,7 @@ contains
           end do
         end do
       else
+        m = 0
         do j = 1, nomega
           do k = 1, nrhs
             do l = 1, nbasis
@@ -6334,6 +6336,7 @@ contains
           end do
         end do
       else
+        m = 0
         do j = 1, nomega
           do k = 1, nrhs
             do l = 1, nbasis
@@ -6366,6 +6369,7 @@ contains
 
     else if (precon_string.eq.'sleijpen') then
 
+!! create davidson precon residuals first
       if (nroots.eq.nomega) then ! one omega per root
         do j = 1, nroots
           do k = 1, nbasis
@@ -6375,6 +6379,7 @@ contains
           end do
         end do
       else
+        m = 0
         do j = 1, nomega
           do k = 1, nrhs
             do l = 1, nbasis
@@ -6410,19 +6415,6 @@ contains
         end do
       end if
   
-      do k = 1, nroots
-        call gdot(nbasis,dmvx(1:nbasis,k),1,&
-  &            full_solutions(1:nbasis,k),1,denominator,ierr)
-        call gdot(nbasis,dmvx(1:nbasis,k),1,&
-  &            residuals(1:nbasis,k),1,numerator,ierr)
-        do j = 1, nbasis
-          residuals(j,k) = &
-  &    (residuals(j,k)/(approx_spectra(j)))&
-  &  - ( ((numerator/denominator)*full_solutions(j,k)) &
-  &   / (approx_spectra(j)) )
-        end do
-      end do
-
       if (nroots.eq.nomega) then ! one omega per root
         do j = 1, nroots
           call gdot(nbasis,dmvx(1:nbasis,j),1,&
@@ -6468,6 +6460,7 @@ contains
           end do
         end do
       else
+        m = 0
         do j = 1, nomega
           do k = 1, nrhs
             do l = 1, nbasis
