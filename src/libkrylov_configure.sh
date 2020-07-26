@@ -31,8 +31,9 @@ echo '     autoconf-archive is installed in the default location,'
 echo '     please enter <Use_Default>.' 
 echo ''
 echo 'Searching for autoconf-archive macros.'
-echo 'Please enter an avaiable option: <exit>, <Default> or <Manual>'
+echo 'Please enter an avaiable option: <exit>, <Saved>, <Default> or <Manual>'
 echo ''
+FILE=usermacrolocation
 read macro_option
 for (( ; ; ))
 do
@@ -52,12 +53,21 @@ do
   then
     AUTOCONF_MACRO=autoconf-archive/autoconf-archive/m4  
     break
+  elif [[ $macro_option == "Saved" ]];
+  then
+    if [ -f "$FILE" ]; then
+      AUTOCONF_MACRO=$(cat "$FILE")
+      break
+    else
+      echo 'No user macro location saved, please select another option:'
+      read macro_option
+    fi
   elif [[ $macro_option == "Manual" ]];
   then
     break
   else
     echo 'Please enter an avaiable option: <exit>, <Default> or <Manual>'
-    read autoconf_path
+    read macro_option
   fi        
 done
 if [[ $macro_option == "Manual" ]];
@@ -85,6 +95,7 @@ then
 fi
 echo '$AUTOCONF_MACRO entered is'
 echo $AUTOCONF_MACRO
+echo $AUTOCONF_MACRO > usermacrolocation
 # Select building with BLAS
 echo 'Build with external BLAS/LAPack libraries?'
 echo ' Please enter >yes< or >no<'

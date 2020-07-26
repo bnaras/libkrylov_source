@@ -203,7 +203,7 @@ module libkrylovinterface_real_dp
     procedure :: lkl_guess => lkl_guess_unit_vec_rdp
   end type lkl_g_unit_vec_rdp
 
-  type, extends(libkrylov_mvp_real_dp) :: lkl_mvp_nm_rdp
+  type, extends(libkrylov_mvp_real_dp) :: lkl_mvp_n_mul_rdp
 ! external data required for the function
 ! contains the matrix problem
 ! pointer to target set outside of solver
@@ -211,7 +211,7 @@ module libkrylovinterface_real_dp
     real(lkl_real_dp_k), pointer :: matrix(:,:) => null()
   contains
     procedure :: lkl_mvp => lkl_mvp_naive_multiply_rdp
-  end type lkl_mvp_nm_rdp
+  end type lkl_mvp_n_mul_rdp
 
 !--------------------------------------------------------------------
 
@@ -219,10 +219,12 @@ module libkrylovinterface_real_dp
 ! Abstract types for functions specific to solvers
 !--------------------------------------------------------------------
 
-!! abstract type for krylov_problem function for problem_a
-!! function to determining parameters of the problem to be solved
+!! type for krylov_problem function for problem_a
+!! to determine parameters of the problem to be solved
   type :: libkrylov_problem_a_real_dp
+!!  rows of solutions, nbasis
     integer(lkl_int_rdp_k) :: nbasis
+!!  number of roots
     integer(lkl_int_rdp_k) :: nroots
     integer(lkl_int_rdp_k) :: minstart
     integer(lkl_int_rdp_k) :: nstart
@@ -234,33 +236,10 @@ module libkrylovinterface_real_dp
     character(len=32) :: precon_string
     integer(lkl_int_rdp_k) :: iverb
     integer(lkl_int_rdp_k) :: irestart
-!  contains
-!    procedure(libkrylov_problem_a_intrfc_rdp), deferred :: lkl_problem_a
   end type libkrylov_problem_a_real_dp
-!  abstract interface
-!    subroutine libkrylov_problem_a_intrfc_rdp(data,nbasis,nroots,&
-!  &   minstart,maxstart,threshold,maxiter,&
-!  &   id_string,precon_string,iverb,irestart,ierr)
-!      import :: lkl_int_rdp_k, libkrylov_problem_a_real_dp, lkl_real_dp_k
-!      class(libkrylov_problem_a_real_dp) :: data
-!      integer(lkl_int_rdp_k), intent(inout) :: nbasis
-!      integer(lkl_int_rdp_k), intent(inout) :: nroots
-!      integer(lkl_int_rdp_k), intent(inout) :: minstart
-!      integer(lkl_int_rdp_k), intent(inout) :: maxstart
-!      real(lkl_real_dp_k), intent(inout) :: threshold
-!      integer(lkl_int_rdp_k), intent(inout) :: maxiter
-!      character(len=22), intent(inout) :: id_string
-!      character(len=32), intent(inout) :: precon_string
-!      integer(lkl_int_rdp_k), intent(inout) :: iverb
-!      integer(lkl_int_rdp_k), intent(inout) :: irestart
-!      integer(lkl_int_rdp_k), intent(inout) :: ierr
-!    end subroutine libkrylov_problem_a_intrfc_rdp
-!  end interface
 
-!! abstract type for krylov_output function of problem_a
+!! type for krylov_output function of problem_a
 !! function that takes the output from the solver
-!! and does what the user wants with them
-!! wheter printing or passing out of the solver
   type :: libkrylov_output_a_real_dp
 !!  rows of solutions, nbasis
     integer(lkl_int_rdp_k) :: nbasis
@@ -278,44 +257,10 @@ module libkrylovinterface_real_dp
     real(lkl_real_dp_k), allocatable :: euc_norm(:)
 !!  residual norm of all vectors
     real(lkl_real_dp_k) :: fro_norm
-!  contains
-!    procedure(libkrylov_output_a_intrfc_rdp), deferred :: lkl_output_a
   end type libkrylov_output_a_real_dp
-!  abstract interface
-!    subroutine libkrylov_output_a_intrfc_rdp(data,n1,n2,n3,n4,&
-!  &   jconverged,roots,lagrangian,solutions,&
-!  &   euc_norm,fro_norm,id_string,ierr)
-!      import :: lkl_int_rdp_k, libkrylov_output_a_real_dp, lkl_real_dp_k
-!      class(libkrylov_output_a_real_dp) :: data
-!!!    rows of solutions, nbasis
-!      integer(lkl_int_rdp_k), intent(in) :: n1
-!!!    size of subspace , not used
-!      integer(lkl_int_rdp_k), intent(in) :: n2
-!!!    columns of solutions, nroots
-!      integer(lkl_int_rdp_k), intent(in) :: n3
-!!!    number of converged solutions, nconverged
-!      integer(lkl_int_rdp_k), intent(in) :: n4
-!!!    array for which solutions are converged
-!      logical, intent(in) :: jconverged(n3)
-!!!    eigenvalues
-!      real(lkl_real_dp_k), intent(in) :: roots(n3)
-!!!    functional
-!      real(lkl_real_dp_k), intent(in) :: lagrangian(n3)
-!!!    solutions on the full space
-!      real(lkl_real_dp_k), intent(in) :: solutions(n1,n3)
-!!!    residual norms of each vector
-!      real(lkl_real_dp_k), intent(in) :: euc_norm(n3)
-!!!    residual norm of all vectors
-!      real(lkl_real_dp_k), intent(in) :: fro_norm
-!!!    id_string 
-!      character(len=22), intent(in) :: id_string
-!!!    error variable
-!      integer(lkl_int_rdp_k), intent(inout) :: ierr
-!    end subroutine libkrylov_output_a_intrfc_rdp
-!  end interface
 
 
-!! abstract type for krylov_problem function for problem_b
+!! type for krylov_problem function for problem_b
 !! function to determining parameters of the problem to be solved
   type :: libkrylov_problem_b_real_dp
     integer(lkl_int_rdp_k) :: nbasis
@@ -330,33 +275,10 @@ module libkrylovinterface_real_dp
     character(len=32) :: precon_string
     integer(lkl_int_rdp_k) :: iverb
     integer(lkl_int_rdp_k) :: irestart
-!   contains
-!     procedure(libkrylov_problem_b_intrfc_rdp), deferred :: lkl_problem_b
   end type libkrylov_problem_b_real_dp
-!  abstract interface
-!    subroutine libkrylov_problem_b_intrfc_rdp(data,nbasis,nrhs,&
-!  &   minstart,maxstart,threshold,maxiter,&
-!  &   id_string,precon_string,iverb,irestart,ierr)
-!      import :: lkl_int_rdp_k, libkrylov_problem_b_real_dp, lkl_real_dp_k
-!      class(libkrylov_problem_b_real_dp) :: data
-!      integer(lkl_int_rdp_k), intent(inout) :: nbasis
-!      integer(lkl_int_rdp_k), intent(inout) :: nrhs
-!      integer(lkl_int_rdp_k), intent(inout) :: minstart
-!      integer(lkl_int_rdp_k), intent(inout) :: maxstart
-!      real(lkl_real_dp_k), intent(inout) :: threshold
-!      integer(lkl_int_rdp_k), intent(inout) :: maxiter
-!      character(len=22), intent(inout) :: id_string
-!      character(len=32), intent(inout) :: precon_string
-!      integer(lkl_int_rdp_k), intent(inout) :: iverb
-!      integer(lkl_int_rdp_k), intent(inout) :: irestart
-!      integer(lkl_int_rdp_k), intent(inout) :: ierr
-!    end subroutine libkrylov_problem_b_intrfc_rdp
-!  end interface
 
-!! abstract type for krylov_output function of problem_b
-!! function that takes the output from the solver
-!! and does what the user wants with them
-!! wheter printing or passing out of the solver
+!! type for krylov_output function of problem_b
+!! that takes the output from the solver
   type :: libkrylov_output_b_real_dp
 !!  rows of solutions, nbasis
     integer(lkl_int_rdp_k) :: nbasis
@@ -372,43 +294,9 @@ module libkrylovinterface_real_dp
     real(lkl_real_dp_k), allocatable :: euc_norm(:)
 !!  residual norm of all vectors
     real(lkl_real_dp_k) :: fro_norm
-!  contains
-!    procedure(libkrylov_output_b_intrfc_rdp), deferred :: lkl_output_b
   end type libkrylov_output_b_real_dp
-!  abstract interface
-!    subroutine libkrylov_output_b_intrfc_rdp(data,n1,n2,n3,n4,&
-!  &   jconverged,rhs,lagrangian,solutions,&
-!  &   euc_norm,fro_norm,id_string,ierr)
-!      import :: lkl_int_rdp_k, libkrylov_output_b_real_dp, lkl_real_dp_k
-!      class(libkrylov_output_b_real_dp) :: data
-!!!    rows of solutions, nbasis
-!      integer(lkl_int_rdp_k), intent(in) :: n1
-!!!    size of subspace , not used
-!      integer(lkl_int_rdp_k), intent(in) :: n2
-!!!    columns of solutions, nrhs
-!      integer(lkl_int_rdp_k), intent(in) :: n3
-!!!    number of converged solutions, nconverged
-!      integer(lkl_int_rdp_k), intent(in) :: n4
-!!!    array for which solutions are converged
-!      logical, intent(in) :: jconverged(n3)
-!!!    rhs
-!      real(lkl_real_dp_k), intent(in) :: rhs(n1,n3)
-!!!    functional
-!      real(lkl_real_dp_k), intent(in) :: lagrangian(n3)
-!!!    solutions on the full space, stored on mvproduct
-!      real(lkl_real_dp_k), intent(in) :: solutions(n1,n3)
-!!!    residual norms of each vector
-!      real(lkl_real_dp_k), intent(in) :: euc_norm(n3)
-!!!    residual norm of all vectors
-!      real(lkl_real_dp_k), intent(in) :: fro_norm
-!!!    id_string 
-!      character(len=22), intent(in) :: id_string
-!!!    error variable
-!      integer(lkl_int_rdp_k), intent(inout) :: ierr
-!    end subroutine libkrylov_output_b_intrfc_rdp
-!  end interface
 
-!! abstract type for krylov_problem function for problem_c
+!! type for krylov_problem function for problem_c
 !! function to determining parameters of the problem to be solved
   type :: libkrylov_problem_c_real_dp
     integer(lkl_int_rdp_k) :: nbasis
@@ -425,35 +313,10 @@ module libkrylovinterface_real_dp
     character(len=32) :: precon_string
     integer(lkl_int_rdp_k) :: iverb
     integer(lkl_int_rdp_k) :: irestart
-!  contains
-!    procedure(libkrylov_problem_c_intrfc_rdp), deferred :: lkl_problem_c
   end type libkrylov_problem_c_real_dp
-!  abstract interface
-!    subroutine libkrylov_problem_c_intrfc_rdp(data,nbasis,nomega,nrhs,&
-!  &   minstart,maxstart,threshold,maxiter,unique_rhs_omega,&
-!  &   id_string,precon_string,iverb,irestart,ierr)
-!      import :: lkl_int_rdp_k, libkrylov_problem_c_real_dp, lkl_real_dp_k
-!      class(libkrylov_problem_c_real_dp) :: data
-!      integer(lkl_int_rdp_k), intent(inout) :: nbasis
-!      integer(lkl_int_rdp_k), intent(inout) :: nomega
-!      integer(lkl_int_rdp_k), intent(inout) :: nrhs
-!      integer(lkl_int_rdp_k), intent(inout) :: minstart
-!      integer(lkl_int_rdp_k), intent(inout) :: maxstart
-!      real(lkl_real_dp_k), intent(inout) :: threshold
-!      integer(lkl_int_rdp_k), intent(inout) :: maxiter
-!      logical, intent(inout) :: unique_rhs_omega
-!      character(len=22), intent(inout) :: id_string
-!      character(len=32), intent(inout) :: precon_string
-!      integer(lkl_int_rdp_k), intent(inout) :: iverb
-!      integer(lkl_int_rdp_k), intent(inout) :: irestart
-!      integer(lkl_int_rdp_k), intent(inout) :: ierr
-!    end subroutine libkrylov_problem_c_intrfc_rdp
-!  end interface
 
-!! abstract type for krylov_output function of problem_c
-!! function that takes the output from the solver
-!! and does what the user wants with them
-!! wheter printing or passing out of the solver
+!! type for krylov_output function of problem_c
+!! that takes the output from the solver
   type :: libkrylov_output_c_real_dp
 !!  rows of solutions, nbasis
     integer(lkl_int_rdp_k) :: nbasis
@@ -469,47 +332,7 @@ module libkrylovinterface_real_dp
     real(lkl_real_dp_k), allocatable :: euc_norm(:)
 !!  residual norm of all vectors
     real(lkl_real_dp_k) :: fro_norm
-!  contains
-!    procedure(libkrylov_output_c_intrfc_rdp), deferred :: lkl_output_c
   end type libkrylov_output_c_real_dp
-!  abstract interface
-!    subroutine libkrylov_output_c_intrfc_rdp(data,n1,n2,n3,n4,n5,n6,&
-!  &   jconverged,omega,rhs,lagrangian,solutions,&
-!  &   euc_norm,fro_norm,id_string,ierr)
-!      import :: lkl_int_rdp_k, libkrylov_output_c_real_dp, lkl_real_dp_k
-!      class(libkrylov_output_c_real_dp) :: data
-!!!    rows of solutions, nbasis
-!      integer(lkl_int_rdp_k), intent(in) :: n1
-!!!    size of subspace , not used
-!      integer(lkl_int_rdp_k), intent(in) :: n2
-!!!    number of frequencies, nomega
-!      integer(lkl_int_rdp_k), intent(in) :: n3
-!!!    number of rhs, nrhs
-!      integer(lkl_int_rdp_k), intent(in) :: n4
-!!!    columns of solutions, nroots
-!      integer(lkl_int_rdp_k), intent(in) :: n5
-!!!    number of solutions converged
-!      integer(lkl_int_rdp_k), intent(in) :: n6
-!!!    array for which solutions are converged
-!      logical, intent(in) :: jconverged(n5)
-!!!    frequencies
-!      real(lkl_real_dp_k), intent(in) :: omega(n3)
-!!!    rhs
-!      real(lkl_real_dp_k), intent(in) :: rhs(n1,n4)
-!!!    lagrangian
-!      real(lkl_real_dp_k), intent(in) :: lagrangian(n5)
-!!!    solutions on the full space, stored on mvproduct
-!      real(lkl_real_dp_k), intent(in) :: solutions(n1,n5)
-!!!    residual norms of each vector
-!      real(lkl_real_dp_k), intent(in) :: euc_norm(n5)
-!!!    residual norm of all vectors
-!      real(lkl_real_dp_k), intent(in) :: fro_norm
-!!!    id_string 
-!      character(len=22), intent(in) :: id_string
-!!!    error variable
-!      integer(lkl_int_rdp_k), intent(inout) :: ierr
-!    end subroutine libkrylov_output_c_intrfc_rdp
-!  end interface
 
 !--------------------------------------------------------------------
 
@@ -1346,7 +1169,7 @@ contains
 !--------------------------------------------------------------------
 ! External data (defined in the interface above)
 !--------------------------------------------------------------------
-    class(lkl_mvp_nm_rdp) :: data
+    class(lkl_mvp_n_mul_rdp) :: data
 !--------------------------------------------------------------------
 ! Variables
 !--------------------------------------------------------------------

@@ -56,7 +56,7 @@ module floatformat
 !--------------------------------------------------------------------
 
 !! precision parameter
-  integer, parameter :: kind_float = kind_single
+!  integer, parameter :: kind_float = kind_single
   
 !--------------------------------------------------------------------
 

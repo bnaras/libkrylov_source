@@ -34,9 +34,9 @@ program krylovdriver_1c
 ! for file i/o : reading size and contents operations
   use arrayfile
 ! set interfaces
+  use libkrylovinterface
+  use libkrylovinterface2
   use libkrylovsolver
-! define the input subroutines
-  use driver1types
 !--------------------------------------------------------------------
 ! Implicit None statement
 !--------------------------------------------------------------------
@@ -51,7 +51,7 @@ program krylovdriver_1c
 !  type(kl_rhs) :: krylov_rhs
 !  type(kl_omega) :: krylov_omega
   type(lkl_g_unit_vec) :: krylov_g_uv
-  type(kl_mvp) :: krylov_mvp
+  type(lkl_mvp_n_mul) :: krylov_mvp
   type(libkrylov_output_c_subroutine) :: krylov_output
 !--------------------------------------------------------------------
 ! Local Variables for Subroutines and reading problem
@@ -370,7 +370,7 @@ program krylovdriver_1c
   allocate(krylov_output%lagrangian(nroots))
   allocate(krylov_output%jconverged(nroots))
   allocate(krylov_output%euc_norm(nroots))
-  krylov_mvp%krylov_a => krylov_a
+  krylov_mvp%matrix => krylov_a%element
 
 
 ! call solver with function to calculate nstart based on electron gas

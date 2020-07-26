@@ -14,6 +14,9 @@ module libkrylovinterface
 ! Modules and Global Varaibles
 !--------------------------------------------------------------------
   use libkrylovinterface_real_sp , only: &
+  &   base => base_rsp, &
+  &   kind_float => lkl_real_sp_k, &
+  &   kind_integer => lkl_int_rsp_k, &
   &   libkrylov_matrix_subroutine => libkrylov_matrix_real_sp, &
   &   libkrylov_vector_subroutine => libkrylov_vector_real_sp, &
   &   libkrylov_start_subroutine => libkrylov_start_real_sp, &

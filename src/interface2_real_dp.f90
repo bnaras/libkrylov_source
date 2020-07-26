@@ -26,7 +26,9 @@ module libkrylovinterface2
   &   lkl_s_ext_in => lkl_s_ext_in_rdp, &
   &   lkl_start_ext_in => lkl_start_ext_in_rdp, &
   &   lkl_g_unit_vec => lkl_g_unit_vec_rdp, &
-  &   lkl_guess_unit_vec => lkl_guess_unit_vec_rdp
+  &   lkl_guess_unit_vec => lkl_guess_unit_vec_rdp, &
+  &   lkl_mvp_n_mul => lkl_mvp_n_mul_rdp, &
+  &   lkl_mvp_naive_multiply => lkl_mvp_naive_multiply_rdp
 !--------------------------------------------------------------------
 ! Implicit none
 !--------------------------------------------------------------------
