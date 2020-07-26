@@ -196,9 +196,9 @@ contains
 !! number of elements in obj1 and obj2
     integer(kind_integer), intent(in) :: n
 !! array 1
-    type(base), intent(in) :: obj1(n)
+    type(base), intent(in) :: obj1(:)
 !! array 2
-    type(base), intent(in) :: obj2(n)
+    type(base), intent(in) :: obj2(:)
 !! spacing between elements in obj1
     integer(kind_integer), intent(in) :: inc1
 !! spacing between elements in obj2
