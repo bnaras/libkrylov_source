@@ -203,6 +203,16 @@ module libkrylovinterface_real_dp
     procedure :: lkl_guess => lkl_guess_unit_vec_rdp
   end type lkl_g_unit_vec_rdp
 
+  type, extends(libkrylov_mvp_real_dp) :: lkl_mvp_nm_rdp
+! external data required for the function
+! contains the matrix problem
+! pointer to target set outside of solver
+! shared with kl_approx, must be set before calling solver
+    real(lkl_real_dp_k), pointer :: matrix(:,:) => null()
+  contains
+    procedure :: lkl_mvp => lkl_mvp_naive_multiply_rdp
+  end type lkl_mvp_nm_rdp
+
 !--------------------------------------------------------------------
 
 !--------------------------------------------------------------------
@@ -1311,6 +1321,57 @@ contains
   end subroutine lkl_guess_unit_vec_rdp
 !--------------------------------------------------------------------
 
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+  subroutine lkl_mvp_naive_multiply_rdp(data,n1,n2,&
+  &     basis_vectors,mvproduct,ierr)
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Description:
+!--------------------------------------------------------------------
+!< This subroutine does the matrix vector product directly
+!< and does the matrix-vector products naively and explicitly.
+!< using a BLAS call
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Modules and Global Variables
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+! Implicit None statement
+!--------------------------------------------------------------------
+    implicit none
+!--------------------------------------------------------------------
+! External data (defined in the interface above)
+!--------------------------------------------------------------------
+    class(lkl_mvp_nm_rdp) :: data
+!--------------------------------------------------------------------
+! Variables
+!--------------------------------------------------------------------
+! matching interface defined in krylovtypes_a
+   integer(lkl_int_rdp_k), intent(in) :: n1
+   integer(lkl_int_rdp_k), intent(in) :: n2
+   real(lkl_real_dp_k), intent(inout) :: basis_vectors(n1,n2)
+   real(lkl_real_dp_k), intent(inout) :: mvproduct(n1,n2)
+   integer(lkl_int_rdp_k), intent(inout) :: ierr
+!--------------------------------------------------------------------
+! Local Variables
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+
+!! calculate matrix-vector product
+   call dgemm('n','n',n1,n2,n1,&
+  &   real(1,kind=lkl_real_dp_k),data%matrix,n1,&
+  &   basis_vectors,n1,real(0,kind=lkl_real_dp_k),&
+  &   mvproduct,n1)
+
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
+  end subroutine lkl_mvp_naive_multiply_rdp
+!--------------------------------------------------------------------
+!--------------------------------------------------------------------
 
 !--------------------------------------------------------------------
 
