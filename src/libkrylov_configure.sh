@@ -147,8 +147,8 @@ do
 # generate Makefile.am
         echo ''
         echo 'generating Makefile.am from templates'
-        sed "s|Placeholder|$AUTOCONF_MACRO|g" Makefile_shared.am > Makefile.am
-        cat Makefile_mkl_template.am >> Makefile.am
+        cat Makefile_mkl_template.am > Makefile.am
+        sed "s|Placeholder|$AUTOCONF_MACRO|g" Makefile_shared.am >> Makefile.am
 # copy configure.ac without blas/lapack searches
         echo 'generating configure.ac from template'
         sed "s|Placeholder|$AUTOCONF_MACRO|g" configure_blas_free.ac > configure.ac
@@ -162,8 +162,8 @@ do
       then
 # generate Makefile.am
         echo 'generating Makefile.am from templates'
-        sed "s|Placeholder|$AUTOCONF_MACRO|g" Makefile_shared.am > Makefile.am
-        cat Makefile_blas_template.am >> Makefile.am
+        cat Makefile_blas_template.am > Makefile.am
+        sed "s|Placeholder|$AUTOCONF_MACRO|g" Makefile_shared.am >> Makefile.am
 # copy configure.ac without blas/lapack searches
         echo 'generating configure.ac from template'
         sed "s|Placeholder|$AUTOCONF_MACRO|g" configure_blas.ac > configure.ac
@@ -190,8 +190,8 @@ do
     exit 1
 # generate Makefile.am
     echo 'generating Makefile.am from templates'
-    sed "s|Placeholder|$AUTOCONF_MACRO|g" Makefile_shared.am > Makefile.am
-    cat Makefile_blas_free_template.am >> Makefile.am
+    cat Makefile_free_template.am > Makefile.am
+    sed "s|Placeholder|$AUTOCONF_MACRO|g" Makefile_shared.am >> Makefile.am
 # copy configure.ac without blas/lapack searches
     echo 'generating configure.ac from template'
     sed "s|Placeholder|$AUTOCONF_MACRO|g" configure_blas_free.ac > configure.ac

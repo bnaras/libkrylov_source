@@ -396,8 +396,8 @@ contains
     problem_a%nstart = 0
     problem_a%maxstart = nbasis
     problem_a%threshold = real(8,kind=lkl_real_dp_k)
-    problem_a%maxiter = 5
-    problem_a%totalmaxiter = 25
+    problem_a%maxiter = 30
+    problem_a%totalmaxiter = 80
     problem_a%id_string = "problem_a_solver_1"
     problem_a%precon_string = "davidson"
     problem_a%iverb = 5
@@ -512,8 +512,8 @@ contains
     problem_b%nstart = 0
     problem_b%maxstart = nbasis
     problem_b%threshold = real(8,kind=lkl_real_dp_k)
-    problem_b%maxiter = 25
-    problem_b%totalmaxiter = 25
+    problem_b%maxiter = 30
+    problem_b%totalmaxiter = 80
     problem_b%id_string = "problem_b_solver_1"
     problem_b%precon_string = "approx_spectra"
     problem_b%iverb = 5
@@ -652,8 +652,8 @@ contains
     problem_c%nstart = 0
     problem_c%maxstart = nbasis
     problem_c%threshold = real(8,kind=lkl_real_dp_k)
-    problem_c%maxiter = 25
-    problem_c%totalmaxiter = 25
+    problem_c%maxiter = 30
+    problem_c%totalmaxiter = 80
     problem_c%id_string = "problem_c_solver_1"
     problem_c%precon_string = "davidson"
     problem_c%iverb = 5
