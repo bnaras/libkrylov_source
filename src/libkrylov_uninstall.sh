@@ -13,4 +13,6 @@ make uninstall
 rm *.mod
 rm *_mods/*.mod
 rm *_mods/*.o
+rm ../lib/*.mod
+rm ../lib/*.o
 echo '----------Cleaned out compiled files----------'

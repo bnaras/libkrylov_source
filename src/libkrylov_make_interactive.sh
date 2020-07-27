@@ -102,14 +102,12 @@ then
     make install-real_sp_driver1bPROGRAMS
     make install-real_sp_driver1cPROGRAMS
     echo '----------Real Single Precision driver1 made----------'
-  #  make install-real_sp_test_restart_aPROGRAMS
-  #  make install-real_sp_test_restart_bPROGRAMS
-  #  make install-real_sp_test_restart_cPROGRAMS
-  #  echo '----------Real Double Precision restart tests made----------'
     make install-real_sp_sym_problem1PROGRAMS
     echo '----------Real Single Precision reference problems made----------'
     cp *.mod real_sp_mods/.
     cp *.o real_sp_mods/.
+    cp libkrylovinterface_real_sp.mod ../lib/.
+    cp libkrylovsolver_real_sp.mod ../lib/.
     echo '----------Real Single Precision done----------'
   fi
   if [[ $precision == single && $element_type == complex ]];
@@ -129,14 +127,12 @@ then
     make install-cmplx_sp_driver1bPROGRAMS
     make install-cmplx_sp_driver1cPROGRAMS
     echo '----------Complex Single Precision driver1 made----------'
-  #  make install-cmplx_sp_test_restart_aPROGRAMS
-  #  make install-cmplx_sp_test_restart_bPROGRAMS
-  #  make install-cmplx_sp_test_restart_cPROGRAMS
-    echo '----------Complex Single Precision restart tests made----------'
     make install-cmplx_sp_sym_problem1PROGRAMS
     echo '----------Complex Single Precision reference problems made----------'
     cp *.mod cmplx_sp_mods/.
     cp *.o cmplx_sp_mods/.
+    cp libkrylovinterface_cmplx_sp.mod ../lib/.
+    cp libkrylovsolver_cmplx_sp.mod ../lib/.
     echo '----------Complex Single Precision done----------'
   fi
   if [[ $precision == double && $element_type == real ]];
@@ -156,14 +152,12 @@ then
     make install-real_dp_driver1bPROGRAMS
     make install-real_dp_driver1cPROGRAMS
     echo '----------Real Double Precision driver1 made----------'
-  #  make install-real_dp_test_restart_aPROGRAMS
-  #  make install-real_dp_test_restart_bPROGRAMS
-  #  make install-real_dp_test_restart_cPROGRAMS
-  #  echo '----------Real Double Precision restart tests made----------'
     make install-real_dp_sym_problem1PROGRAMS
     echo '----------Real Double Precision reference problems made----------'
     cp *.mod real_dp_mods/.
     cp *.o real_dp_mods/.
+    cp libkrylovinterface_real_dp.mod ../lib/.
+    cp libkrylovsolver_real_dp.mod ../lib/.
     echo '----------Real Double Precision done----------'
   fi
   if [[ $precision == double && $element_type == complex ]];
@@ -183,14 +177,12 @@ then
     make install-cmplx_dp_driver1bPROGRAMS
     make install-cmplx_dp_driver1cPROGRAMS
     echo '----------Complex Double Precision driver1a made----------'
-  #  make install-cmplx_dp_test_restart_aPROGRAMS
-  #  make install-cmplx_dp_test_restart_bPROGRAMS
-  #  make install-cmplx_dp_test_restart_cPROGRAMS
-  #  echo '----------Complex Double Precision restart tests made----------'
     make install-cmplx_dp_sym_problem1PROGRAMS
     echo '----------Complex Double Precision reference problems made----------'
     cp *.mod cmplx_dp_mods/.
     cp *.o cmplx_dp_mods/.
+    cp libkrylovinterface_cmplx_dp.mod ../lib/.
+    cp libkrylovsolver_cmplx_dp.mod ../lib/.
     echo '----------Complex Double Precision done----------'
   fi
   echo '----------All make instructions completed----------'
