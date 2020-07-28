@@ -14,6 +14,9 @@ module libkrylovinterface
 ! Modules and Global Varaibles
 !--------------------------------------------------------------------
   use libkrylovinterface_cmplx_sp , only: &
+  &   base => base_csp, &
+  &   kind_float => lkl_cmplx_sp_k, &
+  &   kind_integer => lkl_int_csp_k, &
   &   libkrylov_matrix_subroutine => libkrylov_matrix_cmplx_sp, &
   &   libkrylov_vector_subroutine => libkrylov_vector_cmplx_sp, &
   &   libkrylov_start_subroutine => libkrylov_start_cmplx_sp, &

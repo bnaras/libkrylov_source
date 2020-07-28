@@ -91,7 +91,7 @@ contains
 ! Output Parameters
 !--------------------------------------------------------------------
 !! array 3
-    type(base), intent(out) :: obj3(m,n)
+    type(base), intent(out) :: obj3(:,:)
 !--------------------------------------------------------------------
 ! Local Variables
 !--------------------------------------------------------------------
@@ -103,6 +103,71 @@ contains
   end subroutine ggemm
 !--------------------------------------------------------------------
 
+!--------------------------------------------------------------------
+  subroutine ghemm(side,uplo,m,n,alpha,obj1,ld1, &
+  &   obj2,ld2,beta,obj3,ld3)
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+!< Description:
+!< wrapper for
+!< Matrix Multiplication alpha*obj1*obj2 + beta*obj3=obj3
+!< or Matrix Multiplication alpha*obj2*obj1 + beta*obj3=obj3
+!< of type(base)
+!< where obj1 must contain symmetric matrix
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+! Modules
+!--------------------------------------------------------------------
+    use basekinds
+    use floatformat
+    use basetypes
+!--------------------------------------------------------------------
+!
+    implicit none
+!
+!--------------------------------------------------------------------
+! Input Parameters
+!--------------------------------------------------------------------
+!! array 1
+    type(base), intent(in) :: obj1(:,:)
+!! array 2
+    type(base), intent(in) :: obj2(:,:)
+!! the number of rows in obj1 and obj3
+    integer(kind_integer), intent(in) :: m
+!! the number of columns in obj2 and obj3
+    integer(kind_integer), intent(in) :: n
+!! first dimension of obj1
+    integer(kind_integer), intent(in) :: ld1
+!! first dimension of obj2
+    integer(kind_integer), intent(in) :: ld2
+!! first dimension of obj3
+    integer(kind_integer), intent(in) :: ld3
+!! scalar multiplying obj1
+    type(base), intent(in) :: alpha
+!! scalar multiplying obj3
+    type(base), intent(in) :: beta
+!! obj1 on the left('l') or right('r') side of the equation
+!! (same side as inverse multiplication)
+    character(len=1), intent(in) :: side
+!! obj1 as upper('u') or lower('l') triangular matrix
+    character(len=1), intent(in) :: uplo
+!!--------------------------------------------------------------------
+! Output Parameters
+!--------------------------------------------------------------------
+!! array 3
+    type(base), intent(out) :: obj3(:,:)
+!--------------------------------------------------------------------
+!  Local Variables
+!--------------------------------------------------------------------
+
+    call ssymm(side,uplo,m,n,alpha,obj1,ld1,  &
+  &     obj2,ld2,beta,obj3,ld3)
+
+!--------------------------------------------------------------------
+  end subroutine ghemm
+!--------------------------------------------------------------------
 
 !--------------------------------------------------------------------
   subroutine gdot(n,obj1,inc1,obj2,inc2,obj3,ierr)
@@ -131,9 +196,9 @@ contains
 !! number of elements in obj1 and obj2
     integer(kind_integer), intent(in) :: n
 !! array 1
-    type(base), intent(in) :: obj1(n)
+    type(base), intent(in) :: obj1(:)
 !! array 2
-    type(base), intent(in) :: obj2(n)
+    type(base), intent(in) :: obj2(:)
 !! spacing between elements in obj1
     integer(kind_integer), intent(in) :: inc1
 !! spacing between elements in obj2

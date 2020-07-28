@@ -13,6 +13,89 @@ then
   exit 0
 fi
 set -e
+# set autoconf-archive macro path
+echo 'Finding an installation of additional autoconf-archive macros is required.'
+echo ''
+echo 'For manual installation, please enter <exit> to exit the script,' 
+echo 'find a path you like and enter:'
+echo 'git clone --depth 1 --branch v2019.01.06 https://github.com/autoconf-archive/autoconf-archive.git'
+echo ''
+echo 'Entering <Default> will prompt the above clone in the directory:'
+echo 'src/autoconf-archive/'
+echo ''
+echo 'Entering <Manual>, will ask for a file path to a'
+echo 'autoconf-archive macros.'
+echo ''
+echo '    If <Default> has previously been entered and' 
+echo '     autoconf-archive is installed in the default location,'
+echo '     please enter <Use_Default>.' 
+echo ''
+echo 'Searching for autoconf-archive macros.'
+echo 'Please enter an avaiable option: <exit>, <Saved>, <Default> or <Manual>'
+echo ''
+FILE=usermacrolocation
+read macro_option
+for (( ; ; ))
+do
+  if [[ $macro_option == "exit" ]];
+  then
+    exit 1
+  elif [[ $macro_option == "Default" ]];
+  then
+    mkdir autoconf-archive
+    cd autoconf-archive
+    echo 'cloning autoconf-archive!'
+    git clone --depth 1 --branch v2019.01.06 https://github.com/autoconf-archive/autoconf-archive.git
+    cd ..  
+    AUTOCONF_MACRO=autoconf-archive/autoconf-archive/m4  
+    break
+  elif [[ $macro_option == "Use_Default" ]];
+  then
+    AUTOCONF_MACRO=autoconf-archive/autoconf-archive/m4  
+    break
+  elif [[ $macro_option == "Saved" ]];
+  then
+    if [ -f "$FILE" ]; then
+      AUTOCONF_MACRO=$(cat "$FILE")
+      break
+    else
+      echo 'No user macro location saved, please select another option:'
+      read macro_option
+    fi
+  elif [[ $macro_option == "Manual" ]];
+  then
+    break
+  else
+    echo 'Please enter an avaiable option: <exit>, <Default> or <Manual>'
+    read macro_option
+  fi        
+done
+if [[ $macro_option == "Manual" ]];
+then
+  echo 'Please enter a file path to autoconf-archive macros'
+  echo 'which usually look like "/a/path/like/autoconf-archive/m4" :'
+  echo '(enter <exit> to exit the script)' 
+  read autoconf_path
+  for (( ; ; ))
+  do
+    if [[ $autoconf_path == "" ]];
+    then
+      echo '$AUTOCONF_MACRO is empty'
+      echo "A path to the autoconf-archive installation's macro must be entered."
+      echo '(Otherwise, enter <exit> to terminate script)'
+      read autoconf_path
+    elif [[ $autoconf_path == "exit" ]];
+    then
+      exit 1
+    else
+      AUTOCONF_MACRO=$autoconf_path
+      break
+    fi        
+  done
+fi
+echo '$AUTOCONF_MACRO entered is'
+echo $AUTOCONF_MACRO
+echo $AUTOCONF_MACRO > usermacrolocation
 # Select building with BLAS
 echo 'Build with external BLAS/LAPack libraries?'
 echo ' Please enter >yes< or >no<'
@@ -64,15 +147,14 @@ do
 # generate Makefile.am
         echo ''
         echo 'generating Makefile.am from templates'
-        cat Makefile_shared.am > Makefile.am
-        cat Makefile_mkl_template.am >> Makefile.am
+        cat Makefile_mkl_template.am > Makefile.am
+        sed "s|Placeholder|$AUTOCONF_MACRO|g" Makefile_shared.am >> Makefile.am
 # copy configure.ac without blas/lapack searches
-        echo 'copying configure.ac from template'
-        cp configure_blas_free.ac configure.ac
+        echo 'generating configure.ac from template'
+        sed "s|Placeholder|$AUTOCONF_MACRO|g" configure_blas_free.ac > configure.ac
         echo '----------copied MKL autoconf files----------'
-        autoreconf --verbose --install --force
+        autoreconf --verbose --install --force -I $AUTOCONF_MACRO
         echo '----------autoconf for MKL done----------'
-        ./configure --help
         ./configure --prefix=$PWD
         break
       fi
@@ -80,13 +162,13 @@ do
       then
 # generate Makefile.am
         echo 'generating Makefile.am from templates'
-        cat Makefile_shared.am > Makefile.am
-        cat Makefile_blas_template.am >> Makefile.am
+        cat Makefile_blas_template.am > Makefile.am
+        sed "s|Placeholder|$AUTOCONF_MACRO|g" Makefile_shared.am >> Makefile.am
 # copy configure.ac without blas/lapack searches
-        echo 'copying configure.ac from template'
-        cp configure_blas.ac configure.ac
+        echo 'generating configure.ac from template'
+        sed "s|Placeholder|$AUTOCONF_MACRO|g" configure_blas.ac > configure.ac
         echo '----------copied BLAS/LAPack configure files----------'
-        autoreconf --verbose --install --force
+        autoreconf --verbose --install --force -I $AUTOCONF_MACRO
         echo '----------autoconf for external BLAS/LAPack library done----------'
         echo 'Please enter a desired BLAS library file path'
         echo '(Optional, can be used to point to a specific library)'
@@ -94,7 +176,6 @@ do
         echo 'Please enter a LAPack library file path'
         echo '(Optional, can be used to point to a specific library)'
         read answer4
-        ./configure --help
         ./configure --prefix=$PWD --with-blas=$answer3 --with-lapack=$answer4
         break
       fi
@@ -109,13 +190,13 @@ do
     exit 1
 # generate Makefile.am
     echo 'generating Makefile.am from templates'
-    cat Makefile_shared.am > Makefile.am
-    cat Makefile_blas_free_template.am >> Makefile.am
+    cat Makefile_free_template.am > Makefile.am
+    sed "s|Placeholder|$AUTOCONF_MACRO|g" Makefile_shared.am >> Makefile.am
 # copy configure.ac without blas/lapack searches
-    echo 'copying configure.ac from template'
-    cp configure_blas_free.ac configure.ac
+    echo 'generating configure.ac from template'
+    sed "s|Placeholder|$AUTOCONF_MACRO|g" configure_blas_free.ac > configure.ac
     echo '----------copied external-library-free autoconf files----------'
-    autoreconf --verbose --install --force
+    autoreconf --verbose --install --force -I $AUTOCONF_MACRO
     echo '----------autoconf without external library done----------'
     ./configure --help
     ./configure --prefix=$PWD

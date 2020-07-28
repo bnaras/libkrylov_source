@@ -47,22 +47,20 @@ aclocal.m4
 configure
 libtool
 
+# ignore local version of autoconf-archive
+autoconf-archive/*
 
 # ignore autoconf log files/folders
-# which are on their own git system
 build_aux/*
-autoconf-archive/*
 autom4te.cache/*
 config.log
 
 # ignore userconfig
 userlibraryconfig
+usermacrolocation
 
 # ignore compiled executables
 *_real_sp
 *_real_dp
 *_cmplx_sp
 *_cmplx_dp
-
-# ignore configuration
-*srcs/.*

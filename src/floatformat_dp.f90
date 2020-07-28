@@ -18,6 +18,7 @@ module floatformat
 !--------------------------------------------------------------------
 ! Modules and Global Variables
 !--------------------------------------------------------------------
+  use libkrylovinterface
 ! define kind_integer and other kind parameters
   use basekinds
 !--------------------------------------------------------------------
@@ -56,7 +57,7 @@ module floatformat
 !--------------------------------------------------------------------
 
 !! precision parameter
-  integer, parameter :: kind_float = kind_double
+!  integer, parameter :: kind_float = kind_double
   
 !--------------------------------------------------------------------
 
