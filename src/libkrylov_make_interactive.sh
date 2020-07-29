@@ -107,7 +107,9 @@ then
     cp *.mod real_sp_mods/.
     cp *.o real_sp_mods/.
     cp libkrylovinterface_real_sp.mod ../lib/.
+    cp libkrylovinterface_real_sp.o ../lib/.
     cp libkrylovsolver_real_sp.mod ../lib/.
+    cp libkrylovsolver_real_sp.o ../lib/.
     echo '----------Real Single Precision done----------'
   fi
   if [[ $precision == single && $element_type == complex ]];
@@ -132,7 +134,9 @@ then
     cp *.mod cmplx_sp_mods/.
     cp *.o cmplx_sp_mods/.
     cp libkrylovinterface_cmplx_sp.mod ../lib/.
+    cp libkrylovinterface_cmplx_sp.o ../lib/.
     cp libkrylovsolver_cmplx_sp.mod ../lib/.
+    cp libkrylovsolver_cmplx_sp.o ../lib/.
     echo '----------Complex Single Precision done----------'
   fi
   if [[ $precision == double && $element_type == real ]];
@@ -157,7 +161,9 @@ then
     cp *.mod real_dp_mods/.
     cp *.o real_dp_mods/.
     cp libkrylovinterface_real_dp.mod ../lib/.
+    cp libkrylovinterface_real_dp.o ../lib/.
     cp libkrylovsolver_real_dp.mod ../lib/.
+    cp libkrylovsolver_real_dp.o ../lib/.
     echo '----------Real Double Precision done----------'
   fi
   if [[ $precision == double && $element_type == complex ]];
@@ -182,7 +188,9 @@ then
     cp *.mod cmplx_dp_mods/.
     cp *.o cmplx_dp_mods/.
     cp libkrylovinterface_cmplx_dp.mod ../lib/.
+    cp libkrylovinterface_cmplx_dp.o ../lib/.
     cp libkrylovsolver_cmplx_dp.mod ../lib/.
+    cp libkrylovsolver_cmplx_dp.o ../lib/.
     echo '----------Complex Double Precision done----------'
   fi
   echo '----------All make instructions completed----------'
