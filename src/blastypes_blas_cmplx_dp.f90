@@ -690,7 +690,7 @@ contains
     integer(kind_integer) :: lwork_val = 1
     integer(kind_integer) :: rwork_val = 1
 !!  'array' for optimal lwork (work in first call of LAPACK)
-    complex(kind_float) :: lworker
+    complex(kind_float) :: lworker(1)
 !!  array for work
     complex(kind_float), allocatable :: lwork(:)
 !!  array for rwork
@@ -707,7 +707,7 @@ contains
 
     if (ierr.ne.0) return
 
-    lwork_val = int(lworker,kind=kind_integer)
+    lwork_val = int(lworker(1),kind=kind_integer)
 
 !! allocate lwork
     allocate(lwork(lwork_val))
@@ -775,7 +775,7 @@ contains
 !!  integer variable to store optimal WORK size
     integer(kind_integer) :: lwork_val = 1
 !!  'array' for optimal lwork (work in first call of LAPACK)
-    complex(kind_float) :: lworker
+    complex(kind_float) :: lworker(1)
 !!  array for lwork
     complex(kind_float), allocatable :: lwork(:)
 !--------------------------------------------------------------------
@@ -789,7 +789,7 @@ contains
 
     if (ierr.ne.0) return
 
-    lwork_val = int(lworker,kind=kind_integer)
+    lwork_val = int(lworker(1),kind=kind_integer)
 !! allocate lwork
     allocate(lwork(lwork_val))
 
@@ -861,7 +861,7 @@ contains
 !!  integer variable to store optimal WORK size
     integer(kind_integer) :: lwork_val = 1
 !!  array for optimal lwork (work in first call of LAPACK)
-    real(kind_float) :: lworker
+    real(kind_float) :: lworker(1)
 !!  array for lwork
     real(kind_float), allocatable :: lwork(:)
 !--------------------------------------------------------------------
@@ -876,7 +876,7 @@ contains
 
     if (ierr.ne.0) return
 
-    lwork_val = int(lworker,kind=kind_integer)
+    lwork_val = int(lworker(1),kind=kind_integer)
 !! allocate lwork
     allocate(lwork(lwork_val))
 
@@ -936,7 +936,7 @@ contains
 !!  integer variable to store optimal WORK size
     integer(kind_integer) :: lwork_val = 1
 !!  array for optimal lwork (work in first call of LAPACK)
-    real(kind_float) :: lworker
+    real(kind_float) :: lworker(1)
 !!  array for lwork
     real(kind_float), allocatable :: lwork(:)
 !--------------------------------------------------------------------
@@ -947,7 +947,7 @@ contains
 
     if (ierr.ne.0) return
 
-    lwork_val = int(lworker,kind=kind_integer)
+    lwork_val = int(lworker(1),kind=kind_integer)
 !! allocate lwork
     allocate(lwork(lwork_val))
 
@@ -1009,7 +1009,7 @@ contains
 !!  integer variable to store optimal WORK size
     integer(kind_integer) :: lwork_val = 1
 !!  array for optimal lwork (work in first call of LAPACK)
-    real(kind_float) :: lworker
+    real(kind_float) :: lworker(1)
 !!  array for lwork
     real(kind_float), allocatable :: lwork(:)
 !--------------------------------------------------------------------
@@ -1020,7 +1020,7 @@ contains
 
     if (ierr.ne.0) return
 
-    lwork_val = int(lworker,kind=kind_integer)
+    lwork_val = int(lworker(1),kind=kind_integer)
 !! allocate lwork
     allocate(lwork(lwork_val))
 
@@ -1098,7 +1098,7 @@ contains
 !!  integer variable to store optimal WORK size
     integer(kind_integer) :: lwork_val = 1
 !!  array for optimal lwork (work in first call of LAPACK)
-    complex(kind_float) :: lworker
+    complex(kind_float) :: lworker(1)
 !!  array for lwork
     complex(kind_float), allocatable :: lwork(:)
     real(kind_float), allocatable :: rwork(:)
@@ -1113,7 +1113,7 @@ contains
 
     if (ierr.ne.0) return
 
-    lwork_val = int(lworker,kind=kind_integer)
+    lwork_val = int(lworker(1),kind=kind_integer)
 !! allocate lwork
     allocate(lwork(lwork_val))
 
