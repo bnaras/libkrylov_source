@@ -403,13 +403,19 @@ contains
     problem_a%iverb = 5
     problem_a%irestart = 0
     allocate(approx_spectra(nbasis))
+    approx_spectra = real(0,kind=lkl_real_dp_k)
     allocate(base_solutions(nbasis,nroots))
+    base_solutions%element = real(0,kind=lkl_real_dp_k)
     output_a%nbasis = nbasis
     output_a%nroots = nroots
     allocate(output_a%roots(nroots))
+    output_a%roots= real(0,kind=lkl_real_dp_k)
     allocate(output_a%lagrangian(nroots))
+    output_a%lagrangian%element = real(0,kind=lkl_real_dp_k)
     allocate(output_a%jconverged(nroots))
+    output_a%jconverged = .false.
     allocate(output_a%euc_norm(nroots))
+    output_a%euc_norm = real(0,kind=lkl_real_dp_k)
 !--------------------------------------------------------------------
   end subroutine lkl_constr_a_1_rdp
 !--------------------------------------------------------------------
@@ -519,13 +525,19 @@ contains
     problem_b%iverb = 5
     problem_b%irestart = 0
     allocate(approx_spectra(nbasis))
+    approx_spectra = real(0,kind=lkl_real_dp_k)
     allocate(base_rhs(nbasis,nrhs))
+    base_rhs%element = real(0,kind=lkl_real_dp_k)
     allocate(base_solutions(nbasis,nrhs))
+    base_solutions%element = real(0,kind=lkl_real_dp_k)
     output_b%nbasis = nbasis
     output_b%nrhs = nrhs
     allocate(output_b%lagrangian(nrhs))
+    output_b%lagrangian%element = real(0,kind=lkl_real_dp_k)
     allocate(output_b%jconverged(nrhs))
+    output_b%jconverged = .false.
     allocate(output_b%euc_norm(nrhs))
+    output_b%euc_norm = real(0,kind=lkl_real_dp_k)
 !--------------------------------------------------------------------
   end subroutine lkl_constr_b_1_rdp
 !--------------------------------------------------------------------
@@ -659,14 +671,21 @@ contains
     problem_c%iverb = 5
     problem_c%irestart = 0
     allocate(approx_spectra(nbasis))
+    approx_spectra = real(0,kind=lkl_real_dp_k)
     allocate(omega(nomega))
+    omega = real(0,kind=lkl_real_dp_k)
     allocate(base_rhs(nbasis,nrhs))
+    base_rhs%element = real(0,kind=lkl_real_dp_k)
     allocate(base_solutions(nbasis,nroots))
+    base_solutions%element = real(0,kind=lkl_real_dp_k)
     output_c%nbasis = nbasis
     output_c%nroots = nroots
     allocate(output_c%lagrangian(nroots))
+    output_c%lagrangian%element = real(0,kind=lkl_real_dp_k)
     allocate(output_c%jconverged(nroots))
+    output_c%jconverged = .false.
     allocate(output_c%euc_norm(nroots))
+    output_c%euc_norm = real(0,kind=lkl_real_dp_k)
 !--------------------------------------------------------------------
   end subroutine lkl_constr_c_1_rdp
 !--------------------------------------------------------------------
