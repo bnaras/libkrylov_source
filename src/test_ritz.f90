@@ -658,7 +658,7 @@ program test_ritz
   print *, 'input z_array9(rayleigh_sq) is diagonal of integer squared values'
 !! call normalize subroutine
   call krylov_a_ritz(n,q,m,z_array8,z_array9,z_array7,z_array3,&
-  & r_vector1,r_vector2,z_vector1,z_array5,iverb,ierr)
+  & r_vector1,r_vector2,z1,z_array5,iverb,ierr)
 !! check ierr value to see whether routine terminated with an error
 !! test if ierr is not equal to 0
   if (ierr.ne.0) then
@@ -692,25 +692,25 @@ program test_ritz
     end if
   end do
 !! write info about output
-  print *, 'output z_vector1(lagrangian) should be integers'
-!! write test to check each element
-  print *, 'testing each element of z_vector1'
+  print *, 'output z1(lagrangian) should be sum of integers'
+  print *, 'testing z1'
 !! using do loops to take the absolute difference
 !! between the elements in test array 
 !! and the elements in reference value
+  r_ref = real(0,kind=kind_float)
   do j1 = 1, m 
-    r_test = z_vector1(j1)
-    r_ref = real(j1,kind=kind_float)
+    r_ref = r_ref + real(j1,kind=kind_float)
+  end do
+  r_test = z1
 !! test if difference if greater than machine precision
 !! (defined by the constant eps)
-    if (abs(r_test-r_ref).gt.eps) then
+  if (abs(r_test-r_ref).gt.eps) then
 !! if true, write failed for elements
-!! and the position of the element that failed
-      print *, 'failed for elements', j1
+!! and the position of the element that failed 
+    print *, 'z1 failed'
 !! set logical check = .true.
-      check = .true.
-    end if
-  end do
+    check = .true.
+  end if
 !! write info about output
   print *, 'output z_array5(solutions) should be identity'
 !! write test to check each element
@@ -770,7 +770,7 @@ program test_ritz
   print *, 'input z_array8(rayleigh) is diagonal of integer values'
 !! call normalize subroutine
   call krylov_b_ritz(n,q,m,z_array8,z_array7,z_array6,z_array3,&
-  & r_vector1,z_vector1,z_array5,iverb,ierr)
+  & r_vector1,z1,z_array5,iverb,ierr)
 !! check ierr value to see whether routine terminated with an error
 !! test if ierr is not equal to 0
   if (ierr.ne.0) then
@@ -783,25 +783,25 @@ program test_ritz
     print *, 'krylov_b_ritz runs'
   end if
 !! write info about output
-  print *, 'output z_vector1(lagrangian) should be -integers'
-!! write test to check each element
-  print *, 'testing each element of z_vector1'
+  print *, 'output z1(lagrangian) should be sum of - integers'
+  print *, 'testing z1'
 !! using do loops to take the absolute difference
 !! between the elements in test array 
 !! and the elements in reference value
+  r_ref = real(0,kind=kind_float)
   do j1 = 1, m 
-    r_test = z_vector1(j1)
-    r_ref = real(-j1,kind=kind_float)
+    r_ref = r_ref + real(-j1,kind=kind_float)
+  end do
+  r_test = z1
 !! test if difference if greater than machine precision
 !! (defined by the constant eps)
-    if (abs(r_test-r_ref).gt.eps) then
+  if (abs(r_test-r_ref).gt.eps) then
 !! if true, write failed for elements
-!! and the position of the element that failed
-      print *, 'failed for elements', j1
+!! and the position of the element that failed 
+    print *, 'z1 failed'
 !! set logical check = .true.
-      check = .true.
-    end if
-  end do
+    check = .true.
+  end if
 !! write info about output
   print *, 'output z_array5(solutions) should be identity'
 !! write test to check each element
@@ -867,7 +867,7 @@ program test_ritz
   print *, 'input z_array8(rayleigh) is diagonal of integer values'
 !! call normalize subroutine
   call krylov_c_ritz(n,q,1,m,m,z_array8,z_array7,z_array6,z_array3,&
-  & r_vector1,x1,z_vector1,z_array5,iverb,ierr)
+  & r_vector1,x1,z1,z_array5,iverb,ierr)
 !! check ierr value to see whether routine terminated with an error
 !! test if ierr is not equal to 0
   if (ierr.ne.0) then
@@ -880,25 +880,25 @@ program test_ritz
     print *, 'krylov_c_ritz runs'
   end if
 !! write info about output
-  print *, 'output z_vector1(lagrangian) should be -integers'
-!! write test to check each element
-  print *, 'testing each element of z_vector1'
+  print *, 'output z1(lagrangian) should be sum of - integers'
+  print *, 'testing z1'
 !! using do loops to take the absolute difference
 !! between the elements in test array 
 !! and the elements in reference value
+  r_ref = real(0,kind=kind_float)
   do j1 = 1, m 
-    r_test = z_vector1(j1)
-    r_ref = real(-j1,kind=kind_float)
+    r_ref = r_ref + real(-j1,kind=kind_float)
+  end do
+  r_test = z1
 !! test if difference if greater than machine precision
 !! (defined by the constant eps)
-    if (abs(r_test-r_ref).gt.eps) then
+  if (abs(r_test-r_ref).gt.eps) then
 !! if true, write failed for elements
-!! and the position of the element that failed
-      print *, 'failed for elements', j1
+!! and the position of the element that failed 
+    print *, 'z1 failed'
 !! set logical check = .true.
-      check = .true.
-    end if
-  end do
+    check = .true.
+  end if
 !! write info about output
   print *, 'output z_array5(solutions) should be identity'
 !! write test to check each element

@@ -321,11 +321,6 @@ program krylovdriver_1b
   krylov_problem%iverb = 5
   krylov_problem%irestart = irestart
 
-  krylov_output%nbasis = nbasis
-  krylov_output%nrhs = nrhs
-  allocate(krylov_output%lagrangian(nrhs))
-  allocate(krylov_output%jconverged(nrhs))
-  allocate(krylov_output%euc_norm(nrhs))
   krylov_mvp%matrix => krylov_a%element
 
 ! call solver with function to calculate nstart based on electron gas
@@ -350,20 +345,15 @@ program krylovdriver_1b
   lagr_string = trim(b1_string)//'_lagr'
 
 ! print to file
- call array_print_base(vector_string,nbasis,nrhs,krylov_x,ierr)
+  call array_print_base(vector_string,nbasis,nrhs,krylov_x,ierr)
 
-! print to file
- call array_print_base(lagr_string,1,nrhs,krylov_output%lagrangian,ierr)
-
+  print *, 'Final Lagrangian: ',krylov_output%lagrangian
 
 ! no post calculation operations, everything done within solver
   deallocate(krylov_a)
   deallocate(krylov_d)
   deallocate(krylov_p)
   deallocate(krylov_x)
-  deallocate(krylov_output%lagrangian)
-  deallocate(krylov_output%jconverged)
-  deallocate(krylov_output%euc_norm)
 
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------

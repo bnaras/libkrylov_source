@@ -38,6 +38,7 @@ grep 'failed' real_dp_npc_driver1c.out >> ../testing.summary
 echo 'for frequencies:' >> ../testing.summary
 sed '7,12!d' real_dp_1c_npc_indx.json >> ../testing.summary
 echo 'lagrangian:' >> ../testing.summary
+grep 'Final Lagrangian' real_dp_npc_driver1c.out >> ../testing.summary
 sed '7,12!d' real_dp_1c_npc_lagr.json >> ../testing.summary
 echo '' >> ../testing.summary
 mv real_dp_apc_driver1c.out real_dp_apc_driver1c.out.old 2>/dev/null
@@ -54,6 +55,7 @@ grep 'failed' real_dp_apc_driver1c.out >> ../testing.summary
 echo 'for frequencies:' >> ../testing.summary
 sed '7,12!d' real_dp_1c_apc_indx.json >> ../testing.summary
 echo 'lagrangian:' >> ../testing.summary
+grep 'Final Lagrangian' real_dp_apc_driver1c.out >> ../testing.summary
 sed '7,12!d' real_dp_1c_apc_lagr.json >> ../testing.summary
 echo '' >> ../testing.summary
 mv real_dp_dpc_driver1c.out real_dp_dpc_driver1c.out.old 2>/dev/null
@@ -70,6 +72,7 @@ grep 'failed' real_dp_dpc_driver1c.out >> ../testing.summary
 echo 'for frequencies:' >> ../testing.summary
 sed '7,12!d' real_dp_1c_dpc_indx.json >> ../testing.summary
 echo 'lagrangian:' >> ../testing.summary
+grep 'Final Lagrangian' real_dp_dpc_driver1c.out >> ../testing.summary
 sed '7,12!d' real_dp_1c_dpc_lagr.json >> ../testing.summary
 echo '' >> ../testing.summary
 mv real_dp_spc_driver1c.out real_dp_spc_driver1c.out.old 2>/dev/null
@@ -86,6 +89,7 @@ grep 'failed' real_dp_spc_driver1c.out >> ../testing.summary
 echo 'for frequencies:' >> ../testing.summary
 sed '7,12!d' real_dp_1c_spc_indx.json >> ../testing.summary
 echo 'lagrangian:' >> ../testing.summary
+grep 'Final Lagrangian' real_dp_spc_driver1c.out >> ../testing.summary
 sed '7,12!d' real_dp_1c_spc_lagr.json >> ../testing.summary
 echo '' >> ../testing.summary
 echo '~~~~~Real Double reference_c test done~~~~~'

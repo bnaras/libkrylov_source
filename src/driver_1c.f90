@@ -365,11 +365,6 @@ program krylovdriver_1c
   krylov_problem%iverb = 5
   krylov_problem%irestart = irestart
 
-  krylov_output%nbasis = nbasis
-  krylov_output%nroots = nroots
-  allocate(krylov_output%lagrangian(nroots))
-  allocate(krylov_output%jconverged(nroots))
-  allocate(krylov_output%euc_norm(nroots))
   krylov_mvp%matrix => krylov_a%element
 
 
@@ -408,11 +403,10 @@ program krylovdriver_1c
   call array_print_base(vector_string,nbasis,nroots,krylov_x,ierr)
 
 !! print to file
-  call array_print_base(lagr_string,1,nroots,krylov_output%lagrangian,ierr)
-
-!! print to file
   call array_print_float(freq_string,nroots,print_freq,ierr)
 
+
+  print *, 'Final Lagrangian: ',krylov_output%lagrangian
 
 ! no post calculation operations, everything done within solver
   deallocate(krylov_a)
@@ -420,9 +414,6 @@ program krylovdriver_1c
   deallocate(krylov_x)
   deallocate(krylov_o)
   deallocate(krylov_p)
-  deallocate(krylov_output%lagrangian)
-  deallocate(krylov_output%jconverged)
-  deallocate(krylov_output%euc_norm)
   deallocate(print_freq)
 
 !--------------------------------------------------------------------
