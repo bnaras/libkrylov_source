@@ -124,7 +124,8 @@ module libkrylovinterface_real_sp
 !! function to determine initial basis vectors, basis_vectors
 !! and overlap of the basis_vectors
 !! using an approximate spectra as input
-!! preserving the first n3 basis_vectors
+!! preserving the first n3 basis_vectors, but recalculating
+!! entire overlap
   type, abstract :: libkrylov_guess_real_sp
   contains
     procedure(libkrylov_guess_intrfc_rsp), deferred :: lkl_guess
@@ -181,14 +182,13 @@ module libkrylovinterface_real_sp
 ! type extensions for example input functions 
 !--------------------------------------------------------------------
 
-!! input type for number of starting basis vectors based on
-!! an electron gas
+!! defining input type for number of starting basis vectors
   type, extends(libkrylov_start_real_sp) :: lkl_s_elec_gas_rsp
   contains
     procedure :: lkl_start => lkl_start_elec_gas_rsp
   end type lkl_s_elec_gas_rsp
 
-!! input type for number of starting basis vectors passed in
+!! defining input type for number of starting basis vectors
   type, extends(libkrylov_start_real_sp) :: lkl_s_ext_in_rsp
 ! external data required for the function
 ! value of number of starting basis vectors
@@ -197,7 +197,7 @@ module libkrylovinterface_real_sp
     procedure :: lkl_start => lkl_start_ext_in_rsp
   end type lkl_s_ext_in_rsp
 
-!! input type for initial basis vectors as unit vectors
+!! defining input function for initial basis vectors
   type, extends(libkrylov_guess_real_sp) :: lkl_g_unit_vec_rsp
   contains
     procedure :: lkl_guess => lkl_guess_unit_vec_rsp
@@ -212,7 +212,6 @@ module libkrylovinterface_real_sp
   contains
     procedure :: lkl_mvp => lkl_mvp_naive_multiply_rsp
   end type lkl_mvp_n_mul_rsp
-
 
 !--------------------------------------------------------------------
 
@@ -295,11 +294,11 @@ module libkrylovinterface_real_sp
 !! type for krylov_output function of problem_c
 !! that takes the output from the solver
   type :: libkrylov_output_c_real_sp
+!!  funtional
     type(base_rsp) :: lagrangian
 !!  residual norm of all vectors
     real(lkl_real_sp_k) :: fro_norm
   end type libkrylov_output_c_real_sp
-
 
 !--------------------------------------------------------------------
 
@@ -685,8 +684,6 @@ contains
 !--------------------------------------------------------------------
   end subroutine lkl_destr_c_1_rsp
 !--------------------------------------------------------------------
-
-
 
 !--------------------------------------------------------------------
 ! Required subroutines for example start and guess function
