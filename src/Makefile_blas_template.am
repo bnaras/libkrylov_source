@@ -4,8 +4,8 @@ AM_LDFLAGS = @LAPACK_LIBS@ @BLAS_LIBS@ @LIBS@ @FLIBS@
 #OPENMPFLAGS = -fopenmp
 PROFILEFLAGS = -pg
 RELEASEFLAGS = -O3 -flto
-#DEBUGFLAGS = -Og -pedantic -Wall -Wextra -g -fbacktrace\
-#-ffpe-trap=overflow,underflow,denormal -fcheck=bounds
+DEBUGFLAGS = -Og -pedantic -Wall -Wextra -g -fbacktrace\
+-ffpe-trap=overflow,underflow,denormal -fcheck=bounds
 # compiler string
 FC = gfortran -fdefault-integer-8 -std=f2008 -cpp -static $(AM_LDFLAGS) $(DEBUGFLAGS)
 # library sources
