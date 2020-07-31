@@ -240,20 +240,10 @@ module libkrylovinterface_real_sp
 !! type for krylov_output function of problem_a
 !! function that takes the output from the solver
   type :: libkrylov_output_a_real_sp
-!!  rows of solutions, nbasis
-    integer(lkl_int_rsp_k) :: nbasis
-!!  number of roots
-    integer(lkl_int_rsp_k) :: nroots
-!!  number of converged solutions, nconverged
-    integer(lkl_int_rsp_k) :: nconverged
-!!  array for which solutions are converged
-    logical, allocatable :: jconverged(:)
 !!  eigenvalues
     real(lkl_real_sp_k), allocatable :: roots(:)
 !!  functional
-    type(base_rsp), allocatable :: lagrangian(:)
-!!  residual norms of each vector
-    real(lkl_real_sp_k), allocatable :: euc_norm(:)
+    type(base_rsp) :: lagrangian
 !!  residual norm of all vectors
     real(lkl_real_sp_k) :: fro_norm
   end type libkrylov_output_a_real_sp
@@ -277,18 +267,8 @@ module libkrylovinterface_real_sp
 !! type for krylov_output function of problem_b
 !! that takes the output from the solver
   type :: libkrylov_output_b_real_sp
-!!  rows of solutions, nbasis
-    integer(lkl_int_rsp_k) :: nbasis
-!!  number of solutions
-    integer(lkl_int_rsp_k) :: nrhs
-!!  number of converged solutions, nconverged
-    integer(lkl_int_rsp_k) :: nconverged
-!!  array for which solutions are converged
-    logical, allocatable :: jconverged(:)
 !!  functional
-    type(base_rsp), allocatable :: lagrangian(:)
-!!  residual norms of each vector
-    real(lkl_real_sp_k), allocatable :: euc_norm(:)
+    type(base_rsp) :: lagrangian
 !!  residual norm of all vectors
     real(lkl_real_sp_k) :: fro_norm
   end type libkrylov_output_b_real_sp
@@ -315,18 +295,7 @@ module libkrylovinterface_real_sp
 !! type for krylov_output function of problem_c
 !! that takes the output from the solver
   type :: libkrylov_output_c_real_sp
-!!  rows of solutions, nbasis
-    integer(lkl_int_rsp_k) :: nbasis
-!!  number of solutions
-    integer(lkl_int_rsp_k) :: nroots
-!!  number of converged solutions, nconverged
-    integer(lkl_int_rsp_k) :: nconverged
-!!  array for which solutions are converged
-    logical, allocatable :: jconverged(:)
-!!  functional
-    type(base_rsp), allocatable :: lagrangian(:)
-!!  residual norms of each vector
-    real(lkl_real_sp_k), allocatable :: euc_norm(:)
+    type(base_rsp) :: lagrangian
 !!  residual norm of all vectors
     real(lkl_real_sp_k) :: fro_norm
   end type libkrylov_output_c_real_sp
@@ -387,7 +356,11 @@ contains
 !--------------------------------------------------------------------
 !  Local Variables
 !--------------------------------------------------------------------
+    integer(lkl_int_rsp_k) :: ntriangle
 !--------------------------------------------------------------------
+
+    ntriangle = nroots*(nroots+1)/2
+
     problem_a%nbasis = nbasis
     problem_a%nroots = nroots
     problem_a%minstart = nroots
@@ -404,16 +377,10 @@ contains
     approx_spectra = real(0,kind=lkl_real_sp_k)
     allocate(base_solutions(nbasis,nroots))
     base_solutions%element = real(0,kind=lkl_real_sp_k)
-    output_a%nbasis = nbasis
-    output_a%nroots = nroots
-    allocate(output_a%roots(nroots))
+    allocate(output_a%roots(ntriangle))
     output_a%roots= real(0,kind=lkl_real_sp_k)
-    allocate(output_a%lagrangian(nroots))
     output_a%lagrangian%element = real(0,kind=lkl_real_sp_k)
-    allocate(output_a%jconverged(nroots))
-    output_a%jconverged = .false.
-    allocate(output_a%euc_norm(nroots))
-    output_a%euc_norm = real(0,kind=lkl_real_sp_k)
+    output_a%fro_norm = real(0,kind=lkl_real_sp_k)
 !--------------------------------------------------------------------
   end subroutine lkl_constr_a_1_rsp
 !--------------------------------------------------------------------
@@ -458,9 +425,6 @@ contains
     deallocate(approx_spectra)
     deallocate(base_solutions)
     deallocate(output_a%roots)
-    deallocate(output_a%lagrangian)
-    deallocate(output_a%jconverged)
-    deallocate(output_a%euc_norm)
 !--------------------------------------------------------------------
   end subroutine lkl_destr_a_1_rsp
 !--------------------------------------------------------------------
@@ -528,14 +492,8 @@ contains
     base_rhs%element = real(0,kind=lkl_real_sp_k)
     allocate(base_solutions(nbasis,nrhs))
     base_solutions%element = real(0,kind=lkl_real_sp_k)
-    output_b%nbasis = nbasis
-    output_b%nrhs = nrhs
-    allocate(output_b%lagrangian(nrhs))
     output_b%lagrangian%element = real(0,kind=lkl_real_sp_k)
-    allocate(output_b%jconverged(nrhs))
-    output_b%jconverged = .false.
-    allocate(output_b%euc_norm(nrhs))
-    output_b%euc_norm = real(0,kind=lkl_real_sp_k)
+    output_b%fro_norm = real(0,kind=lkl_real_sp_k)
 !--------------------------------------------------------------------
   end subroutine lkl_constr_b_1_rsp
 !--------------------------------------------------------------------
@@ -584,9 +542,6 @@ contains
     deallocate(approx_spectra)
     deallocate(base_rhs)
     deallocate(base_solutions)
-    deallocate(output_b%lagrangian)
-    deallocate(output_b%jconverged)
-    deallocate(output_b%euc_norm)
 !--------------------------------------------------------------------
   end subroutine lkl_destr_b_1_rsp
 !--------------------------------------------------------------------
@@ -676,14 +631,8 @@ contains
     base_rhs%element = real(0,kind=lkl_real_sp_k)
     allocate(base_solutions(nbasis,nroots))
     base_solutions%element = real(0,kind=lkl_real_sp_k)
-    output_c%nbasis = nbasis
-    output_c%nroots = nroots
-    allocate(output_c%lagrangian(nroots))
     output_c%lagrangian%element = real(0,kind=lkl_real_sp_k)
-    allocate(output_c%jconverged(nroots))
-    output_c%jconverged = .false.
-    allocate(output_c%euc_norm(nroots))
-    output_c%euc_norm = real(0,kind=lkl_real_sp_k)
+    output_c%fro_norm = real(0,kind=lkl_real_sp_k)
 !--------------------------------------------------------------------
   end subroutine lkl_constr_c_1_rsp
 !--------------------------------------------------------------------
@@ -733,9 +682,6 @@ contains
     deallocate(omega)
     deallocate(base_rhs)
     deallocate(base_solutions)
-    deallocate(output_c%lagrangian)
-    deallocate(output_c%jconverged)
-    deallocate(output_c%euc_norm)
 !--------------------------------------------------------------------
   end subroutine lkl_destr_c_1_rsp
 !--------------------------------------------------------------------

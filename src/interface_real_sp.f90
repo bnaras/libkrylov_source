@@ -22,8 +22,8 @@ module libkrylovinterface
   &   libkrylov_start_subroutine => libkrylov_start_real_sp, &
   &   libkrylov_guess_subroutine => libkrylov_guess_real_sp, &
   &   libkrylov_mvp_subroutine => libkrylov_mvp_real_sp, &
-  &   libkrylov_problem_a_subroutine => libkrylov_problem_a_real_sp, &
-  &   libkrylov_output_a_subroutine => libkrylov_output_a_real_sp, &
+  &   libkrylov_problem_a_input => libkrylov_problem_a_real_sp, &
+  &   libkrylov_problem_a_output => libkrylov_output_a_real_sp, &
   &   libkrylov_problem_b_subroutine => libkrylov_problem_b_real_sp, &
   &   libkrylov_output_b_subroutine => libkrylov_output_b_real_sp, &
   &   libkrylov_problem_c_subroutine => libkrylov_problem_c_real_sp, &
