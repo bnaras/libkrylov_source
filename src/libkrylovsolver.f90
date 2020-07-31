@@ -2341,11 +2341,11 @@ contains
 ! Input functions
 !--------------------------------------------------------------------
 !    class(libkrylov_vector_subroutine) ::    krylov_approx
-    class(libkrylov_problem_a_subroutine) :: krylov_problem_a
+    class(libkrylov_problem_a_input) :: krylov_problem_a
     class(libkrylov_start_subroutine) ::     krylov_start
     class(libkrylov_guess_subroutine) ::     krylov_guess
     class(libkrylov_mvp_subroutine) ::       krylov_mvp
-    class(libkrylov_output_a_subroutine) ::  krylov_output_a
+    class(libkrylov_problem_a_output) ::  krylov_output_a
 !--------------------------------------------------------------------
 ! Local Variables
 !--------------------------------------------------------------------
