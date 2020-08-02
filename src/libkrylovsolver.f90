@@ -4198,10 +4198,10 @@ contains
 !    class(libkrylov_vector_subroutine) ::    krylov_approx
     class(libkrylov_start_subroutine) ::     krylov_start
 !    class(libkrylov_matrix_subroutine) ::    krylov_rhs
-    class(libkrylov_problem_b_subroutine) :: krylov_problem_b
+    class(libkrylov_problem_b_input) :: krylov_problem_b
     class(libkrylov_guess_subroutine) ::     krylov_guess
     class(libkrylov_mvp_subroutine) ::       krylov_mvp
-    class(libkrylov_output_b_subroutine) ::  krylov_output_b
+    class(libkrylov_problem_b_output) ::  krylov_output_b
 !--------------------------------------------------------------------
 ! Local Variables
 !--------------------------------------------------------------------
@@ -6572,10 +6572,10 @@ contains
 ! Input functions
 !--------------------------------------------------------------------
     class(libkrylov_start_subroutine) ::  krylov_start
-    class(libkrylov_problem_c_subroutine) :: krylov_problem_c
+    class(libkrylov_problem_c_input) :: krylov_problem_c
     class(libkrylov_guess_subroutine) ::     krylov_guess
     class(libkrylov_mvp_subroutine) ::       krylov_mvp
-    class(libkrylov_output_c_subroutine) ::  krylov_output_c
+    class(libkrylov_problem_c_output) ::  krylov_output_c
 !--------------------------------------------------------------------
 ! Local Variables
 !--------------------------------------------------------------------

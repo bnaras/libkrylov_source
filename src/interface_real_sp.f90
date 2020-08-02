@@ -24,10 +24,10 @@ module libkrylovinterface
   &   libkrylov_mvp_subroutine => libkrylov_mvp_real_sp, &
   &   libkrylov_problem_a_input => libkrylov_problem_a_real_sp, &
   &   libkrylov_problem_a_output => libkrylov_output_a_real_sp, &
-  &   libkrylov_problem_b_subroutine => libkrylov_problem_b_real_sp, &
-  &   libkrylov_output_b_subroutine => libkrylov_output_b_real_sp, &
-  &   libkrylov_problem_c_subroutine => libkrylov_problem_c_real_sp, &
-  &   libkrylov_output_c_subroutine => libkrylov_output_c_real_sp
+  &   libkrylov_problem_b_input => libkrylov_problem_b_real_sp, &
+  &   libkrylov_problem_b_output => libkrylov_output_b_real_sp, &
+  &   libkrylov_problem_c_input => libkrylov_problem_c_real_sp, &
+  &   libkrylov_problem_c_output => libkrylov_output_c_real_sp
 !--------------------------------------------------------------------
 ! Implicit none
 !--------------------------------------------------------------------

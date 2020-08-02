@@ -44,14 +44,14 @@ program krylovdriver_1b
 !--------------------------------------------------------------------
 !  Input Subroutines
 !--------------------------------------------------------------------
-  type(libkrylov_problem_b_subroutine) :: krylov_problem
+  type(libkrylov_problem_b_input) :: krylov_problem
 !  type(kl_approx) :: krylov_approx
   type(lkl_s_elec_gas) :: krylov_s_eg
   type(lkl_s_ext_in) :: krylov_s_ext_in
 !  type(kl_rhs) :: krylov_rhs
   type(lkl_g_unit_vec) :: krylov_g_uv
   type(lkl_mvp_n_mul) :: krylov_mvp
-  type(libkrylov_output_b_subroutine) :: krylov_output
+  type(libkrylov_problem_b_output) :: krylov_output
 !--------------------------------------------------------------------
 ! Local Variables for Subroutines and reading problem
 !--------------------------------------------------------------------
