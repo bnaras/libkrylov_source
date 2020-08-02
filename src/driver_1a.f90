@@ -255,8 +255,8 @@ program krylovdriver_1a
 
 !! allocate array to contain problem
   allocate(krylov_a(nbasis,nbasis))
-  allocate(krylov_d(nbasis))
-  allocate(krylov_x(nbasis,nroots))
+  allocate(krylov_problem%approx_spectra(nbasis))
+  allocate(krylov_output%solutions(nbasis,nroots))
 
 !! read problem array size
   call array_read_base(filename_string,nbasis,&
@@ -268,7 +268,7 @@ program krylovdriver_1a
   end if
 
   do j = 1, nbasis
-    krylov_d(j) = krylov_a(j,j)
+    krylov_problem%approx_spectra(j) = krylov_a(j,j)
     krylov_a(j,j) = real(0,kind=kind_float)
   end do
 
@@ -333,14 +333,15 @@ program krylovdriver_1a
   call array_print_float(values_string,ntriangle,krylov_output%roots,ierr)
 
 !! print to file
-  call array_print_base(vector_string,nbasis,nroots,krylov_x,ierr)
+  call array_print_base(vector_string,nbasis,nroots,&
+  &          krylov_output%solutions,ierr)
 
   print *, 'Final Lagrangian: ',krylov_output%lagrangian
 
 
   deallocate(krylov_a)
-  deallocate(krylov_d)
-  deallocate(krylov_x)
+  deallocate(krylov_problem%approx_spectra)
+  deallocate(krylov_output%solutions)
   deallocate(krylov_output%roots)
 
 !--------------------------------------------------------------------

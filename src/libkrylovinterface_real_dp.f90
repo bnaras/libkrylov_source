@@ -236,11 +236,13 @@ module libkrylovinterface_real_dp
     character(len=32) :: precon_string
     integer(lkl_int_rdp_k) :: iverb
     integer(lkl_int_rdp_k) :: irestart
+    real(lkl_real_dp_k), allocatable :: approx_spectra(:)
   end type libkrylov_problem_a_real_dp
 
 !! type for krylov_output function of problem_a
 !! function that takes the output from the solver
   type :: libkrylov_output_a_real_dp
+    type(base_rdp), allocatable :: solutions(:,:)
 !!  eigenvalues
     real(lkl_real_dp_k), allocatable :: roots(:)
 !!  functional
@@ -265,11 +267,14 @@ module libkrylovinterface_real_dp
     character(len=32) :: precon_string
     integer(lkl_int_rdp_k) :: iverb
     integer(lkl_int_rdp_k) :: irestart
+    real(lkl_real_dp_k), allocatable :: approx_spectra(:)
+    type(base_rdp), allocatable :: rhs(:,:)
   end type libkrylov_problem_b_real_dp
 
 !! type for krylov_output function of problem_b
 !! that takes the output from the solver
   type :: libkrylov_output_b_real_dp
+    type(base_rdp), allocatable :: solutions(:,:)
 !!  functional
     type(base_rdp) :: lagrangian
 !!  residual norm of all vectors
@@ -293,11 +298,15 @@ module libkrylovinterface_real_dp
     character(len=32) :: precon_string
     integer(lkl_int_rdp_k) :: iverb
     integer(lkl_int_rdp_k) :: irestart
+    real(lkl_real_dp_k), allocatable :: approx_spectra(:)
+    real(lkl_real_dp_k), allocatable :: omega(:)
+    type(base_rdp), allocatable :: rhs(:,:)
   end type libkrylov_problem_c_real_dp
 
 !! type for krylov_output function of problem_c
 !! that takes the output from the solver
   type :: libkrylov_output_c_real_dp
+    type(base_rdp), allocatable :: solutions(:,:)
     type(base_rdp) :: lagrangian
 !!  residual norm of all vectors
     real(lkl_real_dp_k) :: fro_norm
@@ -316,7 +325,7 @@ contains
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
   subroutine lkl_constr_a_1_rdp(nbasis,nroots,problem_a,&
-   &   approx_spectra,base_solutions,output_a)
+   &   output_a)
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
 !
@@ -349,10 +358,6 @@ contains
 !--------------------------------------------------------------------
 !!  problem parameters
     class(libkrylov_problem_a_real_dp), intent(out) :: problem_a
-!!  approximate spectra
-    real(lkl_real_dp_k), allocatable :: approx_spectra(:)
-!!  solutions in type base
-    type(base_rdp), allocatable :: base_solutions(:,:)
 !!  output parameters
     class(libkrylov_output_a_real_dp) :: output_a
 !--------------------------------------------------------------------
@@ -375,10 +380,10 @@ contains
     problem_a%precon_string = "davidson"
     problem_a%iverb = 5
     problem_a%irestart = 0
-    allocate(approx_spectra(nbasis))
-    approx_spectra = real(0,kind=lkl_real_dp_k)
-    allocate(base_solutions(nbasis,nroots))
-    base_solutions%element = real(0,kind=lkl_real_dp_k)
+    allocate(problem_a%approx_spectra(nbasis))
+    problem_a%approx_spectra = real(0,kind=lkl_real_dp_k)
+    allocate(output_a%solutions(nbasis,nroots))
+    output_a%solutions%element = real(0,kind=lkl_real_dp_k)
     allocate(output_a%roots(ntriangle))
     output_a%roots= real(0,kind=lkl_real_dp_k)
     output_a%lagrangian%element = real(0,kind=lkl_real_dp_k)
@@ -390,7 +395,7 @@ contains
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
   subroutine lkl_destr_a_1_rdp(&
-   &   approx_spectra,base_solutions,output_a)
+   &   problem_a,output_a)
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
 !
@@ -415,17 +420,15 @@ contains
 ! Output Parameters
 !--------------------------------------------------------------------
 !!  approximate spectra
-    real(lkl_real_dp_k), allocatable :: approx_spectra(:)
-!!  solutions in type base
-    type(base_rdp), allocatable :: base_solutions(:,:)
+    class(libkrylov_problem_a_real_dp) :: problem_a
 !!  output parameters
     class(libkrylov_output_a_real_dp) :: output_a
 !--------------------------------------------------------------------
 !  Local Variables
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
-    deallocate(approx_spectra)
-    deallocate(base_solutions)
+    deallocate(problem_a%approx_spectra)
+    deallocate(output_a%solutions)
     deallocate(output_a%roots)
 !--------------------------------------------------------------------
   end subroutine lkl_destr_a_1_rdp
@@ -434,7 +437,7 @@ contains
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
   subroutine lkl_constr_b_1_rdp(nbasis,nrhs,problem_b,&
-   &   approx_spectra,base_rhs,base_solutions,output_b)
+   &   output_b)
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
 !
@@ -467,12 +470,6 @@ contains
 !--------------------------------------------------------------------
 !!  problem parameters
     class(libkrylov_problem_b_real_dp), intent(out) :: problem_b
-!!  approximate spectra
-    real(lkl_real_dp_k), allocatable :: approx_spectra(:)
-!!  rhs in type base
-    type(base_rdp), allocatable :: base_rhs(:,:)
-!!  solutions in type base
-    type(base_rdp), allocatable :: base_solutions(:,:)
 !!  output parameters
     class(libkrylov_output_b_real_dp) :: output_b
 !--------------------------------------------------------------------
@@ -488,12 +485,12 @@ contains
     problem_b%precon_string = "approx_spectra"
     problem_b%iverb = 5
     problem_b%irestart = 0
-    allocate(approx_spectra(nbasis))
-    approx_spectra = real(0,kind=lkl_real_dp_k)
-    allocate(base_rhs(nbasis,nrhs))
-    base_rhs%element = real(0,kind=lkl_real_dp_k)
-    allocate(base_solutions(nbasis,nrhs))
-    base_solutions%element = real(0,kind=lkl_real_dp_k)
+    allocate(problem_b%approx_spectra(nbasis))
+    problem_b%approx_spectra = real(0,kind=lkl_real_dp_k)
+    allocate(problem_b%rhs(nbasis,nrhs))
+    problem_b%rhs%element = real(0,kind=lkl_real_dp_k)
+    allocate(output_b%solutions(nbasis,nrhs))
+    output_b%solutions%element = real(0,kind=lkl_real_dp_k)
     output_b%lagrangian%element = real(0,kind=lkl_real_dp_k)
     output_b%fro_norm = real(0,kind=lkl_real_dp_k)
 !--------------------------------------------------------------------
@@ -503,7 +500,7 @@ contains
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
   subroutine lkl_destr_b_1_rdp(&
-   &   approx_spectra,base_rhs,base_solutions,output_b)
+   &   problem_b,output_b)
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
 !
@@ -527,23 +524,16 @@ contains
 !--------------------------------------------------------------------
 ! Output Parameters
 !--------------------------------------------------------------------
-!!  approximate spectra
-    real(lkl_real_dp_k), allocatable :: approx_spectra(:)
-!!  input frequency
-    real(lkl_real_dp_k), allocatable :: omega(:)
-!!  rhs
-    type(base_rdp), allocatable :: base_rhs(:,:)
-!!  solutions in type base
-    type(base_rdp), allocatable :: base_solutions(:,:)
 !!  output parameters
+    class(libkrylov_problem_b_real_dp) :: problem_b
     class(libkrylov_output_b_real_dp) :: output_b
 !--------------------------------------------------------------------
 !  Local Variables
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
-    deallocate(approx_spectra)
-    deallocate(base_rhs)
-    deallocate(base_solutions)
+    deallocate(problem_b%approx_spectra)
+    deallocate(problem_b%rhs)
+    deallocate(output_b%solutions)
 !--------------------------------------------------------------------
   end subroutine lkl_destr_b_1_rdp
 !--------------------------------------------------------------------
@@ -551,7 +541,7 @@ contains
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
   subroutine lkl_constr_c_1_rdp(nbasis,nomega,nrhs,unique,problem_c,&
-   &   approx_spectra,omega,base_rhs,base_solutions,output_c)
+   &   output_c)
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
 !
@@ -588,14 +578,6 @@ contains
 !--------------------------------------------------------------------
 !!  problem parameters
     class(libkrylov_problem_c_real_dp), intent(out) :: problem_c
-!!  approximate spectra
-    real(lkl_real_dp_k), allocatable :: approx_spectra(:)
-!!  input frequencies
-    real(lkl_real_dp_k), allocatable :: omega(:)
-!!  rhs in type base
-    type(base_rdp), allocatable :: base_rhs(:,:)
-!!  solutions in type base
-    type(base_rdp), allocatable :: base_solutions(:,:)
 !!  output parameters
     class(libkrylov_output_c_real_dp) :: output_c
 !--------------------------------------------------------------------
@@ -625,14 +607,14 @@ contains
     problem_c%precon_string = "davidson"
     problem_c%iverb = 5
     problem_c%irestart = 0
-    allocate(approx_spectra(nbasis))
-    approx_spectra = real(0,kind=lkl_real_dp_k)
-    allocate(omega(nomega))
-    omega = real(0,kind=lkl_real_dp_k)
-    allocate(base_rhs(nbasis,nrhs))
-    base_rhs%element = real(0,kind=lkl_real_dp_k)
-    allocate(base_solutions(nbasis,nroots))
-    base_solutions%element = real(0,kind=lkl_real_dp_k)
+    allocate(problem_c%approx_spectra(nbasis))
+    problem_c%approx_spectra = real(0,kind=lkl_real_dp_k)
+    allocate(problem_c%omega(nomega))
+    problem_c%omega = real(0,kind=lkl_real_dp_k)
+    allocate(problem_c%rhs(nbasis,nrhs))
+    problem_c%rhs%element = real(0,kind=lkl_real_dp_k)
+    allocate(output_c%solutions(nbasis,nroots))
+    output_c%solutions%element = real(0,kind=lkl_real_dp_k)
     output_c%lagrangian%element = real(0,kind=lkl_real_dp_k)
     output_c%fro_norm = real(0,kind=lkl_real_dp_k)
 !--------------------------------------------------------------------
@@ -642,7 +624,7 @@ contains
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
   subroutine lkl_destr_c_1_rdp(&
-   &   approx_spectra,omega,base_rhs,base_solutions,output_c)
+   &   problem_c,output_c)
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
 !
@@ -666,24 +648,17 @@ contains
 !--------------------------------------------------------------------
 ! Output Parameters
 !--------------------------------------------------------------------
-!!  approximate spectra
-    real(lkl_real_dp_k), allocatable :: approx_spectra(:)
-!!  input frequency
-    real(lkl_real_dp_k), allocatable :: omega(:)
-!!  rhs
-    type(base_rdp), allocatable :: base_rhs(:,:)
-!!  solutions in type base
-    type(base_rdp), allocatable :: base_solutions(:,:)
 !!  output parameters
+    class(libkrylov_problem_c_real_dp) :: problem_c
     class(libkrylov_output_c_real_dp) :: output_c
 !--------------------------------------------------------------------
 !  Local Variables
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
-    deallocate(approx_spectra)
-    deallocate(omega)
-    deallocate(base_rhs)
-    deallocate(base_solutions)
+    deallocate(problem_c%approx_spectra)
+    deallocate(problem_c%omega)
+    deallocate(problem_c%rhs)
+    deallocate(output_c%solutions)
 !--------------------------------------------------------------------
   end subroutine lkl_destr_c_1_rdp
 !--------------------------------------------------------------------
