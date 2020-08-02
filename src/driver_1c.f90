@@ -129,7 +129,7 @@ program krylovdriver_1c
         print *, '-precon       select preconditioner'
         print *, '               available options:'
         print *, '                none'
-        print *, '                approx_spectra'
+        print *, '                conjugate_gradient'
         print *, '                davidson'
         print *, '                sleijpen'
         print *, '                half_sleijpen'

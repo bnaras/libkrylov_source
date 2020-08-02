@@ -2136,7 +2136,7 @@ contains
         end do
       end do
 
-    else if (precon_string.eq.'approx_spectra') then
+    else if (precon_string.eq.'conjugate_gradient') then
 
       do j = 1, nroots
         do k = 1, nbasis
@@ -4004,7 +4004,7 @@ contains
         end do
       end do
 
-    else if (precon_string.eq.'approx_spectra') then
+    else if (precon_string.eq.'conjugate_gradient') then
 
       do j = 1, nrhs
         do k = 1, nbasis
@@ -6255,7 +6255,7 @@ contains
         end do
       end if
 
-    else if (precon_string.eq.'approx_spectra') then
+    else if (precon_string.eq.'conjugate_gradient') then
 
       if (nroots.eq.nomega) then ! one omega per root
         do j = 1, nroots
