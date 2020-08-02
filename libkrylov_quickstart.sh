@@ -7,11 +7,11 @@ then
   echo 'using this library by' 
   echo 'doing the following in the libkrylov/src directory:'
   echo '1. checking that programs required for make are present'
-  echo '2. running the libkrylov_configure.sh script which'
+  echo '2. generates userlibraryconfig based on user input'
+  echo '3. running the libkrylov_configure.sh script which'
   echo '       determines the libraries available to the user'
   echo '       runs the autoreconf and configure program to'
   echo '       sets up the correct Makefile'
-  echo '3. generates userlibraryconfig based on user input'
   echo '4. running libkrylov_make.sh script which'
   echo '       makes the installation directories'
   echo '       makes the libraries and test programs'
@@ -65,8 +65,6 @@ export LIBKRYLOV_PATH=$PWD
 echo '--------------------------------------------------'
 echo 'libraries folders will be installed in '$LIBKRYLOV_PATH
 echo '--------------------------------------------------'
-# Select configuration, configuring make structure
-./libkrylov_configure.sh
 # Determing how much of the library to build
 echo 'Build all libraries?'
 echo ' Please enter >yes< or >no<'
@@ -148,6 +146,8 @@ then
   echo $element_type >> userlibraryconfig
 fi
 # THIS PLACE
+# Select configuration, configuring make structure
+./libkrylov_configure.sh
 # use userinput to make a library
 ./libkrylov_make.sh
 # leave src directory and go to test directory 
