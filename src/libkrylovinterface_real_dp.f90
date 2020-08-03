@@ -221,7 +221,7 @@ module libkrylovinterface_real_dp
 
 !! type for krylov_problem function for problem_a
 !! to determine parameters of the problem to be solved
-  type :: libkrylov_problem_a_real_dp
+  type :: libkrylov_problem_a_input_real_dp
 !!  rows of solutions, nbasis
     integer(lkl_int_rdp_k) :: nbasis
 !!  number of roots
@@ -237,11 +237,11 @@ module libkrylovinterface_real_dp
     integer(lkl_int_rdp_k) :: iverb
     integer(lkl_int_rdp_k) :: irestart
     real(lkl_real_dp_k), allocatable :: approx_spectra(:)
-  end type libkrylov_problem_a_real_dp
+  end type libkrylov_problem_a_input_real_dp
 
 !! type for krylov_output function of problem_a
 !! function that takes the output from the solver
-  type :: libkrylov_output_a_real_dp
+  type :: libkrylov_problem_a_output_real_dp
     type(base_rdp), allocatable :: solutions(:,:)
 !!  eigenvalues
     real(lkl_real_dp_k), allocatable :: roots(:)
@@ -249,12 +249,12 @@ module libkrylovinterface_real_dp
     type(base_rdp) :: lagrangian
 !!  residual norm of all vectors
     real(lkl_real_dp_k) :: fro_norm
-  end type libkrylov_output_a_real_dp
+  end type libkrylov_problem_a_output_real_dp
 
 
 !! type for krylov_problem function for problem_b
 !! function to determining parameters of the problem to be solved
-  type :: libkrylov_problem_b_real_dp
+  type :: libkrylov_problem_b_input_real_dp
     integer(lkl_int_rdp_k) :: nbasis
     integer(lkl_int_rdp_k) :: nrhs
     integer(lkl_int_rdp_k) :: minstart
@@ -269,21 +269,21 @@ module libkrylovinterface_real_dp
     integer(lkl_int_rdp_k) :: irestart
     real(lkl_real_dp_k), allocatable :: approx_spectra(:)
     type(base_rdp), allocatable :: rhs(:,:)
-  end type libkrylov_problem_b_real_dp
+  end type libkrylov_problem_b_input_real_dp
 
 !! type for krylov_output function of problem_b
 !! that takes the output from the solver
-  type :: libkrylov_output_b_real_dp
+  type :: libkrylov_problem_b_output_real_dp
     type(base_rdp), allocatable :: solutions(:,:)
 !!  functional
     type(base_rdp) :: lagrangian
 !!  residual norm of all vectors
     real(lkl_real_dp_k) :: fro_norm
-  end type libkrylov_output_b_real_dp
+  end type libkrylov_problem_b_output_real_dp
 
 !! type for krylov_problem function for problem_c
 !! function to determining parameters of the problem to be solved
-  type :: libkrylov_problem_c_real_dp
+  type :: libkrylov_problem_c_input_real_dp
     integer(lkl_int_rdp_k) :: nbasis
     integer(lkl_int_rdp_k) :: nomega
     integer(lkl_int_rdp_k) :: nrhs
@@ -301,16 +301,16 @@ module libkrylovinterface_real_dp
     real(lkl_real_dp_k), allocatable :: approx_spectra(:)
     real(lkl_real_dp_k), allocatable :: omega(:)
     type(base_rdp), allocatable :: rhs(:,:)
-  end type libkrylov_problem_c_real_dp
+  end type libkrylov_problem_c_input_real_dp
 
 !! type for krylov_output function of problem_c
 !! that takes the output from the solver
-  type :: libkrylov_output_c_real_dp
+  type :: libkrylov_problem_c_output_real_dp
     type(base_rdp), allocatable :: solutions(:,:)
     type(base_rdp) :: lagrangian
 !!  residual norm of all vectors
     real(lkl_real_dp_k) :: fro_norm
-  end type libkrylov_output_c_real_dp
+  end type libkrylov_problem_c_output_real_dp
 
 !--------------------------------------------------------------------
 
@@ -357,9 +357,9 @@ contains
 ! Output Parameters
 !--------------------------------------------------------------------
 !!  problem parameters
-    class(libkrylov_problem_a_real_dp), intent(out) :: problem_a
+    class(libkrylov_problem_a_input_real_dp), intent(out) :: problem_a
 !!  output parameters
-    class(libkrylov_output_a_real_dp) :: output_a
+    class(libkrylov_problem_a_output_real_dp) :: output_a
 !--------------------------------------------------------------------
 !  Local Variables
 !--------------------------------------------------------------------
@@ -420,8 +420,8 @@ contains
 ! Output Parameters
 !--------------------------------------------------------------------
 !!  output parameters
-    class(libkrylov_problem_a_real_dp) :: problem_a
-    class(libkrylov_output_a_real_dp) :: output_a
+    class(libkrylov_problem_a_input_real_dp) :: problem_a
+    class(libkrylov_problem_a_output_real_dp) :: output_a
 !--------------------------------------------------------------------
 !  Local Variables
 !--------------------------------------------------------------------
@@ -468,9 +468,9 @@ contains
 ! Output Parameters
 !--------------------------------------------------------------------
 !!  problem parameters
-    class(libkrylov_problem_b_real_dp), intent(out) :: problem_b
+    class(libkrylov_problem_b_input_real_dp), intent(out) :: problem_b
 !!  output parameters
-    class(libkrylov_output_b_real_dp) :: output_b
+    class(libkrylov_problem_b_output_real_dp) :: output_b
 !--------------------------------------------------------------------
     problem_b%nbasis = nbasis
     problem_b%nrhs = nrhs
@@ -524,8 +524,8 @@ contains
 ! Output Parameters
 !--------------------------------------------------------------------
 !!  output parameters
-    class(libkrylov_problem_b_real_dp) :: problem_b
-    class(libkrylov_output_b_real_dp) :: output_b
+    class(libkrylov_problem_b_input_real_dp) :: problem_b
+    class(libkrylov_problem_b_output_real_dp) :: output_b
 !--------------------------------------------------------------------
 !  Local Variables
 !--------------------------------------------------------------------
@@ -576,9 +576,9 @@ contains
 ! Output Parameters
 !--------------------------------------------------------------------
 !!  problem parameters
-    class(libkrylov_problem_c_real_dp), intent(out) :: problem_c
+    class(libkrylov_problem_c_input_real_dp), intent(out) :: problem_c
 !!  output parameters
-    class(libkrylov_output_c_real_dp) :: output_c
+    class(libkrylov_problem_c_output_real_dp) :: output_c
 !--------------------------------------------------------------------
 !  Local Variables
 !--------------------------------------------------------------------
@@ -648,8 +648,8 @@ contains
 ! Output Parameters
 !--------------------------------------------------------------------
 !!  output parameters
-    class(libkrylov_problem_c_real_dp) :: problem_c
-    class(libkrylov_output_c_real_dp) :: output_c
+    class(libkrylov_problem_c_input_real_dp) :: problem_c
+    class(libkrylov_problem_c_output_real_dp) :: output_c
 !--------------------------------------------------------------------
 !  Local Variables
 !--------------------------------------------------------------------
