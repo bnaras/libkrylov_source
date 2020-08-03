@@ -27,10 +27,9 @@ echo 'test/real_dp_testing.results/ref_1a/real_dp_npc_driver1a.out' >> ../testin
 mv real_dp_1a_vals.json real_dp_1a_npc_vals.json
 mv real_dp_1a_vecs.json real_dp_1a_npc_vecs.json
 grep 'Converged' real_dp_npc_driver1a.out >> ../testing.summary
+grep 'Final L' real_dp_npc_driver1a.out >> ../testing.summary
 echo 'error statments:' >> ../testing.summary
 grep 'failed' real_dp_npc_driver1a.out >> ../testing.summary
-echo 'eigenvalues' >> ../testing.summary
-sed '7,11!d' real_dp_1a_npc_vals.json >> ../testing.summary
 echo '' >> ../testing.summary
 mv real_dp_apc_driver1a.out real_dp_apc_driver1a.out.old 2>/dev/null
 echo 'solve for reference problem with approximate spectra preconditioner' >> ../testing.summary
@@ -40,10 +39,9 @@ echo 'test/real_dp_testing.results/ref_1a/real_dp_apc_driver1a.out' >> ../testin
 mv real_dp_1a_vals.json real_dp_1a_apc_vals.json
 mv real_dp_1a_vecs.json real_dp_1a_apc_vecs.json
 grep 'Converged' real_dp_apc_driver1a.out >> ../testing.summary
+grep 'Final L' real_dp_apc_driver1a.out >> ../testing.summary
 echo 'error statments:' >> ../testing.summary
 grep 'failed' real_dp_apc_driver1a.out >> ../testing.summary
-echo 'eigenvalues' >> ../testing.summary
-sed '7,11!d' real_dp_1a_apc_vals.json >> ../testing.summary
 echo '' >> ../testing.summary
 mv real_dp_dpc_driver1a.out real_dp_dpc_driver1a.out.old 2>/dev/null
 echo 'solve for reference problem with davidson preconditioner' >> ../testing.summary
@@ -53,10 +51,9 @@ echo 'test/real_dp_testing.results/ref_1a/real_dp_dpc_driver1a.out' >> ../testin
 mv real_dp_1a_vals.json real_dp_1a_dpc_vals.json
 mv real_dp_1a_vecs.json real_dp_1a_dpc_vecs.json
 grep 'Converged' real_dp_dpc_driver1a.out >> ../testing.summary
+grep 'Final L' real_dp_dpc_driver1a.out >> ../testing.summary
 echo 'error statments:' >> ../testing.summary
 grep 'failed' real_dp_dpc_driver1a.out >> ../testing.summary
-echo 'eigenvalues' >> ../testing.summary
-sed '7,11!d' real_dp_1a_dpc_vals.json >> ../testing.summary
 echo '' >> ../testing.summary
 mv real_dp_spc_driver1a.out real_dp_spc_driver1a.out.old 2>/dev/null
 echo 'solve for reference problem with Jacobi-Davidson preconditioner' >> ../testing.summary
@@ -66,9 +63,8 @@ echo 'test/real_dp_testing.results/ref_1a/real_dp_spc_driver1a.out' >> ../testin
 mv real_dp_1a_vals.json real_dp_1a_spc_vals.json
 mv real_dp_1a_vecs.json real_dp_1a_spc_vecs.json
 grep 'Converged' real_dp_spc_driver1a.out >> ../testing.summary
+grep 'Final L' real_dp_spc_driver1a.out >> ../testing.summary
 echo 'error statments:' >> ../testing.summary
 grep 'failed' real_dp_spc_driver1a.out >> ../testing.summary
-echo 'eigenvalues' >> ../testing.summary
-sed '7,11!d' real_dp_1a_spc_vals.json >> ../testing.summary
 echo '' >> ../testing.summary
 echo '~~~~~Real Double reference_a tests done~~~~~'
