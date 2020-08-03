@@ -27,11 +27,9 @@ echo 'test/real_dp_testing.results/random_1b/real_dp_npc_driver1b.out' >> ../tes
 ../../../src/real_dp_test/driver1b_real_dp -precon none > real_dp_npc_driver1b.out
 mv real_dp_1b_vecs.json real_dp_1b_npc_vecs.json
 grep 'Converged' real_dp_npc_driver1b.out >> ../testing.summary
+grep 'Final Lagrangian' real_dp_npc_driver1b.out >> ../testing.summary
 echo 'error statments:' >> ../testing.summary
 grep 'failed' real_dp_npc_driver1b.out >> ../testing.summary
-echo 'lagrangian:' >> ../testing.summary
-grep 'Final Lagrangian' real_dp_npc_driver1b.out >> ../testing.summary
-sed '7,9!d' real_dp_1b_npc_lagr.json >> ../testing.summary
 echo '' >> ../testing.summary
 mv real_dp_apc_driver1b.out real_dp_apc_driver1b.out.old 2>/dev/null
 echo 'solve reference problem with approximate spectra preconditioner' >> ../testing.summary
@@ -40,11 +38,9 @@ echo 'test/real_dp_testing.results/random_1b/real_dp_apc_driver1b.out' >> ../tes
 ../../../src/real_dp_test/driver1b_real_dp -precon approx_spectra > real_dp_apc_driver1b.out
 mv real_dp_1b_vecs.json real_dp_1b_apc_vecs.json
 grep 'Converged' real_dp_apc_driver1b.out >> ../testing.summary
+grep 'Final Lagrangian' real_dp_apc_driver1b.out >> ../testing.summary
 echo 'error statments:' >> ../testing.summary
 grep 'failed' real_dp_apc_driver1b.out >> ../testing.summary
-echo 'lagrangian:' >> ../testing.summary
-grep 'Final Lagrangian' real_dp_apc_driver1b.out >> ../testing.summary
-sed '7,9!d' real_dp_1b_apc_lagr.json >> ../testing.summary
 echo '' >> ../testing.summary
 mv real_dp_spc_driver1b.out real_dp_spc_driver1b.out.old 2>/dev/null
 echo 'solve reference problem with Jacobi-Davidson preconditioner' >> ../testing.summary
@@ -53,10 +49,8 @@ echo 'test/real_dp_testing.results/random_1b/real_dp_spc_driver1b.out' >> ../tes
 ../../../src/real_dp_test/driver1b_real_dp -precon sleijpen > real_dp_spc_driver1b.out
 mv real_dp_1b_vecs.json real_dp_1b_spc_vecs.json
 grep 'Converged' real_dp_spc_driver1b.out >> ../testing.summary
+grep 'Final Lagrangian' real_dp_spc_driver1b.out >> ../testing.summary
 echo 'error statments:' >> ../testing.summary
 grep 'failed' real_dp_spc_driver1b.out >> ../testing.summary
-echo 'lagrangian:' >> ../testing.summary
-grep 'Final Lagrangian' real_dp_spc_driver1b.out >> ../testing.summary
-sed '7,9!d' real_dp_1b_spc_lagr.json >> ../testing.summary
 echo '' >> ../testing.summary
 echo '~~~~~Real Double reference_b test done~~~~~'

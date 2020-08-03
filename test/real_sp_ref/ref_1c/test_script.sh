@@ -29,63 +29,47 @@ echo 'solve reference problem with no preconditioner' >> ../testing.summary
 echo 'test output in' >> ../testing.summary
 echo 'test/real_sp_testing.results/ref_1c/real_sp_npc_driver1c.out' >> ../testing.summary
 ../../../src/real_sp_test/driver1c_real_sp -precon none > real_sp_npc_driver1c.out
-mv real_sp_1c_lagr.json real_sp_1c_npc_lagr.json
 mv real_sp_1c_vecs.json real_sp_1c_npc_vecs.json
 mv real_sp_1c_indx.json real_sp_1c_npc_indx.json
 grep 'Converged' real_sp_npc_driver1c.out >> ../testing.summary
+grep 'Final L' real_sp_npc_driver1c.out >> ../testing.summary
 echo 'error statments:' >> ../testing.summary
 grep 'failed' real_sp_npc_driver1c.out >> ../testing.summary
-echo 'for frequencies:' >> ../testing.summary
-sed '7,12!d' real_sp_1c_npc_indx.json >> ../testing.summary
-echo 'lagrangian:' >> ../testing.summary
-sed '7,12!d' real_sp_1c_npc_lagr.json >> ../testing.summary
 echo '' >> ../testing.summary
 mv real_sp_apc_driver1c.out real_sp_apc_driver1c.out.old 2>/dev/null
 echo 'solve reference problem with approximate spectra preconditioner' >> ../testing.summary
 echo 'test output in' >> ../testing.summary
 echo 'test/real_sp_testing.results/ref_1c/real_sp_apc_driver1c.out' >> ../testing.summary
-../../../src/real_sp_test/driver1c_real_sp -precon approx_spectra > real_sp_apc_driver1c.out
-mv real_sp_1c_lagr.json real_sp_1c_apc_lagr.json
+../../../src/real_sp_test/driver1c_real_sp -precon conjugate_gradient > real_sp_apc_driver1c.out
 mv real_sp_1c_vecs.json real_sp_1c_apc_vecs.json
 mv real_sp_1c_indx.json real_sp_1c_apc_indx.json
 grep 'Converged' real_sp_apc_driver1c.out >> ../testing.summary
+grep 'Final L' real_sp_apc_driver1c.out >> ../testing.summary
 echo 'error statments:' >> ../testing.summary
 grep 'failed' real_sp_apc_driver1c.out >> ../testing.summary
-echo 'for frequencies:' >> ../testing.summary
-sed '7,12!d' real_sp_1c_apc_indx.json >> ../testing.summary
-echo 'lagrangian:' >> ../testing.summary
-sed '7,12!d' real_sp_1c_apc_lagr.json >> ../testing.summary
 echo '' >> ../testing.summary
 mv real_sp_dpc_driver1c.out real_sp_dpc_driver1c.out.old 2>/dev/null
 echo 'solve reference problem with davidson preconditioner' >> ../testing.summary
 echo 'test output in' >> ../testing.summary
 echo 'test/real_sp_testing.results/ref_1c/real_sp_dpc_driver1c.out' >> ../testing.summary
 ../../../src/real_sp_test/driver1c_real_sp -precon davidson > real_sp_dpc_driver1c.out
-mv real_sp_1c_lagr.json real_sp_1c_dpc_lagr.json
 mv real_sp_1c_vecs.json real_sp_1c_dpc_vecs.json
 mv real_sp_1c_indx.json real_sp_1c_dpc_indx.json
 grep 'Converged' real_sp_dpc_driver1c.out >> ../testing.summary
+grep 'Final L' real_sp_dpc_driver1c.out >> ../testing.summary
 echo 'error statments:' >> ../testing.summary
 grep 'failed' real_sp_dpc_driver1c.out >> ../testing.summary
-echo 'for frequencies:' >> ../testing.summary
-sed '7,12!d' real_sp_1c_dpc_indx.json >> ../testing.summary
-echo 'lagrangian:' >> ../testing.summary
-sed '7,12!d' real_sp_1c_dpc_lagr.json >> ../testing.summary
 echo '' >> ../testing.summary
 mv real_sp_spc_driver1c.out real_sp_spc_driver1c.out.old 2>/dev/null
 echo 'solve reference problem with Jacobi-Davidson preconditioner' >> ../testing.summary
 echo 'test output in' >> ../testing.summary
 echo 'test/real_sp_testing.results/ref_1c/real_sp_spc_driver1c.out' >> ../testing.summary
 ../../../src/real_sp_test/driver1c_real_sp -precon sleijpen > real_sp_spc_driver1c.out
-mv real_sp_1c_lagr.json real_sp_1c_spc_lagr.json
 mv real_sp_1c_vecs.json real_sp_1c_spc_vecs.json
 mv real_sp_1c_indx.json real_sp_1c_spc_indx.json
 grep 'Converged' real_sp_spc_driver1c.out >> ../testing.summary
+grep 'Final L' real_sp_spc_driver1c.out >> ../testing.summary
 echo 'error statments:' >> ../testing.summary
 grep 'failed' real_sp_spc_driver1c.out >> ../testing.summary
-echo 'for frequencies:' >> ../testing.summary
-sed '7,12!d' real_sp_1c_spc_indx.json >> ../testing.summary
-echo 'lagrangian:' >> ../testing.summary
-sed '7,12!d' real_sp_1c_spc_lagr.json >> ../testing.summary
 echo '' >> ../testing.summary
 echo '~~~~~Real Single reference_c test done~~~~~'
