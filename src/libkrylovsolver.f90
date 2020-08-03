@@ -2297,9 +2297,8 @@ contains
 !--------------------------------------------------------------------
   subroutine problem_a_solver1(&
     & krylov_problem_a,&
-    & approx_spectra,krylov_start,&
+    & krylov_start,&
     & krylov_guess,krylov_mvp,&
-    & full_solutions,&
     & krylov_output_a,ierr)
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
@@ -2409,7 +2408,7 @@ contains
 !! Arrays that are allocated after krylov problem
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !! filled in with the guess of the spectrum
-    real(kind_float), intent(in) :: approx_spectra(:)
+!    real(kind_float), intent(in) :: approx_spectra(:)
 !< approximation of spectra of problem = approx_spectra = D
 !    logical :: jconverged(:)
 !< Indicates which roots are converged
@@ -2445,7 +2444,7 @@ contains
 !< solutions = eigenvectors of current subspace calculation that are relevant = x
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !! filled in between ritz and norms
-    type(base), intent(inout) :: full_solutions(:,:)
+!    type(base), intent(inout) :: full_solutions(:,:)
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !! filled in at krylov_a_norms
 !    real(kind_float) :: dominance
@@ -4160,9 +4159,9 @@ contains
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
   subroutine problem_b_solver1(&
-    & krylov_problem_b,approx_spectra,rhs,&
+    & krylov_problem_b,&
     & krylov_start,krylov_guess,&
-    & krylov_mvp,full_solutions,krylov_output_b,ierr)
+    & krylov_mvp,krylov_output_b,ierr)
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
 !
@@ -4271,9 +4270,9 @@ contains
 !! Arrays that are allocated after krylov problem
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !! filled in with the guess of the spectrum
-    real(kind_float), intent(in) :: approx_spectra(:)
+!    real(kind_float), intent(in) :: approx_spectra(:)
 !< approximation of spectra of problem = approx_spectra = D
-    type(base), intent(in) :: rhs(:,:)
+!   type(base), intent(in) :: rhs(:,:)
 !< RHS of problem = rhs = P
 !    logical, allocatable :: jconverged(:)
 !< logical for determining which roots are converged
@@ -4309,7 +4308,7 @@ contains
 !< solutions = eigenvectors of current subspace calculation that are relevant = x
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !! filled in at between ritz and norms
-    type(base), intent(inout) :: full_solutions(:,:)
+!    type(base), intent(inout) :: full_solutions(:,:)
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !! filled in at krylov_b_norms
     type(base), allocatable :: residuals(:,:)
@@ -4469,7 +4468,7 @@ contains
 !    end if
 
     call krylov_start%lkl_start(nbasis,nrhs,&
-  &        approx_spectra,nstart,ierr)
+  &        krylov_problem_b%approx_spectra,nstart,ierr)
     if (ierr.ne.0) then
       if (iverb.ge.0) then
         print *, 'class(user_krylov_start_subroutine) function failed'
@@ -4701,7 +4700,8 @@ contains
         end if
         associate(interfacing_bv => basis_vectors%element)
           call krylov_guess%lkl_guess(nbasis,nstart,k4,&
-  &             approx_spectra,interfacing_bv(1:nbasis,1:nstart),&
+  &             krylov_problem_b%approx_spectra,&
+  &             interfacing_bv(1:nbasis,1:nstart),&
   &             ierr)
         end associate
         if (ierr.ne.0) then
@@ -4723,7 +4723,8 @@ contains
       end if
       associate(interfacing_bv => basis_vectors%element)
         call krylov_guess%lkl_guess(nbasis,nstart,0,&
-  &       approx_spectra,interfacing_bv(1:nbasis,1:nstart),&
+  &       krylov_problem_b%approx_spectra,&
+  &       interfacing_bv(1:nbasis,1:nstart),&
   &       ierr)
       end associate
       if (ierr.ne.0) then
@@ -4911,7 +4912,7 @@ contains
       zero_kb = real(0,kind=kind_float)
       call ggemm('c','n',nsubspace,nrhs,nbasis,one_kb,&
 &       basis_vectors(1:nbasis,1:nsubspace),nbasis,&
-&       rhs(1:nbasis,1:nrhs),nbasis,&
+&       krylov_problem_b%rhs(1:nbasis,1:nrhs),nbasis,&
 &       zero_kb,&
 &       proj_rhs(1:nsubspace,1:nrhs),&
 &       nsubspace)
@@ -4943,11 +4944,11 @@ contains
         one_kb = real(1,kind=kind_float)
         zero_kb = real(0,kind=kind_float)
         call ggemm('c','n',(nstart-k1),nrhs,nbasis,one_kb,&
-&         basis_vectors(1:nbasis,(k1+1):nsubspace),nbasis,&
-&         rhs(1:nbasis,1:nrhs),nbasis,&
-&         zero_kb,&
-&         proj_rhs((k1+1):nsubspace,1:nrhs),&
-&         nsubspace)
+  &         basis_vectors(1:nbasis,(k1+1):nsubspace),nbasis,&
+  &         krylov_problem_b%rhs(1:nbasis,1:nrhs),nbasis,&
+  &         zero_kb,&
+  &         proj_rhs((k1+1):nsubspace,1:nrhs),&
+  &         nsubspace)
         call array_print_rstrt(rname,nsubspace,nrhs,&
   &       proj_rhs(1:nsubspace,1:nrhs),iverb,ierr)
         ierr = 0
@@ -4956,7 +4957,8 @@ contains
 
     do j = 1, nsubspace
       avproduct(1:nbasis,j) = mvproduct(1:nbasis,j) &
-  &      + (basis_vectors(1:nbasis,j) * approx_spectra(1:nbasis))
+  &      + (basis_vectors(1:nbasis,j) &
+  &      * krylov_problem_b%approx_spectra(1:nbasis))
     end do
 
     call krylov_rayleigh(nbasis,nsubspace,&
@@ -5053,16 +5055,17 @@ contains
   &      basis_vectors,nbasis,&
   &      solutions,maxsubspace,&
   &      zero_kb,&
-  &      full_solutions,&
+  &      krylov_output_b%solutions,&
   &      nbasis)
 
 ! call krylov norms subroutine
       call krylov_b_norms(nbasis,nsubspace,nrhs,&
   &     mvproduct(1:nbasis,1:nsubspace),& 
-  &     basis_vectors(1:nbasis,1:nsubspace),full_solutions,& 
+  &     basis_vectors(1:nbasis,1:nsubspace),&
+  &     krylov_output_b%solutions,& 
   &     solutions(1:nsubspace,1:nrhs),&
   &     overlap(1:nsubspace,1:nsubspace),&
-  &     rhs,approx_spectra,&
+  &     krylov_problem_b%rhs,krylov_problem_b%approx_spectra,&
   &     residuals,&
   &     krylov_output_b%fro_norm,nresiduals,iverb,ierr)
       if (ierr.ne.0) then
@@ -5076,10 +5079,11 @@ contains
 
 !! determine residuals
       call krylov_b_residue(nbasis,nsubspace,nrhs,&
-  &     mvproduct(1:nbasis,1:nsubspace),full_solutions,&
+  &     mvproduct(1:nbasis,1:nsubspace),&
+  &     krylov_output_b%solutions,&
   &     solutions(1:nsubspace,1:nrhs),&
-  &     rhs,&
-  &     approx_spectra,precon_string,&
+  &     krylov_problem_b%rhs,&
+  &     krylov_problem_b%approx_spectra,precon_string,&
   &     residuals,&
   &     largest_sv,&
   &     nresiduals,iverb,ierr)
@@ -5205,7 +5209,7 @@ contains
         ierr = 0
 !! Putting X(full solutions) as new previous V(basis)
         basis_vectors(1:nbasis,1:nrhs) = &
-  &      full_solutions(1:nbasis,1:nrhs)
+  &      krylov_output_b%solutions(1:nbasis,1:nrhs)
 !! set nsubspace to new value
         nsubspace = nrhs
 !!! SVD of saved vectors to improve condition number
@@ -5260,7 +5264,7 @@ contains
 !! generate fresh proj_RHS as well
         call ggemm('c','n',nsubspace,nrhs,nbasis,one_kb,&
   &       basis_vectors(1:nbasis,1:nsubspace),nbasis,&
-  &       rhs(1:nbasis,1:nrhs),nbasis,&
+  &       krylov_problem_b%rhs(1:nbasis,1:nrhs),nbasis,&
   &       zero_kb,&
   &       proj_rhs(1:nsubspace,1:nrhs),&
   &       nsubspace)
@@ -5284,7 +5288,8 @@ contains
         end if
         do j = 1, nsubspace
           avproduct(1:nbasis,j) = mvproduct(1:nbasis,j) &
-  &       + ( basis_vectors(1:nbasis,j) * approx_spectra(1:nbasis))
+  &       + ( basis_vectors(1:nbasis,j) &
+  &       * krylov_problem_b%approx_spectra(1:nbasis))
         end do
         call krylov_rayleigh(nbasis,nsubspace,&
   &         avproduct(1:nbasis,1:nsubspace),&
@@ -5314,7 +5319,7 @@ contains
 !! need to increase RHS as well
         call ggemm('c','n',nresiduals,nrhs,nbasis,one_kb,&
   &       basis_vectors(1:nbasis,(prev_nsubspace+1):nsubspace),nbasis,&
-  &       rhs(1:nbasis,1:nrhs),nbasis,&
+  &       krylov_problem_b%rhs(1:nbasis,1:nrhs),nbasis,&
   &       zero_kb,&
   &       proj_rhs((prev_nsubspace+1):nsubspace,1:nrhs),&
   &       nresiduals)
@@ -5337,12 +5342,14 @@ contains
         end if
         do j = prev_nsubspace+1 , nsubspace
           avproduct(1:nbasis,j) = mvproduct(1:nbasis,j)& 
-  &    +  (basis_vectors(1:nbasis,j) * approx_spectra(1:nbasis))
+  &    +  (basis_vectors(1:nbasis,j) &
+  &    * krylov_problem_b%approx_spectra(1:nbasis))
         end do
 ! expand rayleigh matrix
         call krylov_expand(nbasis,nsubspace,&
   &       nresiduals,prev_nsubspace,&
-  &       approx_spectra,avproduct(1:nbasis,1:nsubspace),&
+  &       krylov_problem_b%approx_spectra,&
+  &       avproduct(1:nbasis,1:nsubspace),&
   &       basis_vectors(1:nbasis,1:nsubspace),&
   &       rayleigh(1:nsubspace,1:nsubspace),&
   &       rayleigh_sq(1:nsubspace,1:nsubspace),iverb,ierr)
@@ -5436,7 +5443,7 @@ contains
     else ! iterations exited with no serious errors, possible useful data!
       if (irestart.ge.1) then ! user asked for save files
         call array_print_rstrt(sname,nbasis,nrhs,&
-  &       full_solutions(1:nbasis,1:nrhs),iverb,ierr)
+  &       krylov_output_b%solutions(1:nbasis,1:nrhs),iverb,ierr)
         if (ierr.eq.0) then ! save file printed! safe to delete restart
           call array_del_rstrt(vname,iverb,ierr)
           ! no check for ierr, no action on fail
@@ -6535,9 +6542,8 @@ contains
 !--------------------------------------------------------------------
   subroutine problem_c_solver1(&
     & krylov_problem_c,&
-    & approx_spectra,omega,rhs,krylov_start,&
+    & krylov_start,&
     & krylov_guess,krylov_mvp,&
-    & full_solutions,&
     & krylov_output_c,ierr)
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
@@ -6652,11 +6658,11 @@ contains
 !! Arrays that are allocated after krylov problem
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !! filled in with the guess of the spectrum
-    real(kind_float), intent(in) :: approx_spectra(:)
+!    real(kind_float), intent(in) :: approx_spectra(:)
 !< approximation of spectra of problem = approx_spectra = D
-    real(kind_float), intent(in) :: omega(:) 
+!    real(kind_float), intent(in) :: omega(:) 
 !< frequencies to be solved for = omega
-    type(base), intent(in) :: rhs(:,:)
+!    type(base), intent(in) :: rhs(:,:)
 !< RHS of problem = rhs = P
 !    logical, allocatable :: jconverged(:)
 !< logical for determining which roots are converged
@@ -6692,7 +6698,7 @@ contains
 !    type(base), allocatable ::  lagrangian(:)
 !< solutions = eigenvectors of current subspace calculation that are relevant = x
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    type(base), intent(inout) :: full_solutions(:,:)
+!    type(base), intent(inout) :: full_solutions(:,:)
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !! filled in at krylov_a_norms
     type(base), allocatable :: residuals(:,:)
@@ -6900,7 +6906,7 @@ contains
 !    end if
 
     call krylov_start%lkl_start(nbasis,nroots,&
-  &        approx_spectra,nstart,ierr)
+  &        krylov_problem_c%approx_spectra,nstart,ierr)
     if (ierr.ne.0) then
       if (iverb.ge.0) then
         print *, 'class(user_krylov_start_subroutine) function failed'
@@ -7144,7 +7150,8 @@ contains
         end if
         associate(interfacing_bv => basis_vectors%element)
           call krylov_guess%lkl_guess(nbasis,nstart,k4,&
-  &             approx_spectra,interfacing_bv(1:nbasis,1:nstart),&
+  &             krylov_problem_c%approx_spectra,&
+  &             interfacing_bv(1:nbasis,1:nstart),&
   &             ierr)
         end associate
         if (ierr.ne.0) then
@@ -7166,7 +7173,8 @@ contains
       end if
       associate(interfacing_bv => basis_vectors%element)
         call krylov_guess%lkl_guess(nbasis,nstart,0,&
-  &       approx_spectra,interfacing_bv(1:nbasis,1:nstart),&
+  &       krylov_problem_c%approx_spectra,&
+  &       interfacing_bv(1:nbasis,1:nstart),&
   &       ierr)
       end associate
       if (ierr.ne.0) then
@@ -7317,7 +7325,8 @@ contains
 
     do j = 1, nsubspace
       avproduct(1:nbasis,j) = mvproduct(1:nbasis,j) &
-  &      + (basis_vectors(1:nbasis,j) * approx_spectra(1:nbasis))
+  &      + (basis_vectors(1:nbasis,j) &
+  &      * krylov_problem_c%approx_spectra(1:nbasis))
     end do
 
     call krylov_rayleigh(nbasis,nsubspace,&
@@ -7378,7 +7387,7 @@ contains
       zero_kb = real(0,kind=kind_float)
       call ggemm('c','n',nsubspace,nrhs,nbasis,one_kb,&
 &       basis_vectors(1:nbasis,1:nsubspace),nbasis,&
-&       rhs(1:nbasis,1:nrhs),nbasis,&
+&       krylov_problem_c%rhs(1:nbasis,1:nrhs),nbasis,&
 &       zero_kb,&
 &       proj_rhs(1:nsubspace,1:nrhs),&
 &       nsubspace)
@@ -7411,7 +7420,7 @@ contains
         zero_kb = real(0,kind=kind_float)
         call ggemm('c','n',(nstart-k1),nrhs,nbasis,one_kb,&
 &         basis_vectors(1:nbasis,(k1+1):nsubspace),nbasis,&
-&         rhs(1:nbasis,1:nrhs),nbasis,&
+&         krylov_problem_c%rhs(1:nbasis,1:nrhs),nbasis,&
 &         zero_kb,&
 &         proj_rhs((k1+1):nsubspace,1:nrhs),&
 &         nsubspace)
@@ -7485,7 +7494,9 @@ contains
   &     cholesky(1:nsubspace,1:nsubspace),&
   &     proj_rhs(1:nsubspace,1:nrhs),&
   &     overlap(1:nsubspace,1:nsubspace),diag_overlap(1:nsubspace),&
-  &     omega,krylov_output_c%lagrangian,solutions(1:nsubspace,1:nroots),iverb,ierr)
+  &     krylov_problem_c%omega,&
+  &     krylov_output_c%lagrangian,solutions(1:nsubspace,1:nroots),&
+  &     iverb,ierr)
       if (ierr.ne.0) then
         if (iverb.ge.0) then
           print *, 'krylov ritz(subspace solve) calculation failed'
@@ -7500,16 +7511,19 @@ contains
   &      basis_vectors,nbasis,&
   &      solutions,maxsubspace,&
   &      zero_kb,&
-  &      full_solutions,&
+  &      krylov_output_c%solutions,&
   &      nbasis)
 
 ! call krylov norms subroutine
       call krylov_c_norms(nbasis,nsubspace,nomega,nrhs,nroots,&
   &     mvproduct(1:nbasis,1:nsubspace),& 
-  &     basis_vectors(1:nbasis,1:nsubspace),full_solutions,& 
+  &     basis_vectors(1:nbasis,1:nsubspace),&
+  &     krylov_output_c%solutions,& 
   &     solutions(1:nsubspace,1:nroots),&
   &     overlap(1:nsubspace,1:nsubspace),&
-  &     omega,rhs,approx_spectra,&
+  &     krylov_problem_c%omega,&
+  &     krylov_problem_c%rhs,&
+  &     krylov_problem_c%approx_spectra,&
   &     residuals,&
   &     krylov_output_c%fro_norm,nresiduals,iverb,ierr)
       if (ierr.ne.0) then
@@ -7523,10 +7537,12 @@ contains
 
 !! determine residuals
       call krylov_c_residue(nbasis,nsubspace,nomega,nrhs,nroots,&
-  &     mvproduct(1:nbasis,1:nsubspace),full_solutions,&
+  &     mvproduct(1:nbasis,1:nsubspace),&
+  &     krylov_output_c%solutions,&
   &     solutions(1:nsubspace,1:nroots),&
-  &     omega,rhs,&
-  &     approx_spectra,precon_string,&
+  &     krylov_problem_c%omega,&
+  &     krylov_problem_c%rhs,&
+  &     krylov_problem_c%approx_spectra,precon_string,&
   &     residuals,&
   &     largest_sv,&
   &     nresiduals,iverb,ierr)
@@ -7652,7 +7668,7 @@ contains
         ierr = 0
 !! Putting X(full solutions) as new previous V(basis)
         basis_vectors(1:nbasis,1:nroots) = &
-  &      full_solutions(1:nbasis,1:nroots)
+  &      krylov_output_c%solutions(1:nbasis,1:nroots)
 !! set nsubspace to new value
         nsubspace = nroots
 !!! SVD of saved vectors to improve condition number
@@ -7707,7 +7723,7 @@ contains
 !! generate fresh proj_RHS as well
         call ggemm('c','n',nsubspace,nrhs,nbasis,one_kb,&
   &       basis_vectors(1:nbasis,1:nsubspace),nbasis,&
-  &       rhs(1:nbasis,1:nrhs),nbasis,&
+  &       krylov_problem_c%rhs(1:nbasis,1:nrhs),nbasis,&
   &       zero_kb,&
   &       proj_rhs(1:nsubspace,1:nrhs),&
   &       nsubspace)
@@ -7731,7 +7747,8 @@ contains
         end if
         do j = 1, nsubspace
           avproduct(1:nbasis,j) = mvproduct(1:nbasis,j) &
-  &       + ( basis_vectors(1:nbasis,j) * approx_spectra(1:nbasis))
+  &       + ( basis_vectors(1:nbasis,j) &
+  &       * krylov_problem_c%approx_spectra(1:nbasis))
         end do
         call krylov_rayleigh(nbasis,nsubspace,&
   &         avproduct(1:nbasis,1:nsubspace),&
@@ -7761,7 +7778,7 @@ contains
 !! need to increase RHS as well
         call ggemm('c','n',nresiduals,nrhs,nbasis,one_kb,&
   &       basis_vectors(1:nbasis,(prev_nsubspace+1):nsubspace),nbasis,&
-  &       rhs(1:nbasis,1:nrhs),nbasis,&
+  &       krylov_problem_c%rhs(1:nbasis,1:nrhs),nbasis,&
   &       zero_kb,&
   &       proj_rhs((prev_nsubspace+1):nsubspace,1:nrhs),&
   &       nresiduals)
@@ -7784,12 +7801,14 @@ contains
         end if
         do j = prev_nsubspace+1 , nsubspace
           avproduct(1:nbasis,j) = mvproduct(1:nbasis,j)& 
-  &    +  (basis_vectors(1:nbasis,j) * approx_spectra(1:nbasis))
+  &    +  (basis_vectors(1:nbasis,j) &
+  &    *  krylov_problem_c%approx_spectra(1:nbasis))
         end do
 ! expand rayleigh matrix
         call krylov_expand(nbasis,nsubspace,&
   &       nresiduals,prev_nsubspace,&
-  &       approx_spectra,avproduct(1:nbasis,1:nsubspace),&
+  &       krylov_problem_c%approx_spectra,&
+  &       avproduct(1:nbasis,1:nsubspace),&
   &       basis_vectors(1:nbasis,1:nsubspace),&
   &       rayleigh(1:nsubspace,1:nsubspace),&
   &       rayleigh_sq(1:nsubspace,1:nsubspace),iverb,ierr)
@@ -7883,7 +7902,7 @@ contains
     else ! iterations exited with no serious errors, possible useful data!
       if (irestart.ge.1) then ! user asked for save files
         call array_print_rstrt(sname,nbasis,nroots,&
-  &       full_solutions(1:nbasis,1:nroots),iverb,ierr)
+  &       krylov_output_c%solutions(1:nbasis,1:nroots),iverb,ierr)
         if (ierr.eq.0) then ! save file printed! safe to delete restart
           call array_del_rstrt(vname,iverb,ierr)
           ! no check for ierr, no action on fail
