@@ -419,9 +419,8 @@ contains
 !--------------------------------------------------------------------
 ! Output Parameters
 !--------------------------------------------------------------------
-!!  approximate spectra
-    class(libkrylov_problem_a_real_dp) :: problem_a
 !!  output parameters
+    class(libkrylov_problem_a_real_dp) :: problem_a
     class(libkrylov_output_a_real_dp) :: output_a
 !--------------------------------------------------------------------
 !  Local Variables
