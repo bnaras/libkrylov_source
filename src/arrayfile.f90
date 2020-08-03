@@ -152,7 +152,7 @@ contains
     read(unit=funit,fmt=*, &
   &       iostat=ierr)
     if (ierr.ne.0) then
-      print *, 'file missing comment line!'
+      print *, 'file missing legend line!'
       close(unit=funit,iostat=ierr,status='keep')
       ierr = -7
       return
@@ -295,7 +295,7 @@ contains
       ierr = -9
       return
     end if 
-!! skip label of columns here
+!! skip label of columns here !!SWAP WITH ABOVE SKIP
     read(unit=funit,fmt=*, &
   &       iostat=ierr)
     if (ierr.ne.0) then
@@ -322,6 +322,27 @@ contains
         obj(k1,k2) = dummy
       end if
     end do
+
+!!! loop to read values
+!    do
+!      read(unit=funit,&
+!  &      fmt='(11x,i10,7x,i10,1x)', &
+!  &         iostat=ierr) k1,k2
+!      if (read_err.ne.0) then
+!        ierr = read_err
+!        exit
+!      else if (k1.eq.0) then ! reading last entry
+!        exit
+!      end if
+!      read(unit=funit,&
+!  &      fmt='(13x,'//base_format_string//',3x)', &
+!  &         iostat=ierr) dummy
+!      if (k1.gt.n1) then
+!      else if (k2.gt.n2) then
+!      else ! assign value only if space is allocated
+!        obj(k1,k2) = dummy
+!      end if
+!    end do
 
 !! close file after reading
     close(unit=funit,iostat=ierr,status='keep')
@@ -402,6 +423,8 @@ contains
   &       iostat=ierr) '  "dimensions":[ ', n1,', ',n2,'],'
     write(unit=funit,fmt='(a18,a32,a2)', &
   &       iostat=ierr) '  "element_type":"',base_print_string,'",'
+!    write(unit=funit,fmt='(a17,a32,a3)', &
+!  &   iostat=ierr) '"legend":["val":"',base_legend_string,'"],'
     write(unit=funit,fmt='(a12)', &
   &       iostat=ierr) '  "array": ['
     write(unit=funit,fmt='(a2,18x,a3,5x,a6,3x,a8,a32)', &
@@ -413,6 +436,12 @@ contains
         write(unit=funit,&
   &      fmt='(4x,a9,i10,a1,i10,a2,'//base_format_string//',a6)', &
   &         iostat=ierr) '{ "val":[',k1,',',k2,',"',obj(k1,k2),'" ] },'
+!        write(unit=funit,&
+!  &      fmt='(4x,a7,i10,a7,i10,a1)', &
+!  &         iostat=ierr) '{"row":',k1,',"col":',k2,','
+!        write(unit=funit,&
+!  &      fmt='(6x,a7,'//base_format_string//',a3)', &
+!  &         iostat=ierr) '"val":"',obj(k1,k2),'"},'
       end do
     end do
 
@@ -420,6 +449,12 @@ contains
     write(unit=funit,&
   &  fmt='(4x,a9,i10,a1,i10,a10)', &
   &       iostat=ierr) '{ "val":[',0,',',0,', null ] }'
+!    write(unit=funit,&
+!  &      fmt='(4x,a7,i10,a7,i10,a1)', &
+!  &         iostat=ierr) '{"row":',0,',"col":',0,','
+!     write(unit=funit,&
+!  &      fmt='(6x,a13)', &
+!  &         iostat=ierr) '"val": null }'
     write(unit=funit,fmt='(a3)', &
   &       iostat=ierr) '  ]'
     write(unit=funit,fmt='(a1)', &
@@ -553,7 +588,7 @@ contains
     read(unit=funit,fmt=*, &
   &       iostat=ierr)
     if (ierr.ne.0) then
-      print *, 'file missing comment line!'
+      print *, 'file missing legend line!'
       close(unit=funit,iostat=ierr,status='keep')
       ierr = -7
       return
@@ -692,7 +727,7 @@ contains
       ierr = -9
       return
     end if 
-!! skip header of columns
+!! skip header of columns !! SWAP WITH ABOVE SKIP
     read(unit=funit,fmt=*, &
   &       iostat=ierr)
     if (ierr.ne.0) then
@@ -718,6 +753,27 @@ contains
         obj(k) = dummy
       end if
     end do
+
+!!! loop to read values
+!    do
+!      read(unit=funit,&
+!  &      fmt='(11x,i10,1x)', &
+!  &         iostat=ierr) k
+!      if (read_err.ne.0) then
+!        ierr = read_err
+!        exit
+!      else if (k1.eq.0) then ! reading last entry
+!        exit
+!      end if
+!      read(unit=funit,&
+!  &      fmt='(13x,'//float_format_string//',3x)', &
+!  &         iostat=ierr) dummy
+!      if (k1.gt.n1) then
+!      else if (k2.gt.n2) then
+!      else ! only read in if space is allocated
+!        obj(k1,k2) = dummy
+!      end if
+!    end do
 
 !! close file after reading
     close(unit=funit,iostat=ierr,status='keep')
@@ -795,6 +851,8 @@ contains
     write(unit=funit,fmt='(a15,a32,a2)', &
   &       iostat=ierr) '  "precision":"',float_print_string,'",'
     write(unit=funit,fmt='(a12)', &
+!    write(unit=funit,fmt='(a24)', &
+!  &   iostat=ierr) '"legend":["val":"real"],'
   &       iostat=ierr) '  "array": ['
     write(unit=funit,fmt='(a2,15x,a6,3x,a4)', &
   &   iostat=ierr) '//','column','real'
@@ -804,12 +862,24 @@ contains
       write(unit=funit,&
   &    fmt='(4x,a9,i10,a2,'//float_format_string//',a6)', &
   &       iostat=ierr) '{ "val":[',k,',"',obj(k),'" ] },'
+!        write(unit=funit,&
+!  &      fmt='(4x,a7,i10,a1)', &
+!  &         iostat=ierr) '{"col":',k,',','
+!        write(unit=funit,&
+!  &      fmt='(6x,a7,'//float_format_string//',a3)', &
+!  &         iostat=ierr) '"val":"',obj(k),'"},'
     end do
 
 !! print closing lines include dummy matrix element, for formating
     write(unit=funit,&
   &  fmt='(4x,a9,i10,a10)', &
   &       iostat=ierr) '{ "val":[',0,', null ] }'
+!    write(unit=funit,&
+!  &      fmt='(4x,a7,i10,a1)', &
+!  &         iostat=ierr) '{"col":',0,','
+!     write(unit=funit,&
+!  &      fmt='(6x,a13)', &
+!  &         iostat=ierr) '"val": null }'
     write(unit=funit,fmt='(a3)', &
   &       iostat=ierr) '  ]'
     write(unit=funit,fmt='(a1)', &
