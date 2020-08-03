@@ -2342,7 +2342,7 @@ contains
     class(libkrylov_problem_a_input) :: krylov_problem_a
     class(libkrylov_start_subroutine) ::     krylov_start
     class(libkrylov_guess_subroutine) ::     krylov_guess
-    class(libkrylov_mvp_subroutine) ::       krylov_mvp
+    class(libkrylov_mvprod_subroutine) ::       krylov_mvp
     class(libkrylov_problem_a_output) ::  krylov_output_a
 !--------------------------------------------------------------------
 ! Local Variables
@@ -4206,7 +4206,7 @@ contains
 !    class(libkrylov_matrix_subroutine) ::    krylov_rhs
     class(libkrylov_problem_b_input) :: krylov_problem_b
     class(libkrylov_guess_subroutine) ::     krylov_guess
-    class(libkrylov_mvp_subroutine) ::       krylov_mvp
+    class(libkrylov_mvprod_subroutine) ::       krylov_mvp
     class(libkrylov_problem_b_output) ::  krylov_output_b
 !--------------------------------------------------------------------
 ! Local Variables
@@ -6587,7 +6587,7 @@ contains
     class(libkrylov_start_subroutine) ::  krylov_start
     class(libkrylov_problem_c_input) :: krylov_problem_c
     class(libkrylov_guess_subroutine) ::     krylov_guess
-    class(libkrylov_mvp_subroutine) ::       krylov_mvp
+    class(libkrylov_mvprod_subroutine) ::       krylov_mvp
     class(libkrylov_problem_c_output) ::  krylov_output_c
 !--------------------------------------------------------------------
 ! Local Variables
