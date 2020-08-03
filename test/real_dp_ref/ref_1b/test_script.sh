@@ -35,7 +35,7 @@ mv real_dp_apc_driver1b.out real_dp_apc_driver1b.out.old 2>/dev/null
 echo 'solve reference problem with approximate spectra preconditioner' >> ../testing.summary
 echo 'test output in' >> ../testing.summary
 echo 'test/real_dp_testing.results/random_1b/real_dp_apc_driver1b.out' >> ../testing.summary
-../../../src/real_dp_test/driver1b_real_dp -precon approx_spectra > real_dp_apc_driver1b.out
+../../../src/real_dp_test/driver1b_real_dp -precon conjugate_gradient > real_dp_apc_driver1b.out
 mv real_dp_1b_vecs.json real_dp_1b_apc_vecs.json
 grep 'Converged' real_dp_apc_driver1b.out >> ../testing.summary
 grep 'Final Lagrangian' real_dp_apc_driver1b.out >> ../testing.summary

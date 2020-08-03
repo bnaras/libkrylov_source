@@ -36,7 +36,7 @@ mv cmplx_sp_apc_driver1a.out cmplx_sp_apc_driver1a.out.old 2>/dev/null
 echo 'solve reference problem with approximate spectra preconditioner' >> ../testing.summary
 echo 'test output in' >> ../testing.summary
 echo 'test/cmplx_sp_testing.results/ref_1a/cmplx_sp_apc_driver1a.out' >> ../testing.summary
-../../../src/cmplx_sp_test/driver1a_cmplx_sp -precon approx_spectra > cmplx_sp_apc_driver1a.out
+../../../src/cmplx_sp_test/driver1a_cmplx_sp -precon conjugate_gradient > cmplx_sp_apc_driver1a.out
 mv cmplx_sp_1a_vals.json cmplx_sp_1a_apc_vals.json
 mv cmplx_sp_1a_vecs.json cmplx_sp_1a_apc_vecs.json
 grep 'Converged' cmplx_sp_apc_driver1a.out >> ../testing.summary
