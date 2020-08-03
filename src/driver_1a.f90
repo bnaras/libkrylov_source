@@ -60,8 +60,8 @@ program krylovdriver_1a
   character(len=32),target :: preconditioner = ''
 ! contains the matrix problem, read in from file
   type(base), target, allocatable :: krylov_a(:,:)
-  real(kind_float), target, allocatable :: krylov_d(:)
-  type(base), allocatable :: krylov_x(:,:)
+!  real(kind_float), target, allocatable :: krylov_d(:)
+!  type(base), allocatable :: krylov_x(:,:)
 ! character string to become id_string in solver
   character(len=22), target :: a1_string = ''
 ! character string for file name that contains the problem
@@ -155,9 +155,8 @@ program krylovdriver_1a
         ierr = 20
         call problem_a_solver1(&
   &       krylov_problem, &
-  &       krylov_d,krylov_s_ext_in, &
+  &       krylov_s_ext_in, &
   &       krylov_g_uv,krylov_mvp, &
-  &       krylov_x, &
   &       krylov_output,ierr)
         stop
       else if (input.eq.'-precon') then
@@ -308,16 +307,14 @@ program krylovdriver_1a
   if (krylov_s_ext_in%nstart.le.0) then
     call problem_a_solver1(&
   &   krylov_problem, &
-  &   krylov_d,krylov_s_eg, &
+  &   krylov_s_eg, &
   &   krylov_g_uv,krylov_mvp, &
-  &   krylov_x, &
   &   krylov_output,ierr)
   else ! call solver with input nstart
     call problem_a_solver1(&
   &   krylov_problem, &
-  &   krylov_d,krylov_s_ext_in, &
+  &   krylov_s_ext_in, &
   &   krylov_g_uv,krylov_mvp, &
-  &   krylov_x, &
   &   krylov_output,ierr)
   end if
 

@@ -62,13 +62,13 @@ program krylovdriver_1c
   character(len=32), target :: preconditioner = ''
 ! contains the matrix of problem, read in from file
   type(base), target, allocatable :: krylov_a(:,:)
-  real(kind_float), target, allocatable :: krylov_d(:)
-  type(base), allocatable :: krylov_x(:,:)
+!  real(kind_float), target, allocatable :: krylov_d(:)
+!  type(base), allocatable :: krylov_x(:,:)
 ! contains the frequencies of the problem, read in from file
-  real(kind_float), target, allocatable :: krylov_o(:)
+!  real(kind_float), target, allocatable :: krylov_o(:)
   real(kind_float), allocatable :: print_freq(:)
 ! contains the rhs of problem, read in from file
-  type(base), target, allocatable :: krylov_p(:,:)
+!  type(base), target, allocatable :: krylov_p(:,:)
 ! character string to become id_string in solver
   character(len=22), target :: c1_string = ''
 ! character string for file name that is to be read at the moment
@@ -157,9 +157,9 @@ program krylovdriver_1c
       else if (input.eq.'-test') then
         ierr = 20
         call problem_c_solver1(&
-  &     krylov_problem,krylov_d,krylov_o,krylov_p, &
+  &     krylov_problem, &
   &     krylov_s_eg,krylov_g_uv,krylov_mvp, &
-  &     krylov_x,krylov_output,ierr)
+  &     krylov_output,ierr)
         stop
       else if (input.eq.'-precon') then
         k = k + 1
@@ -235,7 +235,7 @@ program krylovdriver_1c
 
 !! allocate array to contain problem
   allocate(krylov_a(nbasis,nbasis))
-  allocate(krylov_d(nbasis))
+  allocate(krylov_problem%approx_spectra(nbasis))
 
 !! read problem array
   call array_read_base(filename_string,nbasis,&
@@ -247,7 +247,7 @@ program krylovdriver_1c
   end if
 
   do j = 1, nbasis
-    krylov_d(j) = krylov_a(j,j)
+    krylov_problem%approx_spectra(j) = krylov_a(j,j)
     krylov_a(j,j) = real(0,kind=kind_float)
   end do
 
@@ -274,10 +274,10 @@ program krylovdriver_1c
       stop
     end if
   !! allocate array to contain problem
-    allocate(krylov_o(nomega))
+    allocate(krylov_problem%omega(nomega))
   !! read problem array size
     call array_read_float(filename_string,nomega,&
-  &   krylov_o,ierr)
+  &   krylov_problem%omega,ierr)
     if (ierr.ne.0) then
       print *, 'solver failed as frequencies can not be read!'
       stop
@@ -325,12 +325,12 @@ program krylovdriver_1c
   nrhs = n5 
 
 !! allocate array to contain problem
-  allocate(krylov_p(nbasis,nrhs))
-  allocate(krylov_x(nbasis,nroots))
+  allocate(krylov_problem%rhs(nbasis,nrhs))
+  allocate(krylov_output%solutions(nbasis,nroots))
 
 !! read problem array
   call array_read_base(filename_string,nbasis,&
-  &    nrhs,krylov_p,ierr)
+  &    nrhs,krylov_problem%rhs,ierr)
 
   if (ierr.ne.0) then
     print *, 'solver failed as rhs can not be read!'
@@ -371,14 +371,14 @@ program krylovdriver_1c
 ! call solver with function to calculate nstart based on electron gas
   if (krylov_s_ext_in%nstart.le.0) then
     call problem_c_solver1(&
-  &   krylov_problem,krylov_d,krylov_o,krylov_p, &
+  &   krylov_problem, &
   &   krylov_s_eg,krylov_g_uv,krylov_mvp, &
-  &   krylov_x,krylov_output,ierr)
+  &   krylov_output,ierr)
   else ! use input for nstart
     call problem_c_solver1(&
-  &   krylov_problem,krylov_d,krylov_o,krylov_p, &
+  &   krylov_problem, &
   &   krylov_s_ext_in,krylov_g_uv,krylov_mvp, &
-  &   krylov_x,krylov_output,ierr)
+  &   krylov_output,ierr)
   end if
 
   print *, 'final ierr value = ',ierr
@@ -392,15 +392,16 @@ program krylovdriver_1c
   allocate(print_freq(nroots))
 
   if (unique_rhs_omega) then
-    print_freq = krylov_o
+    print_freq = krylov_problem%omega
   else
     do j = 1, nomega
-      print_freq(1+(j-1)*nrhs:j*nrhs) = krylov_o(j)
+      print_freq(1+(j-1)*nrhs:j*nrhs) = krylov_problem%omega(j)
     end do
   end if
 
 !! print to file
-  call array_print_base(vector_string,nbasis,nroots,krylov_x,ierr)
+  call array_print_base(vector_string,nbasis,nroots,&
+  &      krylov_output%solutions,ierr)
 
 !! print to file
   call array_print_float(freq_string,nroots,print_freq,ierr)
@@ -410,10 +411,10 @@ program krylovdriver_1c
 
 ! no post calculation operations, everything done within solver
   deallocate(krylov_a)
-  deallocate(krylov_d)
-  deallocate(krylov_x)
-  deallocate(krylov_o)
-  deallocate(krylov_p)
+  deallocate(krylov_problem%approx_spectra)
+  deallocate(krylov_output%solutions)
+  deallocate(krylov_problem%omega)
+  deallocate(krylov_problem%rhs)
   deallocate(print_freq)
 
 !--------------------------------------------------------------------
