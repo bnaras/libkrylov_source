@@ -44,14 +44,14 @@ program krylovdriver_1b
 !--------------------------------------------------------------------
 !  Input Subroutines
 !--------------------------------------------------------------------
-  type(libkrylov_problem_b_subroutine) :: krylov_problem
+  type(libkrylov_problem_b_input) :: krylov_problem
 !  type(kl_approx) :: krylov_approx
   type(lkl_s_elec_gas) :: krylov_s_eg
   type(lkl_s_ext_in) :: krylov_s_ext_in
 !  type(kl_rhs) :: krylov_rhs
   type(lkl_g_unit_vec) :: krylov_g_uv
   type(lkl_mvp_n_mul) :: krylov_mvp
-  type(libkrylov_output_b_subroutine) :: krylov_output
+  type(libkrylov_problem_b_output) :: krylov_output
 !--------------------------------------------------------------------
 ! Local Variables for Subroutines and reading problem
 !--------------------------------------------------------------------
@@ -119,7 +119,7 @@ program krylovdriver_1b
         print *, '-precon       select preconditioner'
         print *, '               available options:'
         print *, '                none'
-        print *, '                approx_spectra'
+        print *, '                conjugate_gradient'
         print *, '                davidson'
         print *, '                sleijpen'
         print *, '                half_sleijpen'
@@ -158,9 +158,9 @@ program krylovdriver_1b
       else if (input.eq.'-test') then
         ierr = 20
         call problem_b_solver1(&
-  &     krylov_problem,krylov_d,krylov_p,&
+  &     krylov_problem,&
   &     krylov_s_eg,krylov_g_uv,krylov_mvp, &
-  &     krylov_x,krylov_output,ierr)
+  &     krylov_output,ierr)
         stop
       else if (input.eq.'-precon') then
         k = k + 1
@@ -239,7 +239,8 @@ program krylovdriver_1b
 
 !! allocate array to contain problem
   allocate(krylov_a(nbasis,nbasis))
-  allocate(krylov_d(nbasis))
+  allocate(krylov_problem%approx_spectra(nbasis))
+!  allocate(krylov_d(nbasis))
 
 !! read problem array
   call array_read_base(filename_string,nbasis,&
@@ -251,7 +252,7 @@ program krylovdriver_1b
   end if
 
   do j = 1, nbasis
-    krylov_d(j) = krylov_a(j,j)
+    krylov_problem%approx_spectra(j) = krylov_a(j,j)
     krylov_a(j,j) = real(0,kind=kind_float)
   end do
 
@@ -283,12 +284,12 @@ program krylovdriver_1b
   nrhs = n4
 
 !! allocate array to contain problem
-  allocate(krylov_p(nbasis,nrhs))
-  allocate(krylov_x(nbasis,nrhs))
+  allocate(krylov_problem%rhs(nbasis,nrhs))
+  allocate(krylov_output%solutions(nbasis,nrhs))
 
 !! read problem array
   call array_read_base(filename_string,nbasis,&
-  &    nrhs,krylov_p,ierr)
+  &    nrhs,krylov_problem%rhs,ierr)
 
   if (ierr.ne.0) then
     print *, 'solver failed as rhs can not be read!'
@@ -321,25 +322,20 @@ program krylovdriver_1b
   krylov_problem%iverb = 5
   krylov_problem%irestart = irestart
 
-  krylov_output%nbasis = nbasis
-  krylov_output%nrhs = nrhs
-  allocate(krylov_output%lagrangian(nrhs))
-  allocate(krylov_output%jconverged(nrhs))
-  allocate(krylov_output%euc_norm(nrhs))
   krylov_mvp%matrix => krylov_a%element
 
 ! call solver with function to calculate nstart based on electron gas
   if (krylov_s_ext_in%nstart.le.0) then
 ! call solver
     call problem_b_solver1(&
-  &   krylov_problem,krylov_d,krylov_p,&
+  &   krylov_problem,&
   &   krylov_s_eg,krylov_g_uv,krylov_mvp, &
-  &   krylov_x,krylov_output,ierr)
+  &   krylov_output,ierr)
   else ! use input nstart
     call problem_b_solver1(&
-  &   krylov_problem,krylov_d,krylov_p,&
+  &   krylov_problem,&
   &   krylov_s_ext_in,krylov_g_uv,krylov_mvp, &
-  &   krylov_x,krylov_output,ierr)
+  &   krylov_output,ierr)
   end if
 
   print *, 'final ierr value = ',ierr
@@ -350,20 +346,16 @@ program krylovdriver_1b
   lagr_string = trim(b1_string)//'_lagr'
 
 ! print to file
- call array_print_base(vector_string,nbasis,nrhs,krylov_x,ierr)
+  call array_print_base(vector_string,nbasis,nrhs,&
+  &  krylov_output%solutions,ierr)
 
-! print to file
- call array_print_base(lagr_string,1,nrhs,krylov_output%lagrangian,ierr)
-
+  print *, 'Final Lagrangian: ',krylov_output%lagrangian
 
 ! no post calculation operations, everything done within solver
   deallocate(krylov_a)
-  deallocate(krylov_d)
-  deallocate(krylov_p)
-  deallocate(krylov_x)
-  deallocate(krylov_output%lagrangian)
-  deallocate(krylov_output%jconverged)
-  deallocate(krylov_output%euc_norm)
+  deallocate(krylov_problem%approx_spectra)
+  deallocate(krylov_problem%rhs)
+  deallocate(krylov_output%solutions)
 
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------

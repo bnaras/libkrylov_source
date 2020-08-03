@@ -42,13 +42,13 @@ program krylovdriver_1a
 !--------------------------------------------------------------------
 !  Input Subroutines
 !--------------------------------------------------------------------
-  type(libkrylov_problem_a_subroutine) :: krylov_problem
+  type(libkrylov_problem_a_input) :: krylov_problem
 !  type(kl_approx) :: krylov_approx
   type(lkl_s_elec_gas) :: krylov_s_eg
   type(lkl_s_ext_in) :: krylov_s_ext_in
   type(lkl_g_unit_vec) :: krylov_g_uv
   type(lkl_mvp_n_mul) :: krylov_mvp
-  type(libkrylov_output_a_subroutine) :: krylov_output
+  type(libkrylov_problem_a_output) :: krylov_output
 !--------------------------------------------------------------------
 ! Local Variables for Subroutines and reading problem
 !--------------------------------------------------------------------
@@ -60,8 +60,8 @@ program krylovdriver_1a
   character(len=32),target :: preconditioner = ''
 ! contains the matrix problem, read in from file
   type(base), target, allocatable :: krylov_a(:,:)
-  real(kind_float), target, allocatable :: krylov_d(:)
-  type(base), allocatable :: krylov_x(:,:)
+!  real(kind_float), target, allocatable :: krylov_d(:)
+!  type(base), allocatable :: krylov_x(:,:)
 ! character string to become id_string in solver
   character(len=22), target :: a1_string = ''
 ! character string for file name that contains the problem
@@ -73,7 +73,7 @@ program krylovdriver_1a
   integer(kind_integer) :: n1 = 0
   integer(kind_integer) :: n2 = 0
   integer(kind_integer) :: j,k = 0
-  integer(kind_integer) :: nbasis,nroots,irestart = 0
+  integer(kind_integer) :: nbasis,nroots,ntriangle,irestart = 0
   integer(kind_integer) :: maxiter,totalmaxiter = 0
   logical :: no_stop
 ! file name for eigenvectors
@@ -116,7 +116,7 @@ program krylovdriver_1a
         print *, '-precon       select preconditioner'
         print *, '               available options:'
         print *, '                none'
-        print *, '                approx_spectra'
+        print *, '                conjugate_gradient'
         print *, '                davidson'
         print *, '                sleijpen'
         print *, '                half_sleijpen'
@@ -155,9 +155,8 @@ program krylovdriver_1a
         ierr = 20
         call problem_a_solver1(&
   &       krylov_problem, &
-  &       krylov_d,krylov_s_ext_in, &
+  &       krylov_s_ext_in, &
   &       krylov_g_uv,krylov_mvp, &
-  &       krylov_x, &
   &       krylov_output,ierr)
         stop
       else if (input.eq.'-precon') then
@@ -255,8 +254,8 @@ program krylovdriver_1a
 
 !! allocate array to contain problem
   allocate(krylov_a(nbasis,nbasis))
-  allocate(krylov_d(nbasis))
-  allocate(krylov_x(nbasis,nroots))
+  allocate(krylov_problem%approx_spectra(nbasis))
+  allocate(krylov_output%solutions(nbasis,nroots))
 
 !! read problem array size
   call array_read_base(filename_string,nbasis,&
@@ -268,7 +267,7 @@ program krylovdriver_1a
   end if
 
   do j = 1, nbasis
-    krylov_d(j) = krylov_a(j,j)
+    krylov_problem%approx_spectra(j) = krylov_a(j,j)
     krylov_a(j,j) = real(0,kind=kind_float)
   end do
 
@@ -298,12 +297,9 @@ program krylovdriver_1a
   krylov_problem%iverb = 5
   krylov_problem%irestart = irestart
 
-  krylov_output%nbasis = nbasis
-  krylov_output%nroots = nroots
-  allocate(krylov_output%roots(nroots))
-  allocate(krylov_output%lagrangian(nroots))
-  allocate(krylov_output%jconverged(nroots))
-  allocate(krylov_output%euc_norm(nroots))
+  ntriangle = nroots*(nroots+1)/2
+
+  allocate(krylov_output%roots(ntriangle))
 !  krylov_approx%krylov_d => krylov_d
   krylov_mvp%matrix => krylov_a%element
 
@@ -311,16 +307,14 @@ program krylovdriver_1a
   if (krylov_s_ext_in%nstart.le.0) then
     call problem_a_solver1(&
   &   krylov_problem, &
-  &   krylov_d,krylov_s_eg, &
+  &   krylov_s_eg, &
   &   krylov_g_uv,krylov_mvp, &
-  &   krylov_x, &
   &   krylov_output,ierr)
   else ! call solver with input nstart
     call problem_a_solver1(&
   &   krylov_problem, &
-  &   krylov_d,krylov_s_ext_in, &
+  &   krylov_s_ext_in, &
   &   krylov_g_uv,krylov_mvp, &
-  &   krylov_x, &
   &   krylov_output,ierr)
   end if
 
@@ -333,22 +327,19 @@ program krylovdriver_1a
   lagr_string = trim(a1_string)//'_lagr'
 
 !! print to file
-  call array_print_float(values_string,nroots,krylov_output%roots,ierr)
+  call array_print_float(values_string,ntriangle,krylov_output%roots,ierr)
 
 !! print to file
-  call array_print_base(vector_string,nbasis,nroots,krylov_x,ierr)
+  call array_print_base(vector_string,nbasis,nroots,&
+  &          krylov_output%solutions,ierr)
 
-!! print to file
-  call array_print_base(lagr_string,1,nroots,krylov_output%lagrangian,ierr)
+  print *, 'Final Lagrangian: ',krylov_output%lagrangian
 
 
   deallocate(krylov_a)
-  deallocate(krylov_d)
-  deallocate(krylov_x)
+  deallocate(krylov_problem%approx_spectra)
+  deallocate(krylov_output%solutions)
   deallocate(krylov_output%roots)
-  deallocate(krylov_output%lagrangian)
-  deallocate(krylov_output%jconverged)
-  deallocate(krylov_output%euc_norm)
 
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------

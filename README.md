@@ -38,7 +38,7 @@ achieves compile-time polymorphism.
 She is improving users-friendliness of calling any 
 compiled solver for various matrix element types and precision.
 
-Samuel Beoke has written most of the wiki while debugging 
+Samuel Bekoe has written most of the wiki while debugging 
 the code. Sam is responsible for the testing of the solver
 on problems in the test suite, and some python scripts for
 visualization.

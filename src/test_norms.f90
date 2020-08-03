@@ -74,8 +74,6 @@ program test_norms
   type(base) :: residuals(n1,n3)
 ! euc_norms
   real(kind_float) :: euc_norm(n3)
-! largest_euc_norms
-  real(kind_float) :: largest_euc_norm
 ! fro_norm
   real(kind_float) :: fro_norm
 ! nresiduals
@@ -166,7 +164,6 @@ program test_norms
   nresiduals = 0
   residuals = real(0,kind=kind_float)
   euc_norm = real(0,kind=kind_float)
-  largest_euc_norm = real(0,kind=kind_float)
   fro_norm = real(0,kind=kind_float)
 !! write statement on test
   print *, 'test krylov_a_norms',&
@@ -181,7 +178,7 @@ program test_norms
 !! call normalize subroutine
   call krylov_a_norms(n1,n2,n3,mvproduct,basis_vectors,full_solutions,&
   & solutions,overlap,roots,approx_spectra,&
-  & residuals,euc_norm,largest_euc_norm,fro_norm,nresiduals,iverb,ierr)
+  & residuals,fro_norm,nresiduals,iverb,ierr)
 !! check ierr value to see whether routine terminated with an error
 !! test if ierr is not equal to 0
   if (ierr.ne.0) then
@@ -223,44 +220,13 @@ program test_norms
     end do
   end do
 !! write info about output
-  print *, 'output euc_norm should be integers(x0.1)'
-!! write test to check each element
-  print *, 'testing each element of euc_norm'
-!! using do loops to take the absolute difference
-!! between the elements in test array 
-!! and the elements in reference value
-  do j1 = 1, n3
-    r_ref = real(j1,kind=kind_float)*real(0.1,kind=kind_float)
-!! test if difference if greater than machine precision
-!! (defined by the constant eps)
-    if (abs(euc_norm(j1)-r_ref).gt.eps) then
-!! if true, write failed for elements
-!! and the position of the element that failed
-      print *, 'failed for elements', j1
-!! set logical check = .true.
-      check = .true.
-    end if
-  end do
-!! write info about output
-  print *, 'output largest_euc_norm should be nroots(x0.1)'
-!! take the absolute difference
-!! between the elements in test array 
-!! and the elements in reference value
-  r_ref = real(n3,kind=kind_float)*real(0.1,kind=kind_float)
-!! test if difference if greater than machine precision
-!! (defined by the constant eps)
-  if (abs(largest_euc_norm-r_ref).gt.eps) then
-!! if true, write failed for elements
-!! and the position of the element that failed
-    print *, 'failed to obtain correct largest_euc_norm'
-!! set logical check = .true.
-    check = .true.
-  end if
-!! write info about output
   print *, 'output fro_norm should be sqrt(sum(euc_norm^2))'
 !! take the absolute difference
 !! between the elements in test array 
 !! and the elements in reference value
+  do j1 = 1, n3
+    euc_norm(j1) = real(j1,kind=kind_float)*real(0.1,kind=kind_float)
+  end do
   r_ref = real(0,kind=kind_float)
   do j1 = 1, n3
     r_ref = r_ref + (euc_norm(j1)*euc_norm(j1))
@@ -307,7 +273,6 @@ program test_norms
   nresiduals = 0
   residuals = real(0,kind=kind_float)
   euc_norm = real(0,kind=kind_float)
-  largest_euc_norm = real(0,kind=kind_float)
   fro_norm = real(0,kind=kind_float)
 !! write statement on test
   print *, 'test krylov_b_norms',&
@@ -323,7 +288,7 @@ program test_norms
 !! call normalize subroutine
   call krylov_b_norms(n1,n2,n3,mvproduct,basis_vectors,full_solutions,&
   & solutions,overlap,rhs,approx_spectra,&
-  & residuals,euc_norm,largest_euc_norm,fro_norm,nresiduals,iverb,ierr)
+  & residuals,fro_norm,nresiduals,iverb,ierr)
 !! check ierr value to see whether routine terminated with an error
 !! test if ierr is not equal to 0
   if (ierr.ne.0) then
@@ -365,44 +330,13 @@ program test_norms
     end do
   end do
 !! write info about output
-  print *, 'output euc_norm should be integers(x0.1)'
-!! write test to check each element
-  print *, 'testing each element of euc_norm'
-!! using do loops to take the absolute difference
-!! between the elements in test array 
-!! and the elements in reference value
-  do j1 = 1, n3
-    r_ref = real(j1,kind=kind_float)*real(0.1,kind=kind_float)
-!! test if difference if greater than machine precision
-!! (defined by the constant eps)
-    if (abs(euc_norm(j1)-r_ref).gt.eps) then
-!! if true, write failed for elements
-!! and the position of the element that failed
-      print *, 'failed for elements', j1
-!! set logical check = .true.
-      check = .true.
-    end if
-  end do
-!! write info about output
-  print *, 'output largest_euc_norm should be nroots(x0.1)'
-!! take the absolute difference
-!! between the elements in test array 
-!! and the elements in reference value
-  r_ref = real(n3,kind=kind_float)*real(0.1,kind=kind_float)
-!! test if difference if greater than machine precision
-!! (defined by the constant eps)
-  if (abs(largest_euc_norm-r_ref).gt.eps) then
-!! if true, write failed for elements
-!! and the position of the element that failed
-    print *, 'failed to obtain correct largest_euc_norm'
-!! set logical check = .true.
-    check = .true.
-  end if
-!! write info about output
   print *, 'output fro_norm should be sqrt(sum(euc_norm^2))'
 !! take the absolute difference
 !! between the elements in test array 
 !! and the elements in reference value
+  do j1 = 1, n3
+    euc_norm(j1) = real(j1,kind=kind_float)*real(0.1,kind=kind_float)
+  end do
   r_ref = real(0,kind=kind_float)
   do j1 = 1, n3
     r_ref = r_ref + (euc_norm(j1)*euc_norm(j1))
@@ -459,7 +393,6 @@ program test_norms
   nresiduals = 0
   residuals = real(0,kind=kind_float)
   euc_norm = real(0,kind=kind_float)
-  largest_euc_norm = real(0,kind=kind_float)
   fro_norm = real(0,kind=kind_float)
 !! write statement on test
   print *, 'test krylov_c_norms',&
@@ -476,7 +409,7 @@ program test_norms
   call krylov_c_norms(n1,n2,n4,n3,n5,mvproduct,basis_vectors,&
   & full_solutions,solutions,&
   & overlap,omega,rhs,approx_spectra,&
-  & residuals,euc_norm,largest_euc_norm,fro_norm,nresiduals,iverb,ierr)
+  & residuals,fro_norm,nresiduals,iverb,ierr)
 !! check ierr value to see whether routine terminated with an error
 !! test if ierr is not equal to 0
   if (ierr.ne.0) then
@@ -518,44 +451,13 @@ program test_norms
     end do
   end do
 !! write info about output
-  print *, 'output euc_norm should be integers(x0.1)'
-!! write test to check each element
-  print *, 'testing each element of euc_norm'
-!! using do loops to take the absolute difference
-!! between the elements in test array 
-!! and the elements in reference value
-  do j1 = 1, n3
-    r_ref = real(j1,kind=kind_float)*real(0.1,kind=kind_float)
-!! test if difference if greater than machine precision
-!! (defined by the constant eps)
-    if (abs(euc_norm(j1)-r_ref).gt.eps) then
-!! if true, write failed for elements
-!! and the position of the element that failed
-      print *, 'failed for elements', j1
-!! set logical check = .true.
-      check = .true.
-    end if
-  end do
-!! write info about output
-  print *, 'output largest_euc_norm should be nroots(x0.1)'
-!! take the absolute difference
-!! between the elements in test array 
-!! and the elements in reference value
-  r_ref = real(n3,kind=kind_float)*real(0.1,kind=kind_float)
-!! test if difference if greater than machine precision
-!! (defined by the constant eps)
-  if (abs(largest_euc_norm-r_ref).gt.eps) then
-!! if true, write failed for elements
-!! and the position of the element that failed
-    print *, 'failed to obtain correct largest_euc_norm'
-!! set logical check = .true.
-    check = .true.
-  end if
-!! write info about output
   print *, 'output fro_norm should be sqrt(sum(euc_norm^2))'
 !! take the absolute difference
 !! between the elements in test array 
 !! and the elements in reference value
+  do j1 = 1, n3
+    euc_norm(j1) = real(j1,kind=kind_float)*real(0.1,kind=kind_float)
+  end do
   r_ref = real(0,kind=kind_float)
   do j1 = 1, n3
     r_ref = r_ref + (euc_norm(j1)*euc_norm(j1))

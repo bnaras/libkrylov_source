@@ -19,45 +19,38 @@ echo 'at zero frequency'  >> ../testing.summary
 echo 'comparing to exact lagrangians' >> ../testing.summary
 sed '7,9!d' cmplx_sp_1b_exact_lagr.json >> ../testing.summary
 echo '' >> ../testing.summary
-rm cmplx_sp_1b_lagr.json 2>/dev/null
 rm cmplx_sp_1b_vecs.json 2>/dev/null
 mv cmplx_sp_npc_driver1b.out cmplx_sp_npc_driver1b.out.old 2>/dev/null
 echo 'solve reference problem with no preconditioner' >> ../testing.summary
 echo 'test output in' >> ../testing.summary
 echo 'test/cmplx_sp_testing.results/ref_1b/cmplx_sp_npc_driver1b.out' >> ../testing.summary
 ../../../src/cmplx_sp_test/driver1b_cmplx_sp -precon none > cmplx_sp_npc_driver1b.out
-mv cmplx_sp_1b_lagr.json cmplx_sp_1b_npc_lagr.json
 mv cmplx_sp_1b_vecs.json cmplx_sp_1b_npc_vecs.json
 grep 'Converged' cmplx_sp_npc_driver1b.out >> ../testing.summary
+grep 'Final L' cmplx_sp_npc_driver1b.out >> ../testing.summary
 echo 'error statments:' >> ../testing.summary
 grep 'failed' cmplx_sp_npc_driver1b.out >> ../testing.summary
-echo 'lagrangians:' >> ../testing.summary
-sed '7,9!d' cmplx_sp_1b_npc_lagr.json >> ../testing.summary
 echo '' >> ../testing.summary
 mv cmplx_sp_apc_driver1b.out cmplx_sp_apc_driver1b.out.old 2>/dev/null
 echo 'solve reference problem with approximate spectra preconditioner' >> ../testing.summary
 echo 'test output in' >> ../testing.summary
 echo 'test/cmplx_sp_testing.results/random_1b/cmplx_sp_apc_driver1b.out' >> ../testing.summary
-../../../src/cmplx_sp_test/driver1b_cmplx_sp -precon approx_spectra > cmplx_sp_apc_driver1b.out
-mv cmplx_sp_1b_lagr.json cmplx_sp_1b_apc_lagr.json
+../../../src/cmplx_sp_test/driver1b_cmplx_sp -precon conjugate_gradient > cmplx_sp_apc_driver1b.out
 mv cmplx_sp_1b_vecs.json cmplx_sp_1b_apc_vecs.json
 grep 'Converged' cmplx_sp_apc_driver1b.out >> ../testing.summary
+grep 'Final L' cmplx_sp_apc_driver1b.out >> ../testing.summary
 echo 'error statments:' >> ../testing.summary
 grep 'failed' cmplx_sp_apc_driver1b.out >> ../testing.summary
-echo 'lagrangians:' >> ../testing.summary
-sed '7,9!d' cmplx_sp_1b_apc_lagr.json >> ../testing.summary
 echo '' >> ../testing.summary
 mv cmplx_sp_spc_driver1b.out cmplx_sp_spc_driver1b.out.old 2>/dev/null
 echo 'solve reference problem with Jacobi-Davidson preconditioner' >> ../testing.summary
 echo 'test output in' >> ../testing.summary
 echo 'test/cmplx_sp_testing.results/random_1b/cmplx_sp_spc_driver1b.out' >> ../testing.summary
 ../../../src/cmplx_sp_test/driver1b_cmplx_sp -precon sleijpen > cmplx_sp_spc_driver1b.out
-mv cmplx_sp_1b_lagr.json cmplx_sp_1b_spc_lagr.json
 mv cmplx_sp_1b_vecs.json cmplx_sp_1b_spc_vecs.json
 grep 'Converged' cmplx_sp_spc_driver1b.out >> ../testing.summary
+grep 'Final L' cmplx_sp_spc_driver1b.out >> ../testing.summary
 echo 'error statments:' >> ../testing.summary
 grep 'failed' cmplx_sp_spc_driver1b.out >> ../testing.summary
-echo 'lagrangians:' >> ../testing.summary
-sed '7,9!d' cmplx_sp_1b_spc_lagr.json >> ../testing.summary
 echo '' >> ../testing.summary
 echo '~~~~~Complex Single reference_b test done~~~~~'

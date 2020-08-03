@@ -499,7 +499,7 @@ contains
 
 !--------------------------------------------------------------------
   subroutine krylov_rayleigh(nbasis,nsubspace,&
-  &     approx_spectra,avproduct,&
+  &     avproduct,&
   &     basis_vectors,rayleigh,rayleigh_sq,iverb,ierr)
 !--------------------------------------------------------------------
 !
@@ -531,7 +531,6 @@ contains
 ! Comments in the solver subroutine below
     integer(kind_integer), intent(in) :: nbasis
     integer(kind_integer), intent(in) :: nsubspace ! first subspace!
-    real(kind_float), intent(in) :: approx_spectra(nbasis)
     type(base), intent(in) :: avproduct(nbasis,nsubspace)
     type(base), intent(in) :: basis_vectors(nbasis,nsubspace)
 !--------------------------------------------------------------------
@@ -1578,7 +1577,7 @@ contains
 ! Output Variables
 !--------------------------------------------------------------------
     real(kind_float), intent(inout) :: roots(nroots)
-    type(base), intent(inout) :: lagrangian(nroots)
+    type(base), intent(inout) :: lagrangian
     type(base), intent(inout) :: solutions(nsubspace,nroots)
 !--------------------------------------------------------------------
 ! Error Variables
@@ -1595,6 +1594,7 @@ contains
     type(base), allocatable :: svavx(:,:)
     type(base), allocatable :: vaavx(:,:)
     type(base), allocatable :: vvx(:,:)
+    type(base), allocatable :: jlagrangian(:)
     type(base) :: expectation
     type(base) :: norm
     type(base) :: xvaavx
@@ -1623,6 +1623,7 @@ contains
     allocate(vaavx(nsubspace,nroots))
     allocate(vvx(nsubspace,nroots))
     allocate(euc_norm(nroots))
+    allocate(jlagrangian(nroots))
 
 !! construct d_o_sqrt
     d_o_sqrt = sqrt(diag_overlap)
@@ -1717,7 +1718,7 @@ contains
   &   solutions,nsubspace,zero_kb,&
   &   vvx,nsubspace)
     if (iverb.ge.2) then
-      print *, 'lagrangians of desired solutions:' 
+      print *, 'lagrangians of individual solutions:' 
     end if
     do j = 1, nroots
       call gdot(nsubspace,solutions(1:nsubspace,j),1,&
@@ -1771,30 +1772,38 @@ contains
         return ! return to solver loop
       end if
       one_kb = real(1,kind=kind_float)
-      lagrangian(j) = expectation-((norm-one_kb)*roots(j))
+      jlagrangian(j) = expectation-((norm-one_kb)*roots(j))
       if (iverb.ge.2) then
-        print *, 'L of ',j,': ',lagrangian(j)
+        print *, 'L of ',j,': ',jlagrangian(j)
       end if
-      ax_norm = xvaavx
-      ax_norm = sqrt(ax_norm)
-      print *, 'difference in sqrt(xvaavx) and xvavx'
-      print *, (ax_norm-expectation)
-      euc_norm(j) = xvaavx &
-!  &     - (expectation*roots(j)) &
-!  &     - (expectation*roots(j)) &
-  &     - (expectation*expectation/norm)
-      print *, 'error of root ',j,': ', (expectation-(norm*roots(j)))
+!      ax_norm = xvaavx
+!      ax_norm = sqrt(ax_norm)
+!      print *, 'difference in sqrt(xvaavx) and xvavx'
+!      print *, (ax_norm-expectation)
+!      euc_norm(j) = xvaavx &
+!!  &     - (expectation*roots(j)) &
+!!  &     - (expectation*roots(j)) &
+!  &     - (expectation*expectation/norm)
+!      print *, 'error of root ',j,': ', (expectation-(norm*roots(j)))
     end do
 
-    fro_norm = sum(abs(euc_norm(1:nroots)))
-    fro_norm = sqrt(fro_norm)
+!    fro_norm = sum(abs(euc_norm(1:nroots)))
+!    fro_norm = sqrt(fro_norm)
+!
+!    if (iverb.ge.2) then
+!      print *, 'estimate of frobenius norm:',fro_norm
+!      do j = 1, nroots
+!        print *, 'estimate of sq of euc norm of residual ',j,': ',euc_norm(j)
+!      end do
+!    end if 
 
+    lagrangian = real(0,kind=kind_float)
+    do j = 1, nroots
+      lagrangian = lagrangian + jlagrangian(j)
+    end do
     if (iverb.ge.2) then
-      print *, 'estimate of frobenius norm:',fro_norm
-      do j = 1, nroots
-        print *, 'estimate of sq of euc norm of residual ',j,': ',euc_norm(j)
-      end do
-    end if 
+      print *, 'Total L :', lagrangian
+    end if
 
 ! Deallocate local arrays
     deallocate(vavx)
@@ -1804,6 +1813,7 @@ contains
     deallocate(subspace)
     deallocate(all_roots)
     deallocate(d_o_sqrt)
+    deallocate(jlagrangian)
 
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
@@ -1817,7 +1827,7 @@ contains
   &     mvproduct,basis_vectors,full_solutions,solutions,&
   &     overlap,roots,&
   &     approx_spectra,residuals,&
-  &     euc_norm,largest_euc_norm,fro_norm,&
+  &     fro_norm,&
   &     nresiduals,iverb,ierr)
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
@@ -1863,8 +1873,6 @@ contains
 ! Output Variables
 !--------------------------------------------------------------------
     type(base), intent(inout) :: residuals(nbasis,nroots)
-    real(kind_float), intent(inout) :: euc_norm(nroots)
-    real(kind_float), intent(inout) :: largest_euc_norm
     real(kind_float), intent(inout) :: fro_norm
     integer(kind_integer), intent(inout) :: nresiduals
 !--------------------------------------------------------------------
@@ -1881,8 +1889,10 @@ contains
     type(base), allocatable :: all_solutions(:,:)
     real(kind_float), allocatable :: all_roots(:)
     logical, allocatable :: eps_converged(:)
+    real(kind_float), allocatable :: euc_norm(:)
     real(kind_float) :: lognbasis
     integer(kind_integer) :: ntemp ! n of all_residuals
+    integer(kind_integer) :: nconverged
     type(base), allocatable :: xo(:,:)
     type(base), allocatable :: vxo(:,:)
     type(base), allocatable :: euc_sq(:)
@@ -1898,6 +1908,7 @@ contains
     allocate(xo(nsubspace,nroots))
     allocate(vxo(nbasis,nroots))
     allocate(euc_sq(nroots))
+    allocate(euc_norm(nroots))
 
 !! Set constants required for BLAS
     one_kb = real(1,kind=kind_float)
@@ -1988,17 +1999,6 @@ contains
     end if
     nresiduals = ntemp
 
-!! find largest euc_norm
-    largest_euc_norm = maxval(euc_norm)
-    if (iverb.ge.3) then
-      print *, 'largest euclidean norm: ',largest_euc_norm
-      if (iverb.ge.4) then
-        do j = 1,nroots
-          print *, j,' euclidean norm: ',euc_norm(j)
-        end do
-      end if
-    end if
-
 !! return to calling subroutine if there are no residues
 !! above machine precision
     if (ntemp.eq.0) then
@@ -2026,6 +2026,7 @@ contains
     deallocate(vxo)
     deallocate(xo)
     deallocate(euc_sq)
+    deallocate(euc_norm)
 
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
@@ -2134,7 +2135,7 @@ contains
         end do
       end do
 
-    else if (precon_string.eq.'approx_spectra') then
+    else if (precon_string.eq.'conjugate_gradient') then
 
       do j = 1, nroots
         do k = 1, nbasis
@@ -2296,9 +2297,8 @@ contains
 !--------------------------------------------------------------------
   subroutine problem_a_solver1(&
     & krylov_problem_a,&
-    & approx_spectra,krylov_start,&
+    & krylov_start,&
     & krylov_guess,krylov_mvp,&
-    & full_solutions,&
     & krylov_output_a,ierr)
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
@@ -2339,11 +2339,11 @@ contains
 ! Input functions
 !--------------------------------------------------------------------
 !    class(libkrylov_vector_subroutine) ::    krylov_approx
-    class(libkrylov_problem_a_subroutine) :: krylov_problem_a
+    class(libkrylov_problem_a_input) :: krylov_problem_a
     class(libkrylov_start_subroutine) ::     krylov_start
     class(libkrylov_guess_subroutine) ::     krylov_guess
     class(libkrylov_mvp_subroutine) ::       krylov_mvp
-    class(libkrylov_output_a_subroutine) ::  krylov_output_a
+    class(libkrylov_problem_a_output) ::  krylov_output_a
 !--------------------------------------------------------------------
 ! Local Variables
 !--------------------------------------------------------------------
@@ -2352,7 +2352,7 @@ contains
 !! variable for error variable
     integer(kind_integer), intent(inout) :: ierr 
 !! integer for loops
-    integer(kind_integer) :: j,k = 0
+    integer(kind_integer) :: j,k,l = 0
 !! integer for restart files
     integer(kind_integer) :: k1,k2,k3,k4 = 0
 !! integer for iteration counting
@@ -2408,7 +2408,7 @@ contains
 !! Arrays that are allocated after krylov problem
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !! filled in with the guess of the spectrum
-    real(kind_float), intent(in) :: approx_spectra(:)
+!    real(kind_float), intent(in) :: approx_spectra(:)
 !< approximation of spectra of problem = approx_spectra = D
 !    logical :: jconverged(:)
 !< Indicates which roots are converged
@@ -2437,21 +2437,21 @@ contains
 !< V**dagger AV = rayleigh
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !! filled in at krylov_a_ritz
-!    real(kind_float), pointer :: roots(:) => null()
+    real(kind_float), allocatable :: roots(:)
     type(base), allocatable ::  solutions(:,:)
-!    type(base), pointer ::  lagrangian(:)
+!    type(base) ::  lagrangian(:)
 !< roots = eigenvalues of current subspace calculation that are relevant = omega
 !< solutions = eigenvectors of current subspace calculation that are relevant = x
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !! filled in between ritz and norms
-    type(base), intent(inout) :: full_solutions(:,:)
+!    type(base), intent(inout) :: full_solutions(:,:)
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !! filled in at krylov_a_norms
-    real(kind_float) :: dominance
+!    real(kind_float) :: dominance
     type(base), allocatable :: residuals(:,:)
 !    real(kind_float), pointer :: euc_norm(:) => null()
 !    real(kind_float), pointer :: fro_norm => null()
-    real(kind_float) :: largest_euc_norm
+!    real(kind_float) :: largest_euc_norm
     integer(kind_integer) :: nresiduals = 0
 !< dominance = inverse of nbasis in real variable, for Davidson warning
 !< residuals = preconditioned residuals of the approximate solutions 
@@ -2605,7 +2605,7 @@ contains
 !    end if
 
     call krylov_start%lkl_start(nbasis,nroots,&
-  &        approx_spectra,nstart,ierr)
+  &        krylov_problem_a%approx_spectra,nstart,ierr)
     if (ierr.ne.0) then
       if (iverb.ge.0) then
         print *, 'class(user_krylov_start_subroutine) function failed'
@@ -2756,7 +2756,7 @@ contains
     allocate(cholesky(maxsubspace,maxsubspace)) !maximum
     allocate(rayleigh(maxsubspace,maxsubspace)) !maximum
     allocate(rayleigh_sq(maxsubspace,maxsubspace)) !maximum
-!    allocate(roots(nroots))
+    allocate(roots(nroots))
     allocate(diag_overlap(maxsubspace)) !maximum
 !    allocate(full_solutions(nbasis,nroots))
     allocate(residuals(nbasis,nroots)) !maximum
@@ -2810,7 +2810,8 @@ contains
         end if
         associate(interfacing_bv => basis_vectors%element)
           call krylov_guess%lkl_guess(nbasis,nstart,k4,&
-  &             approx_spectra,interfacing_bv(1:nbasis,1:nstart),&
+  &             krylov_problem_a%approx_spectra,&
+  &             interfacing_bv(1:nbasis,1:nstart),&
   &             ierr)
         end associate
         if (ierr.ne.0) then
@@ -2832,7 +2833,8 @@ contains
       end if
       associate(interfacing_bv => basis_vectors%element)
         call krylov_guess%lkl_guess(nbasis,nstart,0,&
-  &       approx_spectra,interfacing_bv(1:nbasis,1:nstart),&
+  &       krylov_problem_a%approx_spectra,&
+  &       interfacing_bv(1:nbasis,1:nstart),&
   &       ierr)
       end associate
       if (ierr.ne.0) then
@@ -2985,11 +2987,12 @@ contains
 
     do j = 1, nsubspace
       avproduct(1:nbasis,j) = mvproduct(1:nbasis,j) &
-  &      + (basis_vectors(1:nbasis,j) * approx_spectra(1:nbasis))
+  &      + (basis_vectors(1:nbasis,j) * &
+         krylov_problem_a%approx_spectra(1:nbasis))
     end do
 
     call krylov_rayleigh(nbasis,nsubspace,&
-  &     approx_spectra,avproduct(1:nbasis,1:nsubspace),&
+  &     avproduct(1:nbasis,1:nsubspace),&
   &     basis_vectors(1:nbasis,1:nsubspace),&
   &     rayleigh(1:nsubspace,1:nsubspace),&
   &     rayleigh_sq(1:nsubspace,1:nsubspace),iverb,ierr)
@@ -3017,7 +3020,7 @@ contains
       print *, ''
     end if
 
-    dominance = real(1,kind=kind_float)/nbasis
+!    dominance = real(1,kind=kind_float)/nbasis
 
 ! SOLVER LOOP
     jter = 0
@@ -3053,7 +3056,7 @@ contains
   &     rayleigh_sq(1:nsubspace,1:nsubspace),&
   &     cholesky(1:nsubspace,1:nsubspace),&
   &     overlap(1:nsubspace,1:nsubspace),diag_overlap(1:nsubspace),&
-  &     krylov_output_a%roots,krylov_output_a%lagrangian,&
+  &     roots,krylov_output_a%lagrangian,&
   &     solutions(1:nsubspace,1:nroots),iverb,ierr)
       if (ierr.ne.0) then
         if (iverb.ge.0) then
@@ -3064,6 +3067,13 @@ contains
         exit ! This exits subspace loop
       end if
 
+! transfer roots to output
+      k = 0
+      do j = 1, nroots
+        k = k + j
+        krylov_output_a%roots(k) = roots(j)
+      end do
+
 !! Set constants required for BLAS
       one_kb = real(1,kind=kind_float)
       zero_kb = real(0,kind=kind_float)
@@ -3072,7 +3082,7 @@ contains
   &      basis_vectors(1:nbasis,1:nsubspace),nbasis,&
   &      solutions(1:nsubspace,1:nroots),nsubspace,&
   &      zero_kb,&
-  &      full_solutions(1:nbasis,1:nroots),&
+  &      krylov_output_a%solutions(1:nbasis,1:nroots),&
   &      nbasis)
 
 !! compare threshold again difference in approx_spectra and roots,
@@ -3096,11 +3106,12 @@ contains
 ! call krylov norms subroutine
       call krylov_a_norms(nbasis,nsubspace,nroots,&
   &     mvproduct(1:nbasis,1:nsubspace),& 
-  &     basis_vectors(1:nbasis,1:nsubspace),full_solutions,& 
+  &     basis_vectors(1:nbasis,1:nsubspace),&
+  &     krylov_output_a%solutions,& 
   &     solutions(1:nsubspace,1:nroots),&
   &     overlap(1:nsubspace,1:nsubspace),&
-  &     krylov_output_a%roots,approx_spectra,&
-  &     residuals,krylov_output_a%euc_norm,largest_euc_norm,&
+  &     roots,krylov_problem_a%approx_spectra,&
+  &     residuals,&
   &     krylov_output_a%fro_norm,nresiduals,iverb,ierr)
       if (ierr.ne.0) then
         if (iverb.ge.0) then
@@ -3113,10 +3124,11 @@ contains
 
 !! determine residuals
       call krylov_a_residue(nbasis,nsubspace,nroots,&
-  &     mvproduct(1:nbasis,1:nsubspace),full_solutions,&
+  &     mvproduct(1:nbasis,1:nsubspace),&
+  &     krylov_output_a%solutions,&
   &     solutions(1:nsubspace,1:nroots),&
-  &     krylov_output_a%roots,&
-  &     approx_spectra,precon_string,&
+  &     roots,&
+  &     krylov_problem_a%approx_spectra,precon_string,&
   &     residuals,&
   &     largest_sv,&
   &     nresiduals,iverb,ierr)
@@ -3131,18 +3143,18 @@ contains
         exit ! This exits subspace loop
       end if
 
-! determine convergence of solutions based on euclidean norm
-      krylov_output_a%nconverged = 0
-      krylov_output_a%jconverged = .false.
-      do j = 1 , nroots
-        if ((-threshold).gt.log10(krylov_output_a%euc_norm(j))) then
-          krylov_output_a%nconverged = krylov_output_a%nconverged + 1
-          krylov_output_a%jconverged(j) = .true.
-        end if
-      end do
-      if (iverb.ge.2) then
-        print *, 'converged vectors: ', krylov_output_a%nconverged
-      end if
+!! determine convergence of solutions based on euclidean norm
+!      krylov_output_a%nconverged = 0
+!      krylov_output_a%jconverged = .false.
+!      do j = 1 , nroots
+!        if ((-threshold).gt.log10(krylov_output_a%euc_norm(j))) then
+!          krylov_output_a%nconverged = krylov_output_a%nconverged + 1
+!          krylov_output_a%jconverged(j) = .true.
+!        end if
+!      end do
+!      if (iverb.ge.2) then
+!        print *, 'converged vectors: ', krylov_output_a%nconverged
+!      end if
 
 ! determine convergence of solutions based on frobenius norm
 ! The stricter test, this is done before check by euclidean norms
@@ -3153,13 +3165,13 @@ contains
         exit ! This exits subspace loop
       end if
 
-! determine convergence of solutions based on nconverged
-      if (krylov_output_a%nconverged.ge.nroots) then
-        if (iverb.ge.1) then
-          print *, 'Converged by euclidean norm!'
-        end if
-        exit ! This exits subspace loop
-      end if
+!! determine convergence of solutions based on nconverged
+!      if (krylov_output_a%nconverged.ge.nroots) then
+!        if (iverb.ge.1) then
+!          print *, 'Converged by euclidean norm!'
+!        end if
+!        exit ! This exits subspace loop
+!      end if
 
 ! convergence checks failed when this line is reached
       if (iverb.ge.2) then
@@ -3263,7 +3275,7 @@ contains
         ierr = 0
 !! Putting X(full solutions) as new previous V(basis)
         basis_vectors(1:nbasis,1:nroots) = &
-  &      full_solutions(1:nbasis,1:nroots)
+  &      krylov_output_a%solutions(1:nbasis,1:nroots)
 !! set nsubspace to new value
         nsubspace = nroots
         prev_nsubspace = nroots
@@ -3321,10 +3333,11 @@ contains
         end if
         do j = 1, nsubspace
           avproduct(1:nbasis,j) = mvproduct(1:nbasis,j) &
-  &       + ( basis_vectors(1:nbasis,j) * approx_spectra(1:nbasis))
+  &       + ( basis_vectors(1:nbasis,j) * &
+  &       krylov_problem_a%approx_spectra(1:nbasis))
         end do
         call krylov_rayleigh(nbasis,nsubspace,&
-  &         approx_spectra,avproduct(1:nbasis,1:nsubspace),&
+  &         avproduct(1:nbasis,1:nsubspace),&
   &         basis_vectors(1:nbasis,1:nsubspace),&
   &         rayleigh(1:prev_nsubspace,1:nsubspace),&
   &         rayleigh_sq(1:prev_nsubspace,1:nsubspace),iverb,ierr)
@@ -3358,12 +3371,14 @@ contains
         end if
         do j = prev_nsubspace+1 , nsubspace
           avproduct(1:nbasis,j) = mvproduct(1:nbasis,j)& 
-  &    +  (basis_vectors(1:nbasis,j) * approx_spectra(1:nbasis))
+  &    +  (basis_vectors(1:nbasis,j) * &
+       krylov_problem_a%approx_spectra(1:nbasis))
         end do
 ! expand rayleigh matrix
         call krylov_expand(nbasis,nsubspace,&
   &       nresiduals,prev_nsubspace,&
-  &       approx_spectra,avproduct(1:nbasis,1:nsubspace),&
+  &       krylov_problem_a%approx_spectra,&
+  &       avproduct(1:nbasis,1:nsubspace),&
   &       basis_vectors(1:nbasis,1:nsubspace),&
   &       rayleigh(1:nsubspace,1:nsubspace),&
   &       rayleigh_sq(1:nsubspace,1:nsubspace),iverb,ierr)
@@ -3437,7 +3452,7 @@ contains
     else ! iterations exited with no serious errors, possible useful data!
       if (irestart.ge.1) then ! user asked for save files
         call array_print_rstrt(sname,nbasis,nroots,&
-  &       full_solutions(1:nbasis,1:nroots),iverb,ierr)
+  &       krylov_output_a%solutions(1:nbasis,1:nroots),iverb,ierr)
         if (ierr.eq.0) then ! save file printed! safe to delete restart
           call array_del_rstrt(vname,iverb,ierr) 
               ! no check for ierr, no action on fail
@@ -3468,18 +3483,12 @@ contains
 !          print *, 'class(user_krylov_output_subroutine) function failed'
 !        end if
 !        ierr = -20
-      if (krylov_output_a%nconverged.le.0) then !only if ierr .eq. 0
+      if ((-threshold).le.log10(krylov_output_a%fro_norm)) then
+! only if ierr = 0
         if (iverb.ge.0) then
-          print *, 'solver produced no solutions' 
+          print *, 'solver failed to converged' 
         end if
         ierr = -15
-      else if (krylov_output_a%nconverged.lt.nroots) then 
-!< only if ierr.eq.0.and.nconverged.gt.0 
-        if (iverb.ge.1) then
-          print *, 'not all desired solutions produced'
-          print *, 'ierr contains number of solutions printed'
-        end if
-        ierr = krylov_output_a%nconverged
       end if
     end if
 
@@ -3559,7 +3568,7 @@ contains
 !--------------------------------------------------------------------
 ! Output Variables
 !--------------------------------------------------------------------
-    type(base), intent(inout) :: lagrangian(nrhs)
+    type(base), intent(inout) :: lagrangian
     type(base), intent(inout) :: solutions(nsubspace,nrhs)
 !--------------------------------------------------------------------
 ! Error Variables
@@ -3574,6 +3583,7 @@ contains
     type(base), allocatable :: subspace(:,:)
     type(base), allocatable :: scaled_rhs(:,:)
     type(base), allocatable :: vavx(:,:)
+    type(base), allocatable :: jlagrangian(:)
     type(base) :: expectation
     type(base) :: norm
     type(base) :: rhs_with_x
@@ -3595,6 +3605,7 @@ contains
     allocate(scaled_rhs(nsubspace,nrhs))
     allocate(ipiv(nsubspace))
     allocate(vavx(nsubspace,nrhs))
+    allocate(jlagrangian(nrhs))
 
 !! construct d_o_sqrt
     d_o_sqrt = sqrt(diag_overlap)
@@ -3673,7 +3684,7 @@ contains
     one_kb = real(1,kind=kind_float)
     zero_kb = real(0,kind=kind_float)
     if (iverb.ge.2) then
-      print *, 'lagrangians of desired solutions:' 
+      print *, 'lagrangians of individual solutions:' 
     end if
     do j = 1, nrhs
       call gdot(nsubspace,solutions(1:nsubspace,j),1,&
@@ -3682,12 +3693,20 @@ contains
   &     proj_rhs(1:nsubspace,j),1,x_with_rhs,ierr)
       call gdot(nsubspace,proj_rhs(1:nsubspace,j),1,&
   &     solutions(1:nsubspace,j),1,rhs_with_x,ierr)
-      lagrangian(j) = expectation&
+      jlagrangian(j) = expectation&
   &     - rhs_with_x - x_with_rhs
       if (iverb.ge.2) then
-        print *, 'L of ',j,' rhs: ',lagrangian(j)
+        print *, 'L of ',j,' rhs: ',jlagrangian(j)
       end if
     end do
+
+    lagrangian = real(0,kind=kind_float)
+    do j = 1, nrhs
+      lagrangian = lagrangian + jlagrangian(j)
+    end do
+    if (iverb.ge.2) then
+      print *, 'Total L :', lagrangian
+    end if
 
 ! Deallocate local arrays
     deallocate(vavx)
@@ -3695,6 +3714,7 @@ contains
     deallocate(scaled_rhs)
     deallocate(subspace)
     deallocate(d_o_sqrt)
+    deallocate(jlagrangian)
 
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
@@ -3709,7 +3729,7 @@ contains
   &     mvproduct,basis_vectors,full_solutions,solutions,&
   &     overlap,rhs,&
   &     approx_spectra,residuals,&
-  &     euc_norm,largest_euc_norm,fro_norm,&
+  &     fro_norm,&
   &     nresiduals,iverb,ierr)
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
@@ -3755,8 +3775,6 @@ contains
 ! Output Variables
 !--------------------------------------------------------------------
     type(base), intent(inout) :: residuals(nbasis,nrhs)
-    real(kind_float), intent(inout) :: euc_norm(nrhs)
-    real(kind_float), intent(inout) :: largest_euc_norm
     real(kind_float), intent(inout) :: fro_norm
     integer(kind_integer), intent(inout) :: nresiduals
 !--------------------------------------------------------------------
@@ -3771,13 +3789,13 @@ contains
     type(base) :: zero_kb
     type(base), allocatable :: all_residuals(:,:)
     type(base), allocatable :: all_solutions(:,:)
-    real(kind_float), allocatable :: all_omega(:) !for generic interface
     logical, allocatable :: eps_converged(:)
     real(kind_float) :: lognbasis
     integer(kind_integer) :: ntemp ! n of all_residuals
     type(base), allocatable :: xo(:,:)
     type(base), allocatable :: vxo(:,:)
     type(base), allocatable :: euc_sq(:)
+    real(kind_float), allocatable :: euc_norm(:)
     real(kind_float) :: res_temp
 !    integer(kind_float) :: ptest = 0 ! preconditioner test
 !! integer for loops
@@ -3788,6 +3806,7 @@ contains
     allocate(all_residuals(nbasis,nrhs))
     allocate(eps_converged(nrhs))
     allocate(euc_sq(nrhs))
+    allocate(euc_norm(nrhs))
 
 !! Set constants required for BLAS
     one_kb = real(1,kind=kind_float)
@@ -3851,18 +3870,7 @@ contains
       end if
     end do
     if (iverb.ge.3) then
-      print *, 'number of residuals before precondition: ',ntemp
-    end if
-
-!! find largest euc_norm
-    largest_euc_norm = maxval(euc_norm)
-    if (iverb.ge.3) then
-      print *, 'largest euclidean norm: ',largest_euc_norm
-      if (iverb.ge.4) then
-        do j = 1,nrhs
-          print *, j,' euclidean norm: ',euc_norm(j)
-        end do
-      end if
+      print *, 'number of residuals before preconditioning: ',ntemp
     end if
 
 !! return to calling subroutine if there are no residues
@@ -3891,6 +3899,7 @@ contains
     deallocate(all_residuals)
     deallocate(eps_converged)
     deallocate(euc_sq)
+    deallocate(euc_norm)
 
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
@@ -4001,7 +4010,7 @@ contains
         end do
       end do
 
-    else if (precon_string.eq.'approx_spectra') then
+    else if (precon_string.eq.'conjugate_gradient') then
 
       do j = 1, nrhs
         do k = 1, nbasis
@@ -4150,9 +4159,9 @@ contains
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
   subroutine problem_b_solver1(&
-    & krylov_problem_b,approx_spectra,rhs,&
+    & krylov_problem_b,&
     & krylov_start,krylov_guess,&
-    & krylov_mvp,full_solutions,krylov_output_b,ierr)
+    & krylov_mvp,krylov_output_b,ierr)
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
 !
@@ -4195,10 +4204,10 @@ contains
 !    class(libkrylov_vector_subroutine) ::    krylov_approx
     class(libkrylov_start_subroutine) ::     krylov_start
 !    class(libkrylov_matrix_subroutine) ::    krylov_rhs
-    class(libkrylov_problem_b_subroutine) :: krylov_problem_b
+    class(libkrylov_problem_b_input) :: krylov_problem_b
     class(libkrylov_guess_subroutine) ::     krylov_guess
     class(libkrylov_mvp_subroutine) ::       krylov_mvp
-    class(libkrylov_output_b_subroutine) ::  krylov_output_b
+    class(libkrylov_problem_b_output) ::  krylov_output_b
 !--------------------------------------------------------------------
 ! Local Variables
 !--------------------------------------------------------------------
@@ -4207,7 +4216,7 @@ contains
 !! variable for error variable
     integer(kind_integer), intent(inout) :: ierr
 !! integer for loops
-    integer(kind_integer) :: j = 0
+    integer(kind_integer) :: j, k = 0
 !! integer for restart files
     integer(kind_integer) :: k1,k2,k3,k4 = 0
 !! integer for iteration counting
@@ -4261,9 +4270,9 @@ contains
 !! Arrays that are allocated after krylov problem
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !! filled in with the guess of the spectrum
-    real(kind_float), intent(in) :: approx_spectra(:)
+!    real(kind_float), intent(in) :: approx_spectra(:)
 !< approximation of spectra of problem = approx_spectra = D
-    type(base), intent(in) :: rhs(:,:)
+!   type(base), intent(in) :: rhs(:,:)
 !< RHS of problem = rhs = P
 !    logical, allocatable :: jconverged(:)
 !< logical for determining which roots are converged
@@ -4299,13 +4308,13 @@ contains
 !< solutions = eigenvectors of current subspace calculation that are relevant = x
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !! filled in at between ritz and norms
-    type(base), intent(inout) :: full_solutions(:,:)
+!    type(base), intent(inout) :: full_solutions(:,:)
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !! filled in at krylov_b_norms
     type(base), allocatable :: residuals(:,:)
 !    real(kind_float), allocatable :: euc_norm(:)
 !    real(kind_float) :: fro_norm
-    real(kind_float) :: largest_euc_norm
+!    real(kind_float) :: largest_euc_norm
     real(kind_float) :: largest_sv
     integer(kind_integer) :: nresiduals = 0
 !< residuals = preconditioned residuals of the approximate solutions 
@@ -4459,7 +4468,7 @@ contains
 !    end if
 
     call krylov_start%lkl_start(nbasis,nrhs,&
-  &        approx_spectra,nstart,ierr)
+  &        krylov_problem_b%approx_spectra,nstart,ierr)
     if (ierr.ne.0) then
       if (iverb.ge.0) then
         print *, 'class(user_krylov_start_subroutine) function failed'
@@ -4691,7 +4700,8 @@ contains
         end if
         associate(interfacing_bv => basis_vectors%element)
           call krylov_guess%lkl_guess(nbasis,nstart,k4,&
-  &             approx_spectra,interfacing_bv(1:nbasis,1:nstart),&
+  &             krylov_problem_b%approx_spectra,&
+  &             interfacing_bv(1:nbasis,1:nstart),&
   &             ierr)
         end associate
         if (ierr.ne.0) then
@@ -4713,7 +4723,8 @@ contains
       end if
       associate(interfacing_bv => basis_vectors%element)
         call krylov_guess%lkl_guess(nbasis,nstart,0,&
-  &       approx_spectra,interfacing_bv(1:nbasis,1:nstart),&
+  &       krylov_problem_b%approx_spectra,&
+  &       interfacing_bv(1:nbasis,1:nstart),&
   &       ierr)
       end associate
       if (ierr.ne.0) then
@@ -4901,7 +4912,7 @@ contains
       zero_kb = real(0,kind=kind_float)
       call ggemm('c','n',nsubspace,nrhs,nbasis,one_kb,&
 &       basis_vectors(1:nbasis,1:nsubspace),nbasis,&
-&       rhs(1:nbasis,1:nrhs),nbasis,&
+&       krylov_problem_b%rhs(1:nbasis,1:nrhs),nbasis,&
 &       zero_kb,&
 &       proj_rhs(1:nsubspace,1:nrhs),&
 &       nsubspace)
@@ -4933,11 +4944,11 @@ contains
         one_kb = real(1,kind=kind_float)
         zero_kb = real(0,kind=kind_float)
         call ggemm('c','n',(nstart-k1),nrhs,nbasis,one_kb,&
-&         basis_vectors(1:nbasis,(k1+1):nsubspace),nbasis,&
-&         rhs(1:nbasis,1:nrhs),nbasis,&
-&         zero_kb,&
-&         proj_rhs((k1+1):nsubspace,1:nrhs),&
-&         nsubspace)
+  &         basis_vectors(1:nbasis,(k1+1):nsubspace),nbasis,&
+  &         krylov_problem_b%rhs(1:nbasis,1:nrhs),nbasis,&
+  &         zero_kb,&
+  &         proj_rhs((k1+1):nsubspace,1:nrhs),&
+  &         nsubspace)
         call array_print_rstrt(rname,nsubspace,nrhs,&
   &       proj_rhs(1:nsubspace,1:nrhs),iverb,ierr)
         ierr = 0
@@ -4946,11 +4957,12 @@ contains
 
     do j = 1, nsubspace
       avproduct(1:nbasis,j) = mvproduct(1:nbasis,j) &
-  &      + (basis_vectors(1:nbasis,j) * approx_spectra(1:nbasis))
+  &      + (basis_vectors(1:nbasis,j) &
+  &      * krylov_problem_b%approx_spectra(1:nbasis))
     end do
 
     call krylov_rayleigh(nbasis,nsubspace,&
-  &     approx_spectra,avproduct(1:nbasis,1:nsubspace),&
+  &     avproduct(1:nbasis,1:nsubspace),&
   &     basis_vectors(1:nbasis,1:nsubspace),&
   &     rayleigh(1:nsubspace,1:nsubspace),&
   &     rayleigh_sq(1:nsubspace,1:nsubspace),iverb,ierr)
@@ -5029,20 +5041,7 @@ contains
   &     proj_rhs(1:nsubspace,1:nrhs),&
   &     overlap(1:nsubspace,1:nsubspace),diag_overlap(1:nsubspace),&
   &     krylov_output_b%lagrangian,solutions(1:nsubspace,1:nrhs),iverb,ierr)
-      if (ierr.eq.-35) then ! error variable for ill-conditioned overlap
-        nsubspace = prev_nsubspace
-        if (iverb.ge.0) then
-          print *, 'preparation for krylov ritz(subspace solve) failed'
-          print *, 'error variable = ',ierr
-        end if
-        if (iter.gt.1) then
-          if (iverb.ge.0) then
-            print *, 'using previous subspace solutions for print'
-          end if
-          ierr = 0
-        end if
-        exit ! This exits subspace loop
-      else if (ierr.ne.0) then
+      if (ierr.ne.0) then
         if (iverb.ge.0) then
           print *, 'krylov ritz(subspace solve) calculation failed'
           print *, 'error variable = ',ierr
@@ -5056,17 +5055,18 @@ contains
   &      basis_vectors,nbasis,&
   &      solutions,maxsubspace,&
   &      zero_kb,&
-  &      full_solutions,&
+  &      krylov_output_b%solutions,&
   &      nbasis)
 
 ! call krylov norms subroutine
       call krylov_b_norms(nbasis,nsubspace,nrhs,&
   &     mvproduct(1:nbasis,1:nsubspace),& 
-  &     basis_vectors(1:nbasis,1:nsubspace),full_solutions,& 
+  &     basis_vectors(1:nbasis,1:nsubspace),&
+  &     krylov_output_b%solutions,& 
   &     solutions(1:nsubspace,1:nrhs),&
   &     overlap(1:nsubspace,1:nsubspace),&
-  &     rhs,approx_spectra,&
-  &     residuals,krylov_output_b%euc_norm,largest_euc_norm,&
+  &     krylov_problem_b%rhs,krylov_problem_b%approx_spectra,&
+  &     residuals,&
   &     krylov_output_b%fro_norm,nresiduals,iverb,ierr)
       if (ierr.ne.0) then
         if (iverb.ge.0) then
@@ -5079,10 +5079,11 @@ contains
 
 !! determine residuals
       call krylov_b_residue(nbasis,nsubspace,nrhs,&
-  &     mvproduct(1:nbasis,1:nsubspace),full_solutions,&
+  &     mvproduct(1:nbasis,1:nsubspace),&
+  &     krylov_output_b%solutions,&
   &     solutions(1:nsubspace,1:nrhs),&
-  &     rhs,&
-  &     approx_spectra,precon_string,&
+  &     krylov_problem_b%rhs,&
+  &     krylov_problem_b%approx_spectra,precon_string,&
   &     residuals,&
   &     largest_sv,&
   &     nresiduals,iverb,ierr)
@@ -5097,18 +5098,18 @@ contains
         exit ! This exits subspace loop
       end if
 
-! determine convergence of solutions based on euclidean norm
-      krylov_output_b%nconverged = 0
-      krylov_output_b%jconverged = .false.
-      do j = 1 , nrhs
-        if ((-threshold).gt.log10(krylov_output_b%euc_norm(j))) then
-          krylov_output_b%nconverged = krylov_output_b%nconverged + 1
-          krylov_output_b%jconverged(j) = .true.
-        end if
-      end do
-      if (iverb.ge.2) then
-        print *, 'converged vectors: ', krylov_output_b%nconverged
-      end if
+!! determine convergence of solutions based on euclidean norm
+!      krylov_output_b%nconverged = 0
+!      krylov_output_b%jconverged = .false.
+!      do j = 1 , nrhs
+!        if ((-threshold).gt.log10(krylov_output_b%euc_norm(j))) then
+!          krylov_output_b%nconverged = krylov_output_b%nconverged + 1
+!          krylov_output_b%jconverged(j) = .true.
+!        end if
+!      end do
+!      if (iverb.ge.2) then
+!        print *, 'converged vectors: ', krylov_output_b%nconverged
+!      end if
 
 ! determine convergence of solutions based on frobenius norm
 ! The stricter test, this is done before check by euclidean norms
@@ -5119,13 +5120,13 @@ contains
         exit ! This exits subspace loop
       end if
 
-! determine convergence of solutions based on nconverged
-      if (krylov_output_b%nconverged.ge.nrhs) then
-        if (iverb.ge.1) then
-          print *, 'Converged by euclidean norm!'
-        end if
-        exit ! This exits subspace loop
-      end if
+!! determine convergence of solutions based on nconverged
+!      if (krylov_output_b%nconverged.ge.nrhs) then
+!        if (iverb.ge.1) then
+!          print *, 'Converged by euclidean norm!'
+!        end if
+!        exit ! This exits subspace loop
+!      end if
 
 ! convergence checks failed when this line is reached
       if (iverb.ge.2) then
@@ -5208,7 +5209,7 @@ contains
         ierr = 0
 !! Putting X(full solutions) as new previous V(basis)
         basis_vectors(1:nbasis,1:nrhs) = &
-  &      full_solutions(1:nbasis,1:nrhs)
+  &      krylov_output_b%solutions(1:nbasis,1:nrhs)
 !! set nsubspace to new value
         nsubspace = nrhs
 !!! SVD of saved vectors to improve condition number
@@ -5263,7 +5264,7 @@ contains
 !! generate fresh proj_RHS as well
         call ggemm('c','n',nsubspace,nrhs,nbasis,one_kb,&
   &       basis_vectors(1:nbasis,1:nsubspace),nbasis,&
-  &       rhs(1:nbasis,1:nrhs),nbasis,&
+  &       krylov_problem_b%rhs(1:nbasis,1:nrhs),nbasis,&
   &       zero_kb,&
   &       proj_rhs(1:nsubspace,1:nrhs),&
   &       nsubspace)
@@ -5287,10 +5288,11 @@ contains
         end if
         do j = 1, nsubspace
           avproduct(1:nbasis,j) = mvproduct(1:nbasis,j) &
-  &       + ( basis_vectors(1:nbasis,j) * approx_spectra(1:nbasis))
+  &       + ( basis_vectors(1:nbasis,j) &
+  &       * krylov_problem_b%approx_spectra(1:nbasis))
         end do
         call krylov_rayleigh(nbasis,nsubspace,&
-  &         approx_spectra,avproduct(1:nbasis,1:nsubspace),&
+  &         avproduct(1:nbasis,1:nsubspace),&
   &         basis_vectors(1:nbasis,1:nsubspace),&
   &         rayleigh(1:prev_nsubspace,1:nsubspace),&
   &         rayleigh_sq(1:prev_nsubspace,1:nsubspace),iverb,ierr)
@@ -5317,7 +5319,7 @@ contains
 !! need to increase RHS as well
         call ggemm('c','n',nresiduals,nrhs,nbasis,one_kb,&
   &       basis_vectors(1:nbasis,(prev_nsubspace+1):nsubspace),nbasis,&
-  &       rhs(1:nbasis,1:nrhs),nbasis,&
+  &       krylov_problem_b%rhs(1:nbasis,1:nrhs),nbasis,&
   &       zero_kb,&
   &       proj_rhs((prev_nsubspace+1):nsubspace,1:nrhs),&
   &       nresiduals)
@@ -5340,12 +5342,14 @@ contains
         end if
         do j = prev_nsubspace+1 , nsubspace
           avproduct(1:nbasis,j) = mvproduct(1:nbasis,j)& 
-  &    +  (basis_vectors(1:nbasis,j) * approx_spectra(1:nbasis))
+  &    +  (basis_vectors(1:nbasis,j) &
+  &    * krylov_problem_b%approx_spectra(1:nbasis))
         end do
 ! expand rayleigh matrix
         call krylov_expand(nbasis,nsubspace,&
   &       nresiduals,prev_nsubspace,&
-  &       approx_spectra,avproduct(1:nbasis,1:nsubspace),&
+  &       krylov_problem_b%approx_spectra,&
+  &       avproduct(1:nbasis,1:nsubspace),&
   &       basis_vectors(1:nbasis,1:nsubspace),&
   &       rayleigh(1:nsubspace,1:nsubspace),&
   &       rayleigh_sq(1:nsubspace,1:nsubspace),iverb,ierr)
@@ -5439,7 +5443,7 @@ contains
     else ! iterations exited with no serious errors, possible useful data!
       if (irestart.ge.1) then ! user asked for save files
         call array_print_rstrt(sname,nbasis,nrhs,&
-  &       full_solutions(1:nbasis,1:nrhs),iverb,ierr)
+  &       krylov_output_b%solutions(1:nbasis,1:nrhs),iverb,ierr)
         if (ierr.eq.0) then ! save file printed! safe to delete restart
           call array_del_rstrt(vname,iverb,ierr)
           ! no check for ierr, no action on fail
@@ -5458,18 +5462,12 @@ contains
           ierr = 0
         end if
       end if
-! Final checks
-      if (krylov_output_b%nconverged.le.0) then !only if ierr .eq. 0
+      if ((-threshold).le.log10(krylov_output_b%fro_norm)) then
+! only if ierr = 0
         if (iverb.ge.0) then
-          print *, 'solver produced no solutions'
+          print *, 'solver failed to converged'
         end if
         ierr = -15
-      else if (krylov_output_b%nconverged.lt.nrhs) then !only if output function works
-        if (iverb.ge.1) then
-          print *, 'not all desired solutions produced'
-          print *, 'ierr contains number of solutions printed'
-        end if
-        ierr = krylov_output_b%nconverged
       end if
     end if
 
@@ -5547,7 +5545,7 @@ contains
 !--------------------------------------------------------------------
 ! Output Variables
 !--------------------------------------------------------------------
-    type(base), intent(inout) :: lagrangian(nroots)
+    type(base), intent(inout) :: lagrangian
     type(base), intent(inout) :: solutions(nsubspace,nroots)
 !--------------------------------------------------------------------
 ! Error Variables
@@ -5564,6 +5562,7 @@ contains
     type(base), allocatable :: subspace_shift(:,:)
     type(base), allocatable :: vavx(:,:)
     type(base), allocatable :: vvx(:,:)
+    type(base), allocatable :: jlagrangian(:)
     type(base) :: expectation
     type(base) :: norm
     type(base) :: rhs_with_x
@@ -5587,6 +5586,7 @@ contains
     allocate(ipiv(nsubspace))
     allocate(vavx(nsubspace,nroots))
     allocate(vvx(nsubspace,nroots))
+    allocate(jlagrangian(nroots))
 
 !! construct d_o_sqrt
     d_o_sqrt = sqrt(diag_overlap)
@@ -5718,7 +5718,7 @@ contains
   &   solutions,nsubspace,zero_kb,&
   &   vvx,nsubspace)
     if (iverb.ge.2) then
-      print *, 'lagrangians of desired solutions:' 
+      print *, 'lagrangians of individual solutions:' 
     end if
     k = 0 ! cycle over rhs
     l = 1 ! cycle over omega
@@ -5734,14 +5734,14 @@ contains
         if (abs(omega(j)).gt.eps) then
           call gdot(nsubspace,solutions(1:nsubspace,j),1,&
   &         vvx(1:nsubspace,j),1,norm,ierr)
-          lagrangian(j) = expectation&
+          jlagrangian(j) = expectation&
   &         -(norm*omega(j))- rhs_with_x - x_with_rhs
         else
-          lagrangian(j) = expectation&
+          jlagrangian(j) = expectation&
   &         - rhs_with_x - x_with_rhs
         end if
         if (iverb.ge.2) then
-          print *, 'L of ',j,' freq and rhs : ',lagrangian(j)
+          print *, 'L of ',j,' freq and rhs : ',jlagrangian(j)
         end if
       end do
     else if (nroots.eq.nomega) then ! only one rhs
@@ -5755,14 +5755,14 @@ contains
         if (abs(omega(j)).gt.eps) then
           call gdot(nsubspace,solutions(1:nsubspace,j),1,&
   &         vvx(1:nsubspace,j),1,norm,ierr)
-          lagrangian(j) = expectation&
+          jlagrangian(j) = expectation&
   &         -(norm*omega(j))- rhs_with_x - x_with_rhs
         else
-          lagrangian(j) = expectation&
+          jlagrangian(j) = expectation&
   &         - rhs_with_x - x_with_rhs
         end if
         if (iverb.ge.2) then
-          print *, 'L of ',j,' freq (fixed rhs): ',lagrangian(j)
+          print *, 'L of ',j,' freq (fixed rhs): ',jlagrangian(j)
         end if
       end do
     else if (nroots.eq.nrhs) then ! only one frequency
@@ -5776,10 +5776,10 @@ contains
   &         proj_rhs(1:nsubspace,j),1,x_with_rhs,ierr)
           call gdot(nsubspace,solutions(1:nsubspace,j),1,&
   &         vvx(1:nsubspace,j),1,norm,ierr)
-          lagrangian(j) = expectation&
+          jlagrangian(j) = expectation&
   &         -(norm*omega(1))- rhs_with_x - x_with_rhs
           if (iverb.ge.2) then
-            print *, 'L of ',j,' rhs (fixed freq): ',lagrangian(j)
+            print *, 'L of ',j,' rhs (fixed freq): ',jlagrangian(j)
           end if
         end do
       else
@@ -5790,10 +5790,10 @@ contains
   &         proj_rhs(1:nsubspace,j),1,x_with_rhs,ierr)
           call gdot(nsubspace,proj_rhs(1:nsubspace,j),1,&
   &         solutions(1:nsubspace,j),1,rhs_with_x,ierr)
-          lagrangian(j) = expectation&
+          jlagrangian(j) = expectation&
   &         - rhs_with_x - x_with_rhs
           if (iverb.ge.2) then
-            print *, 'L of ',j,' rhs (fixed freq): ',lagrangian(j)
+            print *, 'L of ',j,' rhs (fixed freq): ',jlagrangian(j)
           end if
         end do
       end if
@@ -5813,17 +5813,26 @@ contains
         if (abs(omega(l)).gt.eps) then
           call gdot(nsubspace,solutions(1:nsubspace,j),1,&
   &         vvx(1:nsubspace,j),1,norm,ierr)
-          lagrangian(j) = expectation&
+          jlagrangian(j) = expectation&
   &         -(norm*omega(l))- rhs_with_x - x_with_rhs
         else
-          lagrangian(j) = expectation&
+          jlagrangian(j) = expectation&
   &         - rhs_with_x - x_with_rhs
         end if
         if (iverb.ge.2) then
-          print *, 'L of ',k,' rhs and ',l,' freq: ',lagrangian(j)
+          print *, 'L of ',k,' rhs and ',l,' freq: ',jlagrangian(j)
         end if
       end do
     end if
+
+    lagrangian = real(0,kind=kind_float)
+    do j = 1, nroots
+      lagrangian = lagrangian + jlagrangian(j)
+    end do
+    if (iverb.ge.2) then
+      print *, 'Total L :', lagrangian
+    end if
+
 
 ! Deallocate local arrays
     deallocate(subspace_shift)
@@ -5832,6 +5841,7 @@ contains
     deallocate(ipiv)
     deallocate(subspace)
     deallocate(d_o_sqrt)
+    deallocate(jlagrangian)
 
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
@@ -5846,7 +5856,7 @@ contains
   &     mvproduct,basis_vectors,full_solutions,solutions,&
   &     overlap,omega,rhs,&
   &     approx_spectra,residuals,&
-  &     euc_norm,largest_euc_norm,fro_norm,&
+  &     fro_norm,&
   &     nresiduals,iverb,ierr)
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
@@ -5895,8 +5905,6 @@ contains
 ! Output Variables
 !--------------------------------------------------------------------
     type(base), intent(inout) :: residuals(nbasis,nroots)
-    real(kind_float), intent(inout) :: euc_norm(nroots)
-    real(kind_float), intent(inout) :: largest_euc_norm
     real(kind_float), intent(inout) :: fro_norm
     integer(kind_integer), intent(inout) :: nresiduals
 !--------------------------------------------------------------------
@@ -5910,13 +5918,13 @@ contains
     type(base) :: one_kb
     type(base) :: zero_kb
     type(base), allocatable :: all_residuals(:,:)
-    real(kind_float), allocatable :: all_omega(:)
     logical, allocatable :: eps_converged(:)
     real(kind_float) :: lognbasis
     integer(kind_integer) :: ntemp ! n of all_residuals
     type(base), allocatable :: xo(:,:)
     type(base), allocatable :: vxo(:,:)
     type(base), allocatable :: euc_sq(:)
+    real(kind_float), allocatable :: euc_norm(:)
     real(kind_float) :: res_temp
 !    integer(kind_float) :: ptest = 0 ! preconditioner test
 !! integer for loops
@@ -5929,7 +5937,7 @@ contains
     allocate(xo(nsubspace,nroots))
     allocate(vxo(nbasis,nroots))
     allocate(euc_sq(nroots))
-    allocate(all_omega(nroots))
+    allocate(euc_norm(nroots))
 
 !! Set constants required for BLAS
     one_kb = real(1,kind=kind_float)
@@ -6033,17 +6041,6 @@ contains
       print *, 'number of residuals before precondition: ',ntemp
     end if
 
-!! find largest euc_norm
-    largest_euc_norm = maxval(euc_norm)
-    if (iverb.ge.3) then
-      print *, 'largest euclidean norm: ',largest_euc_norm
-      if (iverb.ge.4) then
-        do j = 1,nroots
-          print *, j,' euclidean norm: ',euc_norm(j)
-        end do
-      end if
-    end if
-
 !! return to calling subroutine if there are no residues
 !! above machine precision
     if (ntemp.eq.0) then
@@ -6051,70 +6048,71 @@ contains
       return
     end if
 
+    nresiduals = ntemp
 
-!! modified gram schmidt for the same rhs, 
-    if (nroots.gt.nomega) then
-      if (iverb.ge.4) then
-        print *, 'inner product of residuals:'
-      end if
-      do n = 1 , nrhs
-        do j = n+nrhs , nroots , nrhs
-          do k = n, j-nrhs, nrhs
-            call gdot(nbasis,all_residuals(1:nbasis,j),1,&
-  &           all_residuals(1:nbasis,k),1,euc_sq(1),ierr)
-            if (iverb.ge.4) then
-              print *, 'inner product of residuals: ', j,' and ',k
-              print *, ' corresponding to RHS: ', n,' :'
-              print *, euc_sq(1)
-            end if
-            call gdot(nbasis,all_residuals(1:nbasis,k),1,&
-  &           all_residuals(1:nbasis,k),1,euc_sq(2),ierr)
-            all_residuals(1:nbasis,j) = &
-  &            all_residuals(1:nbasis,j) -&
-  &            all_residuals(1:nbasis,k)*euc_sq(1)/euc_sq(2)
-          end do
-        end do
-      end do
-    end if
-
-
-!! set log of nbasis
-    lognbasis = log10(real(nbasis,kind=kind_float))
-
-!! reset eps_converged, check norms of preconditioned residuals
-!! reuse euc_sq,eps_converged, value of euc_sq lost!
-    eps_converged = .false.
-    nresiduals = nroots
-    do j = 1, nroots
-!! generate norm squared of preconditioned residual
-      call gdot(nbasis,all_residuals(1:nbasis,j),1,&
-  &     all_residuals(1:nbasis,j),1,euc_sq(j),ierr)
-!! make norm squared real(kind_float)
-      res_temp = euc_sq(j)
-!! check that norm is positive
-      if (res_temp.lt.real(0,kind=kind_float)) then
-        if (iverb.ge.0) then
-          print *, 'square of ',j,' residual norm'
-          print *, 'less than zero after orthogonalization'
-          print *, 'exit norm step'
-        end if
-        ierr = -40
-        return ! return to solver loop
-      end if
-!! get norm
-      res_temp = sqrt(res_temp)
-!! check that norm is larger than (logeps+lognbasis)
-      if (log10(res_temp).lt.(logeps)) then
-        eps_converged(j) = .true.
-        nresiduals = nresiduals - 1
-      end if
-      if (iverb.ge.4) then
-        print *, j,' orthogonalized residual norm: ',res_temp
-      end if
-    end do
-    if (iverb.ge.3) then
-      print *, 'number of orthogonalized residuals: ',nresiduals
-    end if
+!!! modified gram schmidt for the same rhs, 
+!    if (nroots.gt.nomega) then
+!      if (iverb.ge.4) then
+!        print *, 'inner product of residuals:'
+!      end if
+!      do n = 1 , nrhs
+!        do j = n+nrhs , nroots , nrhs
+!          do k = n, j-nrhs, nrhs
+!            call gdot(nbasis,all_residuals(1:nbasis,j),1,&
+!  &           all_residuals(1:nbasis,k),1,euc_sq(1),ierr)
+!            if (iverb.ge.4) then
+!              print *, 'inner product of residuals: ', j,' and ',k
+!              print *, ' corresponding to RHS: ', n,' :'
+!              print *, euc_sq(1)
+!            end if
+!            call gdot(nbasis,all_residuals(1:nbasis,k),1,&
+!  &           all_residuals(1:nbasis,k),1,euc_sq(2),ierr)
+!            all_residuals(1:nbasis,j) = &
+!  &            all_residuals(1:nbasis,j) -&
+!  &            all_residuals(1:nbasis,k)*euc_sq(1)/euc_sq(2)
+!          end do
+!        end do
+!      end do
+!    end if
+!
+!
+!!! set log of nbasis
+!    lognbasis = log10(real(nbasis,kind=kind_float))
+!
+!!! reset eps_converged, check norms of preconditioned residuals
+!!! reuse euc_sq,eps_converged, value of euc_sq lost!
+!    eps_converged = .false.
+!    nresiduals = nroots
+!    do j = 1, nroots
+!!! generate norm squared of preconditioned residual
+!      call gdot(nbasis,all_residuals(1:nbasis,j),1,&
+!  &     all_residuals(1:nbasis,j),1,euc_sq(j),ierr)
+!!! make norm squared real(kind_float)
+!      res_temp = euc_sq(j)
+!!! check that norm is positive
+!      if (res_temp.lt.real(0,kind=kind_float)) then
+!        if (iverb.ge.0) then
+!          print *, 'square of ',j,' residual norm'
+!          print *, 'less than zero after orthogonalization'
+!          print *, 'exit norm step'
+!        end if
+!        ierr = -40
+!        return ! return to solver loop
+!      end if
+!!! get norm
+!      res_temp = sqrt(res_temp)
+!!! check that norm is larger than (logeps+lognbasis)
+!      if (log10(res_temp).lt.(logeps)) then
+!        eps_converged(j) = .true.
+!        nresiduals = nresiduals - 1
+!      end if
+!      if (iverb.ge.4) then
+!        print *, j,' orthogonalized residual norm: ',res_temp
+!      end if
+!    end do
+!    if (iverb.ge.3) then
+!      print *, 'number of orthogonalized residuals: ',nresiduals
+!    end if
 
 !! store preconditioned residuals on output array
     l = 0 ! cycle over all not converged preconditioned residuals
@@ -6132,7 +6130,6 @@ contains
 
 ! Deallocate local arrays
     deallocate(all_residuals)
-    deallocate(all_omega)
     deallocate(eps_converged)
     deallocate(vxo)
     deallocate(xo)
@@ -6272,7 +6269,7 @@ contains
         end do
       end if
 
-    else if (precon_string.eq.'approx_spectra') then
+    else if (precon_string.eq.'conjugate_gradient') then
 
       if (nroots.eq.nomega) then ! one omega per root
         do j = 1, nroots
@@ -6545,9 +6542,8 @@ contains
 !--------------------------------------------------------------------
   subroutine problem_c_solver1(&
     & krylov_problem_c,&
-    & approx_spectra,omega,rhs,krylov_start,&
+    & krylov_start,&
     & krylov_guess,krylov_mvp,&
-    & full_solutions,&
     & krylov_output_c,ierr)
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
@@ -6589,10 +6585,10 @@ contains
 ! Input functions
 !--------------------------------------------------------------------
     class(libkrylov_start_subroutine) ::  krylov_start
-    class(libkrylov_problem_c_subroutine) :: krylov_problem_c
+    class(libkrylov_problem_c_input) :: krylov_problem_c
     class(libkrylov_guess_subroutine) ::     krylov_guess
     class(libkrylov_mvp_subroutine) ::       krylov_mvp
-    class(libkrylov_output_c_subroutine) ::  krylov_output_c
+    class(libkrylov_problem_c_output) ::  krylov_output_c
 !--------------------------------------------------------------------
 ! Local Variables
 !--------------------------------------------------------------------
@@ -6601,7 +6597,7 @@ contains
 !! variable for error variable
     integer(kind_integer), intent(inout) :: ierr
 !! integer for loops
-    integer(kind_integer) :: j = 0
+    integer(kind_integer) :: j,k = 0
 !! integer for restart files
     integer(kind_integer) :: k1,k2,k3,k4 = 0
 !! integer for iteration counting
@@ -6662,11 +6658,11 @@ contains
 !! Arrays that are allocated after krylov problem
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !! filled in with the guess of the spectrum
-    real(kind_float), intent(in) :: approx_spectra(:)
+!    real(kind_float), intent(in) :: approx_spectra(:)
 !< approximation of spectra of problem = approx_spectra = D
-    real(kind_float), intent(in) :: omega(:) 
+!    real(kind_float), intent(in) :: omega(:) 
 !< frequencies to be solved for = omega
-    type(base), intent(in) :: rhs(:,:)
+!    type(base), intent(in) :: rhs(:,:)
 !< RHS of problem = rhs = P
 !    logical, allocatable :: jconverged(:)
 !< logical for determining which roots are converged
@@ -6702,7 +6698,7 @@ contains
 !    type(base), allocatable ::  lagrangian(:)
 !< solutions = eigenvectors of current subspace calculation that are relevant = x
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    type(base), intent(inout) :: full_solutions(:,:)
+!    type(base), intent(inout) :: full_solutions(:,:)
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !! filled in at krylov_a_norms
     type(base), allocatable :: residuals(:,:)
@@ -6910,7 +6906,7 @@ contains
 !    end if
 
     call krylov_start%lkl_start(nbasis,nroots,&
-  &        approx_spectra,nstart,ierr)
+  &        krylov_problem_c%approx_spectra,nstart,ierr)
     if (ierr.ne.0) then
       if (iverb.ge.0) then
         print *, 'class(user_krylov_start_subroutine) function failed'
@@ -7154,7 +7150,8 @@ contains
         end if
         associate(interfacing_bv => basis_vectors%element)
           call krylov_guess%lkl_guess(nbasis,nstart,k4,&
-  &             approx_spectra,interfacing_bv(1:nbasis,1:nstart),&
+  &             krylov_problem_c%approx_spectra,&
+  &             interfacing_bv(1:nbasis,1:nstart),&
   &             ierr)
         end associate
         if (ierr.ne.0) then
@@ -7176,7 +7173,8 @@ contains
       end if
       associate(interfacing_bv => basis_vectors%element)
         call krylov_guess%lkl_guess(nbasis,nstart,0,&
-  &       approx_spectra,interfacing_bv(1:nbasis,1:nstart),&
+  &       krylov_problem_c%approx_spectra,&
+  &       interfacing_bv(1:nbasis,1:nstart),&
   &       ierr)
       end associate
       if (ierr.ne.0) then
@@ -7327,11 +7325,12 @@ contains
 
     do j = 1, nsubspace
       avproduct(1:nbasis,j) = mvproduct(1:nbasis,j) &
-  &      + (basis_vectors(1:nbasis,j) * approx_spectra(1:nbasis))
+  &      + (basis_vectors(1:nbasis,j) &
+  &      * krylov_problem_c%approx_spectra(1:nbasis))
     end do
 
     call krylov_rayleigh(nbasis,nsubspace,&
-  &     approx_spectra,avproduct(1:nbasis,1:nsubspace),&
+  &     avproduct(1:nbasis,1:nsubspace),&
   &     basis_vectors(1:nbasis,1:nsubspace),&
   &     rayleigh(1:nsubspace,1:nsubspace),&
   &     rayleigh_sq(1:nsubspace,1:nsubspace),iverb,ierr)
@@ -7388,7 +7387,7 @@ contains
       zero_kb = real(0,kind=kind_float)
       call ggemm('c','n',nsubspace,nrhs,nbasis,one_kb,&
 &       basis_vectors(1:nbasis,1:nsubspace),nbasis,&
-&       rhs(1:nbasis,1:nrhs),nbasis,&
+&       krylov_problem_c%rhs(1:nbasis,1:nrhs),nbasis,&
 &       zero_kb,&
 &       proj_rhs(1:nsubspace,1:nrhs),&
 &       nsubspace)
@@ -7421,7 +7420,7 @@ contains
         zero_kb = real(0,kind=kind_float)
         call ggemm('c','n',(nstart-k1),nrhs,nbasis,one_kb,&
 &         basis_vectors(1:nbasis,(k1+1):nsubspace),nbasis,&
-&         rhs(1:nbasis,1:nrhs),nbasis,&
+&         krylov_problem_c%rhs(1:nbasis,1:nrhs),nbasis,&
 &         zero_kb,&
 &         proj_rhs((k1+1):nsubspace,1:nrhs),&
 &         nsubspace)
@@ -7495,7 +7494,9 @@ contains
   &     cholesky(1:nsubspace,1:nsubspace),&
   &     proj_rhs(1:nsubspace,1:nrhs),&
   &     overlap(1:nsubspace,1:nsubspace),diag_overlap(1:nsubspace),&
-  &     omega,krylov_output_c%lagrangian,solutions(1:nsubspace,1:nroots),iverb,ierr)
+  &     krylov_problem_c%omega,&
+  &     krylov_output_c%lagrangian,solutions(1:nsubspace,1:nroots),&
+  &     iverb,ierr)
       if (ierr.ne.0) then
         if (iverb.ge.0) then
           print *, 'krylov ritz(subspace solve) calculation failed'
@@ -7510,17 +7511,20 @@ contains
   &      basis_vectors,nbasis,&
   &      solutions,maxsubspace,&
   &      zero_kb,&
-  &      full_solutions,&
+  &      krylov_output_c%solutions,&
   &      nbasis)
 
 ! call krylov norms subroutine
       call krylov_c_norms(nbasis,nsubspace,nomega,nrhs,nroots,&
   &     mvproduct(1:nbasis,1:nsubspace),& 
-  &     basis_vectors(1:nbasis,1:nsubspace),full_solutions,& 
+  &     basis_vectors(1:nbasis,1:nsubspace),&
+  &     krylov_output_c%solutions,& 
   &     solutions(1:nsubspace,1:nroots),&
   &     overlap(1:nsubspace,1:nsubspace),&
-  &     omega,rhs,approx_spectra,&
-  &     residuals,krylov_output_c%euc_norm,largest_euc_norm,&
+  &     krylov_problem_c%omega,&
+  &     krylov_problem_c%rhs,&
+  &     krylov_problem_c%approx_spectra,&
+  &     residuals,&
   &     krylov_output_c%fro_norm,nresiduals,iverb,ierr)
       if (ierr.ne.0) then
         if (iverb.ge.0) then
@@ -7533,10 +7537,12 @@ contains
 
 !! determine residuals
       call krylov_c_residue(nbasis,nsubspace,nomega,nrhs,nroots,&
-  &     mvproduct(1:nbasis,1:nsubspace),full_solutions,&
+  &     mvproduct(1:nbasis,1:nsubspace),&
+  &     krylov_output_c%solutions,&
   &     solutions(1:nsubspace,1:nroots),&
-  &     omega,rhs,&
-  &     approx_spectra,precon_string,&
+  &     krylov_problem_c%omega,&
+  &     krylov_problem_c%rhs,&
+  &     krylov_problem_c%approx_spectra,precon_string,&
   &     residuals,&
   &     largest_sv,&
   &     nresiduals,iverb,ierr)
@@ -7551,18 +7557,18 @@ contains
         exit ! This exits subspace loop
       end if
 
-! determine convergence of solutions based on euclidean norm
-      krylov_output_c%nconverged = 0
-      krylov_output_c%jconverged = .false.
-      do j = 1 , nroots
-        if ((-threshold).gt.log10(krylov_output_c%euc_norm(j))) then
-          krylov_output_c%nconverged = krylov_output_c%nconverged + 1
-          krylov_output_c%jconverged(j) = .true.
-        end if
-      end do
-      if (iverb.ge.2) then
-        print *, 'converged vectors: ', krylov_output_c%nconverged
-      end if
+!! determine convergence of solutions based on euclidean norm
+!      krylov_output_c%nconverged = 0
+!      krylov_output_c%jconverged = .false.
+!      do j = 1 , nroots
+!        if ((-threshold).gt.log10(krylov_output_c%euc_norm(j))) then
+!          krylov_output_c%nconverged = krylov_output_c%nconverged + 1
+!          krylov_output_c%jconverged(j) = .true.
+!        end if
+!      end do
+!      if (iverb.ge.2) then
+!        print *, 'converged vectors: ', krylov_output_c%nconverged
+!      end if
 
 ! determine convergence of solutions based on frobenius norm
 ! The stricter test, this is done before check by euclidean norms
@@ -7573,13 +7579,13 @@ contains
         exit ! This exits subspace loop
       end if
 
-! determine convergence of solutions based on nconverged
-      if (krylov_output_c%nconverged.ge.nroots) then
-        if (iverb.ge.1) then
-          print *, 'Converged by euclidean norm!'
-        end if
-        exit ! This exits subspace loop
-      end if
+!! determine convergence of solutions based on nconverged
+!      if (krylov_output_c%nconverged.ge.nroots) then
+!        if (iverb.ge.1) then
+!          print *, 'Converged by euclidean norm!'
+!        end if
+!        exit ! This exits subspace loop
+!      end if
 
 ! convergence checks failed when this line is reached
       if (iverb.ge.2) then
@@ -7662,7 +7668,7 @@ contains
         ierr = 0
 !! Putting X(full solutions) as new previous V(basis)
         basis_vectors(1:nbasis,1:nroots) = &
-  &      full_solutions(1:nbasis,1:nroots)
+  &      krylov_output_c%solutions(1:nbasis,1:nroots)
 !! set nsubspace to new value
         nsubspace = nroots
 !!! SVD of saved vectors to improve condition number
@@ -7717,7 +7723,7 @@ contains
 !! generate fresh proj_RHS as well
         call ggemm('c','n',nsubspace,nrhs,nbasis,one_kb,&
   &       basis_vectors(1:nbasis,1:nsubspace),nbasis,&
-  &       rhs(1:nbasis,1:nrhs),nbasis,&
+  &       krylov_problem_c%rhs(1:nbasis,1:nrhs),nbasis,&
   &       zero_kb,&
   &       proj_rhs(1:nsubspace,1:nrhs),&
   &       nsubspace)
@@ -7741,10 +7747,11 @@ contains
         end if
         do j = 1, nsubspace
           avproduct(1:nbasis,j) = mvproduct(1:nbasis,j) &
-  &       + ( basis_vectors(1:nbasis,j) * approx_spectra(1:nbasis))
+  &       + ( basis_vectors(1:nbasis,j) &
+  &       * krylov_problem_c%approx_spectra(1:nbasis))
         end do
         call krylov_rayleigh(nbasis,nsubspace,&
-  &         approx_spectra,avproduct(1:nbasis,1:nsubspace),&
+  &         avproduct(1:nbasis,1:nsubspace),&
   &         basis_vectors(1:nbasis,1:nsubspace),&
   &         rayleigh(1:prev_nsubspace,1:nsubspace),&
   &         rayleigh_sq(1:prev_nsubspace,1:nsubspace),iverb,ierr)
@@ -7771,7 +7778,7 @@ contains
 !! need to increase RHS as well
         call ggemm('c','n',nresiduals,nrhs,nbasis,one_kb,&
   &       basis_vectors(1:nbasis,(prev_nsubspace+1):nsubspace),nbasis,&
-  &       rhs(1:nbasis,1:nrhs),nbasis,&
+  &       krylov_problem_c%rhs(1:nbasis,1:nrhs),nbasis,&
   &       zero_kb,&
   &       proj_rhs((prev_nsubspace+1):nsubspace,1:nrhs),&
   &       nresiduals)
@@ -7794,12 +7801,14 @@ contains
         end if
         do j = prev_nsubspace+1 , nsubspace
           avproduct(1:nbasis,j) = mvproduct(1:nbasis,j)& 
-  &    +  (basis_vectors(1:nbasis,j) * approx_spectra(1:nbasis))
+  &    +  (basis_vectors(1:nbasis,j) &
+  &    *  krylov_problem_c%approx_spectra(1:nbasis))
         end do
 ! expand rayleigh matrix
         call krylov_expand(nbasis,nsubspace,&
   &       nresiduals,prev_nsubspace,&
-  &       approx_spectra,avproduct(1:nbasis,1:nsubspace),&
+  &       krylov_problem_c%approx_spectra,&
+  &       avproduct(1:nbasis,1:nsubspace),&
   &       basis_vectors(1:nbasis,1:nsubspace),&
   &       rayleigh(1:nsubspace,1:nsubspace),&
   &       rayleigh_sq(1:nsubspace,1:nsubspace),iverb,ierr)
@@ -7893,7 +7902,7 @@ contains
     else ! iterations exited with no serious errors, possible useful data!
       if (irestart.ge.1) then ! user asked for save files
         call array_print_rstrt(sname,nbasis,nroots,&
-  &       full_solutions(1:nbasis,1:nroots),iverb,ierr)
+  &       krylov_output_c%solutions(1:nbasis,1:nroots),iverb,ierr)
         if (ierr.eq.0) then ! save file printed! safe to delete restart
           call array_del_rstrt(vname,iverb,ierr)
           ! no check for ierr, no action on fail
@@ -7923,22 +7932,17 @@ contains
 !  &       euc_norm(1:nroots),fro_norm,id_string,ierr)
 !      end associate
 !! final ierr check and adjustments
-      if (ierr.ne.0) then
+!      if (ierr.ne.0) then
+!        if (iverb.ge.0) then
+!          print *, 'class(user_krylov_output_subroutine) function failed'
+!        end if
+!        ierr = -20
+      if ((-threshold).le.log10(krylov_output_c%fro_norm)) then
+! only if ierr = 0
         if (iverb.ge.0) then
-          print *, 'class(user_krylov_output_subroutine) function failed'
-        end if
-        ierr = -20
-      else if (krylov_output_c%nconverged.le.0) then !only if ierr .eq. 0
-        if (iverb.ge.0) then
-          print *, 'solver produced no solutions'
+          print *, 'solver failed to converged'
         end if
         ierr = -15
-      else if (krylov_output_c%nconverged.lt.nroots) then !only if output function works
-        if (iverb.ge.1) then
-          print *, 'not all desired solutions produced'
-          print *, 'ierr contains number of solutions printed'
-        end if
-        ierr = krylov_output_c%nconverged
       end if
     end if
 
