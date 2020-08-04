@@ -213,7 +213,7 @@ contains
 !! use values to determine number of independent vectors
     n3 = 0
     do k = 1, n2 
-      if (log10(norm(k)).gt.(logeps+3)) then
+      if (log10(norm(k)).gt.(logeps)) then
         n3 = n3 + 1
         vectors(1:n1,n3) = vectors(1:n1,k) 
       end if
@@ -3251,7 +3251,7 @@ contains
     &      cholesky(1:nsubspace,1:nsubspace),cond,iverb,ierr)
         if (ierr.ne.0) then !cholesky failed, attempt rescue
           if (iverb.ge.0) then
-            print *, 'Cholesky decomposition failed'
+            print *, 'Cholesky decomposition unsuccessful'
           end if
         end if
   ! Force restart if cond is less than threshold
@@ -5187,6 +5187,11 @@ contains
         call krylov_cholesky(nsubspace,overlap(1:nsubspace,1:nsubspace),&
     &     diag_overlap(1:nsubspace),& 
     &     cholesky(1:nsubspace,1:nsubspace),cond,iverb,ierr)
+        if (ierr.ne.0) then !cholesky failed, attempt rescue
+          if (iverb.ge.0) then
+            print *, 'Cholesky decomposition unsuccessful'
+          end if
+        end if
 ! Force restart if cond is less than threshold
         if ((logeps).gt.log10(cond)) then
           if (iverb.ge.1) then
@@ -5196,7 +5201,7 @@ contains
         end if
       else
         if (iverb.ge.1) then
-          print *, 'Static restart conditions met'
+          print *, 'Maximum iterations before restart met'
         end if
         ierr = -23
       end if
@@ -7646,18 +7651,23 @@ contains
         call krylov_cholesky(nsubspace,overlap(1:nsubspace,1:nsubspace),&
     &     diag_overlap(1:nsubspace),& 
     &     cholesky(1:nsubspace,1:nsubspace),cond,iverb,ierr)
+        if (ierr.ne.0) then !cholesky failed, attempt rescue
+          if (iverb.ge.0) then
+            print *, 'Cholesky decomposition unsuccessful'
+          end if
+        end if
+! Force restart if cond is less than threshold
+        if ((logeps).gt.log10(cond)) then
+          if (iverb.ge.1) then
+            print *, 'Condition number exceed desired convergence'
+          end if
+          ierr = -24
+        end if
       else
         if (iverb.ge.1) then
           print *, 'static restart due to number of iterations'
         end if
         ierr = -23
-      end if
-! Force restart if cond is less than threshold
-      if ((logeps).gt.log10(cond)) then
-        if (iverb.ge.1) then
-          print *, 'Condition number exceed desired convergence'
-        end if
-        ierr = -24
       end if
 
       if (ierr.ne.0) then !cholesky failed, attempt rescue
@@ -7765,15 +7775,6 @@ contains
           ierr = 0
           exit ! This exits subspace loop
         end if
-      else if (ierr.ne.0) then !krylov_check failed irrecoverably
-        if (iverb.ge.0) then
-          print *, 'new krylov subspace failed stability check'
-          print *, 'error variable = ',ierr
-          print *, 'using previous subspace solutions for print'
-        end if
-        nsubspace = prev_nsubspace
-        ierr = 0
-        exit ! This exits subspace loop
       else ! cholesky decomposition is stable, expand subspace
 !! need to increase RHS as well
         call ggemm('c','n',nresiduals,nrhs,nbasis,one_kb,&
