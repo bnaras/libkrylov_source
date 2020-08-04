@@ -2231,32 +2231,32 @@ contains
 
     nresiduals = nroots
 
-!! get inner product of residual with itself
-    nresiduals = 0
-    k = 0
-    do j = 1, nroots
-      call gdot(nbasis,residuals(1:nbasis,j),1,&
-  &     residuals(1:nbasis,j),1,euc_sq,ierr)
-      if (ierr.ne.0) then
-        if (iverb.ge.0) then
-          print *, '*dot linear algebra error!', ierr
-          print *, 'exit residue step'
-        end if
-        ierr = -40
-        return ! return to solver loop
-      end if
-      euc_norm = euc_sq
-      euc_norm = sqrt(euc_norm)
-      if (iverb.ge.4) then
-        print *, j,' preconditioned residual norm: ', euc_norm
-      end if
-      if (euc_norm.gt.eps) then
-        nresiduals = nresiduals + 1
-      else
-        k = k + 1
-      end if
-      residuals(1:nbasis,j-k) = residuals(1:nbasis,j)
-    end do
+!!! get inner product of residual with itself
+!    nresiduals = 0
+!    k = 0
+!    do j = 1, nroots
+!      call gdot(nbasis,residuals(1:nbasis,j),1,&
+!  &     residuals(1:nbasis,j),1,euc_sq,ierr)
+!      if (ierr.ne.0) then
+!        if (iverb.ge.0) then
+!          print *, '*dot linear algebra error!', ierr
+!          print *, 'exit residue step'
+!        end if
+!        ierr = -40
+!        return ! return to solver loop
+!      end if
+!      euc_norm = euc_sq
+!      euc_norm = sqrt(euc_norm)
+!      if (iverb.ge.4) then
+!        print *, j,' preconditioned residual norm: ', euc_norm
+!      end if
+!      if (euc_norm.gt.eps) then
+!        nresiduals = nresiduals + 1
+!      else
+!        k = k + 1
+!      end if
+!      residuals(1:nbasis,j-k) = residuals(1:nbasis,j)
+!    end do
 
 !!! SVD of residuals to obtain singular values
     call krylov_orthogonalize(nbasis,nroots,residuals,&
@@ -4094,32 +4094,32 @@ contains
 
     nresiduals = nrhs
 
-!! get inner product of residual with itself
-    nresiduals = 0
-    k = 0
-    do j = 1, nrhs
-      call gdot(nbasis,residuals(1:nbasis,j),1,&
-  &     residuals(1:nbasis,j),1,euc_sq,ierr)
-      if (ierr.ne.0) then
-        if (iverb.ge.0) then
-          print *, '*dot linear algebra error!', ierr
-          print *, 'exit residue step'
-        end if
-        ierr = -40
-        return ! return to solver loop
-      end if
-      euc_norm = euc_sq
-      euc_norm = sqrt(euc_norm)
-      if (iverb.ge.4) then
-        print *, j,' preconditioned residual norm: ', euc_norm
-      end if
-      if (euc_norm.gt.eps) then
-        nresiduals = nresiduals + 1
-      else
-        k = k + 1
-      end if
-      residuals(1:nbasis,j-k) = residuals(1:nbasis,j)
-    end do
+!!! get inner product of residual with itself
+!    nresiduals = 0
+!    k = 0
+!    do j = 1, nrhs
+!      call gdot(nbasis,residuals(1:nbasis,j),1,&
+!  &     residuals(1:nbasis,j),1,euc_sq,ierr)
+!      if (ierr.ne.0) then
+!        if (iverb.ge.0) then
+!          print *, '*dot linear algebra error!', ierr
+!          print *, 'exit residue step'
+!        end if
+!        ierr = -40
+!        return ! return to solver loop
+!      end if
+!      euc_norm = euc_sq
+!      euc_norm = sqrt(euc_norm)
+!      if (iverb.ge.4) then
+!        print *, j,' preconditioned residual norm: ', euc_norm
+!      end if
+!      if (euc_norm.gt.eps) then
+!        nresiduals = nresiduals + 1
+!      else
+!        k = k + 1
+!      end if
+!      residuals(1:nbasis,j-k) = residuals(1:nbasis,j)
+!    end do
 
 !!! SVD of residuals to obtain singular values
     call krylov_orthogonalize(nbasis,nrhs,residuals,&
@@ -6480,32 +6480,32 @@ contains
 
     nresiduals = nroots
 
-!! get inner product of residual with itself
-    nresiduals = 0
-    k = 0
-    do j = 1, nroots
-      call gdot(nbasis,residuals(1:nbasis,j),1,&
-  &     residuals(1:nbasis,j),1,euc_sq,ierr)
-      if (ierr.ne.0) then
-        if (iverb.ge.0) then
-          print *, '*dot linear algebra error!', ierr
-          print *, 'exit residue step'
-        end if
-        ierr = -40
-        return ! return to solver loop
-      end if
-      euc_norm = euc_sq
-      euc_norm = sqrt(euc_norm)
-      if (iverb.ge.4) then
-        print *, j,' preconditioned residual norm: ', euc_norm
-      end if
-      if (euc_norm.gt.eps) then
-        nresiduals = nresiduals + 1
-      else
-        k = k + 1
-      end if
-      residuals(1:nbasis,j-k) = residuals(1:nbasis,j)
-    end do
+!!! get inner product of residual with itself
+!    nresiduals = 0
+!    k = 0
+!    do j = 1, nroots
+!      call gdot(nbasis,residuals(1:nbasis,j),1,&
+!  &     residuals(1:nbasis,j),1,euc_sq,ierr)
+!      if (ierr.ne.0) then
+!        if (iverb.ge.0) then
+!          print *, '*dot linear algebra error!', ierr
+!          print *, 'exit residue step'
+!        end if
+!        ierr = -40
+!        return ! return to solver loop
+!      end if
+!      euc_norm = euc_sq
+!      euc_norm = sqrt(euc_norm)
+!      if (iverb.ge.4) then
+!        print *, j,' preconditioned residual norm: ', euc_norm
+!      end if
+!      if (euc_norm.gt.eps) then
+!        nresiduals = nresiduals + 1
+!      else
+!        k = k + 1
+!      end if
+!      residuals(1:nbasis,j-k) = residuals(1:nbasis,j)
+!    end do
 
 !!! SVD of residuals to obtain singular values
     call krylov_orthogonalize(nbasis,nroots,residuals,&
