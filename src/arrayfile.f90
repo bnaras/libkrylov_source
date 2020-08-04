@@ -424,7 +424,7 @@ contains
     write(unit=funit,fmt='(a18,a32,a2)', &
   &       iostat=ierr) '  "element_type":"',base_print_string,'",'
 !    write(unit=funit,fmt='(a17,a32,a3)', &
-!  &   iostat=ierr) '"legend":["val":"',base_legend_string,'"],'
+!  &   iostat=ierr) '"legend":{"val":"',base_legend_string,'"},'
     write(unit=funit,fmt='(a12)', &
   &       iostat=ierr) '  "array": ['
     write(unit=funit,fmt='(a2,18x,a3,5x,a6,3x,a8,a32)', &
@@ -852,7 +852,7 @@ contains
   &       iostat=ierr) '  "precision":"',float_print_string,'",'
     write(unit=funit,fmt='(a12)', &
 !    write(unit=funit,fmt='(a24)', &
-!  &   iostat=ierr) '"legend":["val":"real"],'
+!  &   iostat=ierr) '"legend":{"val":"real"},'
   &       iostat=ierr) '  "array": ['
     write(unit=funit,fmt='(a2,15x,a6,3x,a4)', &
   &   iostat=ierr) '//','column','real'
