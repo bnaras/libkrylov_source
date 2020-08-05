@@ -1,14 +1,20 @@
 { "type(base)array": {
   "name":"real_sp_1b_exact_lagr           ",
-  "dimensions":[          1,          3],
+  "dimensions":[          2,          3],
   "element_type":"real_sp                         ",
 "legend":{"val":"real                            "},
   "array": [
     {"row":         1,"col":         1,
+      "val":"  -0.241588745E-01"},
+    {"row":         2,"col":         1,
       "val":"   0.000000000E+00"},
     {"row":         1,"col":         2,
+      "val":"  -0.253206659E-01"},
+    {"row":         2,"col":         2,
       "val":"   0.000000000E+00"},
     {"row":         1,"col":         3,
+      "val":"  -0.248240996E-01"},
+    {"row":         2,"col":         3,
       "val":"   0.000000000E+00"},
     {"row":         0,"col":         0,
       "val": null }
