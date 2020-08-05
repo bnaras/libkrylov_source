@@ -40,7 +40,7 @@ mv real_dp_b_restart_1.out real_dp_b_restart_1.out.old 2>/dev/null
 echo 'restart level 1' >> ../testing.summary
 echo 'test output in' >> ../testing.summary
 echo 'test/real_dp_testing.results/restart_b/real_dp_b_restart_1.out' >> ../testing.summary
-../../../src/real_dp_test/driver1b_real_dp > real_dp_b_restart_1.out
+../../../src/real_dp_test/driver1b_real_dp -irestart 1 > real_dp_b_restart_1.out
 mv real_dp_1b_vecs.json real_dp_1b_1_vecs.json
 grep 'Converged' real_dp_b_restart_1.out >> ../testing.summary
 echo 'error statments:' >> ../testing.summary
