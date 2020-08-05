@@ -3068,10 +3068,9 @@ contains
       end if
 
 ! transfer roots to output
-      k = 0
+      krylov_output_a%roots = real(0,kind=kind_float)
       do j = 1, nroots
-        k = k + j
-        krylov_output_a%roots(k) = roots(j)
+        krylov_output_a%roots(j,j) = roots(j)
       end do
 
 !! Set constants required for BLAS

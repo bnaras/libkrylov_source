@@ -244,7 +244,7 @@ module libkrylovinterface_real_dp
   type :: libkrylov_problem_a_output_rdp
     type(base_rdp), allocatable :: solutions(:,:)
 !!  eigenvalues
-    real(lkl_real_dp_k), allocatable :: roots(:)
+    real(lkl_real_dp_k), allocatable :: roots(:,:)
 !!  functional
     type(base_rdp) :: lagrangian
 !!  residual norm of all vectors
@@ -384,7 +384,7 @@ contains
     problem_a%approx_spectra = real(0,kind=lkl_real_dp_k)
     allocate(output_a%solutions(nbasis,nroots))
     output_a%solutions%element = real(0,kind=lkl_real_dp_k)
-    allocate(output_a%roots(ntriangle))
+    allocate(output_a%roots(nroots,nroots))
     output_a%roots= real(0,kind=lkl_real_dp_k)
     output_a%lagrangian%element = real(0,kind=lkl_real_dp_k)
     output_a%fro_norm = real(0,kind=lkl_real_dp_k)

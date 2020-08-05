@@ -60,7 +60,7 @@ program krylovdriver_1a
   character(len=32),target :: preconditioner = ''
 ! contains the matrix problem, read in from file
   type(base), target, allocatable :: krylov_a(:,:)
-!  real(kind_float), target, allocatable :: krylov_d(:)
+  real(kind_float), allocatable :: eigens(:)
 !  type(base), allocatable :: krylov_x(:,:)
 ! character string to become id_string in solver
   character(len=22), target :: a1_string = ''
@@ -299,7 +299,8 @@ program krylovdriver_1a
 
   ntriangle = nroots*(nroots+1)/2
 
-  allocate(krylov_output%roots(ntriangle))
+  allocate(krylov_output%roots(nroots,nroots))
+  allocate(eigens(nroots))
 !  krylov_approx%krylov_d => krylov_d
   krylov_mvp%matrix => krylov_a%element
 
@@ -326,8 +327,12 @@ program krylovdriver_1a
   data_string = trim(a1_string)//'_allr'
   lagr_string = trim(a1_string)//'_lagr'
 
+  do j = 1 , nroots
+    eigens(j) = krylov_output%roots(j,j)
+  end do
+
 !! print to file
-  call array_print_float(values_string,ntriangle,krylov_output%roots,ierr)
+  call array_print_float(values_string,nroots,eigens,ierr)
 
 !! print to file
   call array_print_base(vector_string,nbasis,nroots,&

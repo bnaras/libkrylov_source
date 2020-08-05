@@ -242,7 +242,7 @@ module libkrylovinterface_cmplx_dp
   type :: libkrylov_problem_a_output_cdp
     type(base_cdp), allocatable :: solutions(:,:)
 !!  eigenvalues
-    real(lkl_cmplx_dp_k), allocatable :: roots(:)
+    real(lkl_cmplx_dp_k), allocatable :: roots(:,:)
 !!  functional
     type(base_cdp) :: lagrangian
 !!  residual norm of all vectors
@@ -381,7 +381,7 @@ contains
     problem_a%approx_spectra = real(0,kind=lkl_cmplx_dp_k)
     allocate(output_a%solutions(nbasis,nroots))
     output_a%solutions%element = real(0,kind=lkl_cmplx_dp_k)
-    allocate(output_a%roots(nroots))
+    allocate(output_a%roots(nroots,nroots))
     output_a%roots= real(0,kind=lkl_cmplx_dp_k)
     output_a%lagrangian%element = real(0,kind=lkl_cmplx_dp_k)
     output_a%fro_norm = real(0,kind=lkl_cmplx_dp_k)
