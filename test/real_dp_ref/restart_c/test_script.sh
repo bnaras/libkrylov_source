@@ -69,8 +69,6 @@ mv real_dp_1c_indx.json real_dp_1c_2_indx.json
 grep 'Converged' real_dp_c_restart_2.out >> ../testing.summary
 echo 'error statments:' >> ../testing.summary
 grep 'failed' real_dp_c_restart_2.out >> ../testing.summary
-echo 'for frequencies:' >> ../testing.summary
-sed '7,12!d' real_dp_1c_2_indx.json >> ../testing.summary
 echo '' >> ../testing.summary
 echo 'generating restart files for' >> ../testing.summary
 echo 'restart levels' >> ../testing.summary

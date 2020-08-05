@@ -213,7 +213,7 @@ contains
 !! use values to determine number of independent vectors
     n3 = 0
     do k = 1, n2 
-      if (log10(norm(k)).gt.(logeps+3)) then
+      if (log10(norm(k)).gt.(logeps)) then
         n3 = n3 + 1
         vectors(1:n1,n3) = vectors(1:n1,k) 
       end if
@@ -2231,32 +2231,32 @@ contains
 
     nresiduals = nroots
 
-!! get inner product of residual with itself
-    nresiduals = 0
-    k = 0
-    do j = 1, nroots
-      call gdot(nbasis,residuals(1:nbasis,j),1,&
-  &     residuals(1:nbasis,j),1,euc_sq,ierr)
-      if (ierr.ne.0) then
-        if (iverb.ge.0) then
-          print *, '*dot linear algebra error!', ierr
-          print *, 'exit residue step'
-        end if
-        ierr = -40
-        return ! return to solver loop
-      end if
-      euc_norm = euc_sq
-      euc_norm = sqrt(euc_norm)
-      if (iverb.ge.4) then
-        print *, j,' preconditioned residual norm: ', euc_norm
-      end if
-      if (euc_norm.gt.eps) then
-        nresiduals = nresiduals + 1
-      else
-        k = k + 1
-      end if
-      residuals(1:nbasis,j-k) = residuals(1:nbasis,j)
-    end do
+!!! get inner product of residual with itself
+!    nresiduals = 0
+!    k = 0
+!    do j = 1, nroots
+!      call gdot(nbasis,residuals(1:nbasis,j),1,&
+!  &     residuals(1:nbasis,j),1,euc_sq,ierr)
+!      if (ierr.ne.0) then
+!        if (iverb.ge.0) then
+!          print *, '*dot linear algebra error!', ierr
+!          print *, 'exit residue step'
+!        end if
+!        ierr = -40
+!        return ! return to solver loop
+!      end if
+!      euc_norm = euc_sq
+!      euc_norm = sqrt(euc_norm)
+!      if (iverb.ge.4) then
+!        print *, j,' preconditioned residual norm: ', euc_norm
+!      end if
+!      if (euc_norm.gt.eps) then
+!        nresiduals = nresiduals + 1
+!      else
+!        k = k + 1
+!      end if
+!      residuals(1:nbasis,j-k) = residuals(1:nbasis,j)
+!    end do
 
 !!! SVD of residuals to obtain singular values
     call krylov_orthogonalize(nbasis,nroots,residuals,&
@@ -2342,7 +2342,7 @@ contains
     class(libkrylov_problem_a_input) :: krylov_problem_a
     class(libkrylov_start_subroutine) ::     krylov_start
     class(libkrylov_guess_subroutine) ::     krylov_guess
-    class(libkrylov_mvp_subroutine) ::       krylov_mvp
+    class(libkrylov_mvprod_subroutine) ::       krylov_mvp
     class(libkrylov_problem_a_output) ::  krylov_output_a
 !--------------------------------------------------------------------
 ! Local Variables
@@ -3068,10 +3068,9 @@ contains
       end if
 
 ! transfer roots to output
-      k = 0
+      krylov_output_a%roots = real(0,kind=kind_float)
       do j = 1, nroots
-        k = k + j
-        krylov_output_a%roots(k) = roots(j)
+        krylov_output_a%roots(j,j) = roots(j)
       end do
 
 !! Set constants required for BLAS
@@ -3251,7 +3250,7 @@ contains
     &      cholesky(1:nsubspace,1:nsubspace),cond,iverb,ierr)
         if (ierr.ne.0) then !cholesky failed, attempt rescue
           if (iverb.ge.0) then
-            print *, 'Cholesky decomposition failed'
+            print *, 'Cholesky decomposition unsuccessful'
           end if
         end if
   ! Force restart if cond is less than threshold
@@ -4094,32 +4093,32 @@ contains
 
     nresiduals = nrhs
 
-!! get inner product of residual with itself
-    nresiduals = 0
-    k = 0
-    do j = 1, nrhs
-      call gdot(nbasis,residuals(1:nbasis,j),1,&
-  &     residuals(1:nbasis,j),1,euc_sq,ierr)
-      if (ierr.ne.0) then
-        if (iverb.ge.0) then
-          print *, '*dot linear algebra error!', ierr
-          print *, 'exit residue step'
-        end if
-        ierr = -40
-        return ! return to solver loop
-      end if
-      euc_norm = euc_sq
-      euc_norm = sqrt(euc_norm)
-      if (iverb.ge.4) then
-        print *, j,' preconditioned residual norm: ', euc_norm
-      end if
-      if (euc_norm.gt.eps) then
-        nresiduals = nresiduals + 1
-      else
-        k = k + 1
-      end if
-      residuals(1:nbasis,j-k) = residuals(1:nbasis,j)
-    end do
+!!! get inner product of residual with itself
+!    nresiduals = 0
+!    k = 0
+!    do j = 1, nrhs
+!      call gdot(nbasis,residuals(1:nbasis,j),1,&
+!  &     residuals(1:nbasis,j),1,euc_sq,ierr)
+!      if (ierr.ne.0) then
+!        if (iverb.ge.0) then
+!          print *, '*dot linear algebra error!', ierr
+!          print *, 'exit residue step'
+!        end if
+!        ierr = -40
+!        return ! return to solver loop
+!      end if
+!      euc_norm = euc_sq
+!      euc_norm = sqrt(euc_norm)
+!      if (iverb.ge.4) then
+!        print *, j,' preconditioned residual norm: ', euc_norm
+!      end if
+!      if (euc_norm.gt.eps) then
+!        nresiduals = nresiduals + 1
+!      else
+!        k = k + 1
+!      end if
+!      residuals(1:nbasis,j-k) = residuals(1:nbasis,j)
+!    end do
 
 !!! SVD of residuals to obtain singular values
     call krylov_orthogonalize(nbasis,nrhs,residuals,&
@@ -4206,7 +4205,7 @@ contains
 !    class(libkrylov_matrix_subroutine) ::    krylov_rhs
     class(libkrylov_problem_b_input) :: krylov_problem_b
     class(libkrylov_guess_subroutine) ::     krylov_guess
-    class(libkrylov_mvp_subroutine) ::       krylov_mvp
+    class(libkrylov_mvprod_subroutine) ::       krylov_mvp
     class(libkrylov_problem_b_output) ::  krylov_output_b
 !--------------------------------------------------------------------
 ! Local Variables
@@ -5187,6 +5186,11 @@ contains
         call krylov_cholesky(nsubspace,overlap(1:nsubspace,1:nsubspace),&
     &     diag_overlap(1:nsubspace),& 
     &     cholesky(1:nsubspace,1:nsubspace),cond,iverb,ierr)
+        if (ierr.ne.0) then !cholesky failed, attempt rescue
+          if (iverb.ge.0) then
+            print *, 'Cholesky decomposition unsuccessful'
+          end if
+        end if
 ! Force restart if cond is less than threshold
         if ((logeps).gt.log10(cond)) then
           if (iverb.ge.1) then
@@ -5196,7 +5200,7 @@ contains
         end if
       else
         if (iverb.ge.1) then
-          print *, 'Static restart conditions met'
+          print *, 'Maximum iterations before restart met'
         end if
         ierr = -23
       end if
@@ -6420,7 +6424,7 @@ contains
   &            residuals(1:nbasis,j),1,numerator,ierr)
           do k = 1, nbasis
             residuals(k,j) = &
-  &           (residuals(k,j)/(approx_spectra(k)-omega(j)))&
+  &           (residuals(k,j))&
   &         - ( ((numerator/denominator)*full_solutions(k,j)) &
   &         / (approx_spectra(k)-omega(j)) )
           end do
@@ -6435,7 +6439,7 @@ contains
   &            residuals(1:nbasis,k+m),1,numerator,ierr)
             do l = 1, nbasis
               residuals(l,k+m) = &
-  &             (residuals(l,k+m)/(approx_spectra(l)-omega(j)))&
+  &             (residuals(l,k+m))&
   &         -   ( ((numerator/denominator)*full_solutions(l,k+m)) &
   &           / (approx_spectra(l)-omega(j)) )
             end do
@@ -6475,32 +6479,32 @@ contains
 
     nresiduals = nroots
 
-!! get inner product of residual with itself
-    nresiduals = 0
-    k = 0
-    do j = 1, nroots
-      call gdot(nbasis,residuals(1:nbasis,j),1,&
-  &     residuals(1:nbasis,j),1,euc_sq,ierr)
-      if (ierr.ne.0) then
-        if (iverb.ge.0) then
-          print *, '*dot linear algebra error!', ierr
-          print *, 'exit residue step'
-        end if
-        ierr = -40
-        return ! return to solver loop
-      end if
-      euc_norm = euc_sq
-      euc_norm = sqrt(euc_norm)
-      if (iverb.ge.4) then
-        print *, j,' preconditioned residual norm: ', euc_norm
-      end if
-      if (euc_norm.gt.eps) then
-        nresiduals = nresiduals + 1
-      else
-        k = k + 1
-      end if
-      residuals(1:nbasis,j-k) = residuals(1:nbasis,j)
-    end do
+!!! get inner product of residual with itself
+!    nresiduals = 0
+!    k = 0
+!    do j = 1, nroots
+!      call gdot(nbasis,residuals(1:nbasis,j),1,&
+!  &     residuals(1:nbasis,j),1,euc_sq,ierr)
+!      if (ierr.ne.0) then
+!        if (iverb.ge.0) then
+!          print *, '*dot linear algebra error!', ierr
+!          print *, 'exit residue step'
+!        end if
+!        ierr = -40
+!        return ! return to solver loop
+!      end if
+!      euc_norm = euc_sq
+!      euc_norm = sqrt(euc_norm)
+!      if (iverb.ge.4) then
+!        print *, j,' preconditioned residual norm: ', euc_norm
+!      end if
+!      if (euc_norm.gt.eps) then
+!        nresiduals = nresiduals + 1
+!      else
+!        k = k + 1
+!      end if
+!      residuals(1:nbasis,j-k) = residuals(1:nbasis,j)
+!    end do
 
 !!! SVD of residuals to obtain singular values
     call krylov_orthogonalize(nbasis,nroots,residuals,&
@@ -6587,7 +6591,7 @@ contains
     class(libkrylov_start_subroutine) ::  krylov_start
     class(libkrylov_problem_c_input) :: krylov_problem_c
     class(libkrylov_guess_subroutine) ::     krylov_guess
-    class(libkrylov_mvp_subroutine) ::       krylov_mvp
+    class(libkrylov_mvprod_subroutine) ::       krylov_mvp
     class(libkrylov_problem_c_output) ::  krylov_output_c
 !--------------------------------------------------------------------
 ! Local Variables
@@ -7646,18 +7650,23 @@ contains
         call krylov_cholesky(nsubspace,overlap(1:nsubspace,1:nsubspace),&
     &     diag_overlap(1:nsubspace),& 
     &     cholesky(1:nsubspace,1:nsubspace),cond,iverb,ierr)
+        if (ierr.ne.0) then !cholesky failed, attempt rescue
+          if (iverb.ge.0) then
+            print *, 'Cholesky decomposition unsuccessful'
+          end if
+        end if
+! Force restart if cond is less than threshold
+        if ((logeps).gt.log10(cond)) then
+          if (iverb.ge.1) then
+            print *, 'Condition number exceed desired convergence'
+          end if
+          ierr = -24
+        end if
       else
         if (iverb.ge.1) then
           print *, 'static restart due to number of iterations'
         end if
         ierr = -23
-      end if
-! Force restart if cond is less than threshold
-      if ((logeps).gt.log10(cond)) then
-        if (iverb.ge.1) then
-          print *, 'Condition number exceed desired convergence'
-        end if
-        ierr = -24
       end if
 
       if (ierr.ne.0) then !cholesky failed, attempt rescue
@@ -7765,15 +7774,6 @@ contains
           ierr = 0
           exit ! This exits subspace loop
         end if
-      else if (ierr.ne.0) then !krylov_check failed irrecoverably
-        if (iverb.ge.0) then
-          print *, 'new krylov subspace failed stability check'
-          print *, 'error variable = ',ierr
-          print *, 'using previous subspace solutions for print'
-        end if
-        nsubspace = prev_nsubspace
-        ierr = 0
-        exit ! This exits subspace loop
       else ! cholesky decomposition is stable, expand subspace
 !! need to increase RHS as well
         call ggemm('c','n',nresiduals,nrhs,nbasis,one_kb,&

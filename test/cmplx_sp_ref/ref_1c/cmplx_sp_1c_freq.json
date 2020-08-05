@@ -2,10 +2,14 @@
   "name":"cmplx_sp_1c_freq                ",
   "dimensions":[          2],
   "precision":"singleprecision                 ",
+"legend":{"val":"real"},
   "array": [
-//               column   real
-    { "val":[         1,"  -0.551096082E+00" ] },
-    { "val":[         2,"  -0.877609491E+00" ] },
-    { "val":[         0, null ] }
+    {"col":         1,
+      "val":"   0.300000012E+00"},
+    {"col":         2,
+      "val":"   0.500000000E+00"},
+    {"col":         0,
+      "val": null }
   ]
+}
 }

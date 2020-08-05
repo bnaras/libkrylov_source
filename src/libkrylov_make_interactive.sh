@@ -102,8 +102,8 @@ then
     make install-real_sp_driver1bPROGRAMS
     make install-real_sp_driver1cPROGRAMS
     echo '----------Real Single Precision driver1 made----------'
-    make install-real_sp_sym_problem1PROGRAMS
-    echo '----------Real Single Precision reference problems made----------'
+#    make install-real_sp_sym_problem1PROGRAMS
+#    echo '----------Real Single Precision reference problems made----------'
     cp *.mod real_sp_mods/.
     cp *.o real_sp_mods/.
     cp libkrylovinterface_real_sp.mod ../lib/.
@@ -129,8 +129,8 @@ then
     make install-cmplx_sp_driver1bPROGRAMS
     make install-cmplx_sp_driver1cPROGRAMS
     echo '----------Complex Single Precision driver1 made----------'
-    make install-cmplx_sp_sym_problem1PROGRAMS
-    echo '----------Complex Single Precision reference problems made----------'
+#    make install-cmplx_sp_sym_problem1PROGRAMS
+#    echo '----------Complex Single Precision reference problems made----------'
     cp *.mod cmplx_sp_mods/.
     cp *.o cmplx_sp_mods/.
     cp libkrylovinterface_cmplx_sp.mod ../lib/.
@@ -156,8 +156,8 @@ then
     make install-real_dp_driver1bPROGRAMS
     make install-real_dp_driver1cPROGRAMS
     echo '----------Real Double Precision driver1 made----------'
-    make install-real_dp_sym_problem1PROGRAMS
-    echo '----------Real Double Precision reference problems made----------'
+#    make install-real_dp_sym_problem1PROGRAMS
+#    echo '----------Real Double Precision reference problems made----------'
     cp *.mod real_dp_mods/.
     cp *.o real_dp_mods/.
     cp libkrylovinterface_real_dp.mod ../lib/.
@@ -183,8 +183,8 @@ then
     make install-cmplx_dp_driver1bPROGRAMS
     make install-cmplx_dp_driver1cPROGRAMS
     echo '----------Complex Double Precision driver1a made----------'
-    make install-cmplx_dp_sym_problem1PROGRAMS
-    echo '----------Complex Double Precision reference problems made----------'
+#    make install-cmplx_dp_sym_problem1PROGRAMS
+#    echo '----------Complex Double Precision reference problems made----------'
     cp *.mod cmplx_dp_mods/.
     cp *.o cmplx_dp_mods/.
     cp libkrylovinterface_cmplx_dp.mod ../lib/.

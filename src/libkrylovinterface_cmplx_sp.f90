@@ -154,15 +154,15 @@ module libkrylovinterface_cmplx_sp
 !! abstract type for krylov_mvp function
 !! function to determine matrix-vector products, mvproducts
 !! the products of a problem matrix with a set of basis vectors
-  type, abstract :: libkrylov_mvp_cmplx_sp
+  type, abstract :: libkrylov_mvprod_cmplx_sp
   contains
-    procedure(libkrylov_mvp_intrfc_csp), deferred :: lkl_mvp
-  end type libkrylov_mvp_cmplx_sp
+    procedure(libkrylov_mvprod_intrfc_csp), deferred :: lkl_mvp
+  end type libkrylov_mvprod_cmplx_sp
   abstract interface
-    subroutine libkrylov_mvp_intrfc_csp(data,n1,n2,basis_vectors,&
+    subroutine libkrylov_mvprod_intrfc_csp(data,n1,n2,basis_vectors,&
   &   mvproduct,ierr)
-      import :: lkl_int_csp_k, libkrylov_mvp_cmplx_sp, lkl_cmplx_sp_k
-      class(libkrylov_mvp_cmplx_sp) :: data
+      import :: lkl_int_csp_k, libkrylov_mvprod_cmplx_sp, lkl_cmplx_sp_k
+      class(libkrylov_mvprod_cmplx_sp) :: data
 !!    rows of guess vectors, nbasis
       integer(lkl_int_csp_k), intent(in) :: n1
 !!    columns of guess vectors, nsubspace
@@ -173,7 +173,7 @@ module libkrylovinterface_cmplx_sp
       complex(lkl_cmplx_sp_k), intent(inout) :: mvproduct(n1,n2)
 !!    error variable
       integer(lkl_int_csp_k), intent(inout) :: ierr
-    end subroutine libkrylov_mvp_intrfc_csp
+    end subroutine libkrylov_mvprod_intrfc_csp
   end interface
 
 !--------------------------------------------------------------------
@@ -203,7 +203,7 @@ module libkrylovinterface_cmplx_sp
     procedure :: lkl_guess => lkl_guess_unit_vec_csp
   end type lkl_g_unit_vec_csp
 
-  type, extends(libkrylov_mvp_cmplx_sp) :: lkl_mvp_n_mul_csp
+  type, extends(libkrylov_mvprod_cmplx_sp) :: lkl_mvp_n_mul_csp
 ! external data required for the function
 ! contains the matrix problem
 ! pointer to target set outside of solver
@@ -221,7 +221,7 @@ module libkrylovinterface_cmplx_sp
 
 !! type for krylov_problem function for problem_a
 !! to determine parameters of the problem to be solved
-  type :: libkrylov_problem_a_input_cmplx_sp
+  type :: libkrylov_problem_a_input_csp
     integer(lkl_int_csp_k) :: nbasis
     integer(lkl_int_csp_k) :: nroots
     integer(lkl_int_csp_k) :: minstart
@@ -235,22 +235,22 @@ module libkrylovinterface_cmplx_sp
     integer(lkl_int_csp_k) :: iverb
     integer(lkl_int_csp_k) :: irestart
     real(lkl_cmplx_sp_k), allocatable :: approx_spectra(:)
-  end type libkrylov_problem_a_input_cmplx_sp
+  end type libkrylov_problem_a_input_csp
 
 !! type for krylov_output function of problem_a
 !! function that takes the output from the solver
-  type :: libkrylov_problem_a_output_cmplx_sp
+  type :: libkrylov_problem_a_output_csp
     type(base_csp), allocatable :: solutions(:,:)
 !!  eigenvalues
-    real(lkl_cmplx_sp_k), allocatable :: roots(:)
+    real(lkl_cmplx_sp_k), allocatable :: roots(:,:)
 !!  functional
     type(base_csp) :: lagrangian
 !!  residual norm of all vectors
     real(lkl_cmplx_sp_k) :: fro_norm
-  end type libkrylov_problem_a_output_cmplx_sp
+  end type libkrylov_problem_a_output_csp
 
 !! function to determining parameters of the problem to be solved
-  type :: libkrylov_problem_b_input_cmplx_sp
+  type :: libkrylov_problem_b_input_csp
     integer(lkl_int_csp_k) :: nbasis
     integer(lkl_int_csp_k) :: nrhs
     integer(lkl_int_csp_k) :: minstart
@@ -265,21 +265,21 @@ module libkrylovinterface_cmplx_sp
     integer(lkl_int_csp_k) :: irestart
     real(lkl_cmplx_sp_k), allocatable :: approx_spectra(:)
     type(base_csp), allocatable :: rhs(:,:)
-  end type libkrylov_problem_b_input_cmplx_sp
+  end type libkrylov_problem_b_input_csp
 
 !! type for krylov_output function of problem_b
 !! that takes the output from the solver
-  type :: libkrylov_problem_b_output_cmplx_sp
+  type :: libkrylov_problem_b_output_csp
     type(base_csp), allocatable :: solutions(:,:)
 !!  functional
     type(base_csp) :: lagrangian
 !!  residual norm of all vectors
     real(lkl_cmplx_sp_k) :: fro_norm
-  end type libkrylov_problem_b_output_cmplx_sp
+  end type libkrylov_problem_b_output_csp
 
 !! type for krylov_problem function for problem_c
 !! function to determining parameters of the problem to be solved
-  type :: libkrylov_problem_c_input_cmplx_sp
+  type :: libkrylov_problem_c_input_csp
     integer(lkl_int_csp_k) :: nbasis
     integer(lkl_int_csp_k) :: nomega
     integer(lkl_int_csp_k) :: nrhs
@@ -297,17 +297,17 @@ module libkrylovinterface_cmplx_sp
     real(lkl_cmplx_sp_k), allocatable :: approx_spectra(:)
     real(lkl_cmplx_sp_k), allocatable :: omega(:)
     type(base_csp), allocatable :: rhs(:,:)
-  end type libkrylov_problem_c_input_cmplx_sp
+  end type libkrylov_problem_c_input_csp
 
 !! type for krylov_output function of problem_c
 !! that takes the output from the solver
-  type :: libkrylov_problem_c_output_cmplx_sp
+  type :: libkrylov_problem_c_output_csp
     type(base_csp), allocatable :: solutions(:,:)
 !!  functional
     type(base_csp) :: lagrangian
 !!  residual norm of all vectors
     real(lkl_cmplx_sp_k) :: fro_norm
-  end type libkrylov_problem_c_output_cmplx_sp
+  end type libkrylov_problem_c_output_csp
 
 !--------------------------------------------------------------------
 
@@ -354,9 +354,9 @@ contains
 ! Output Parameters
 !--------------------------------------------------------------------
 !!  problem parameters
-    class(libkrylov_problem_a_input_cmplx_sp), intent(out) :: problem_a
+    class(libkrylov_problem_a_input_csp), intent(out) :: problem_a
 !!  output parameters
-    class(libkrylov_problem_a_output_cmplx_sp) :: output_a
+    class(libkrylov_problem_a_output_csp) :: output_a
 !--------------------------------------------------------------------
 !  Local Variables
 !--------------------------------------------------------------------
@@ -381,7 +381,7 @@ contains
     problem_a%approx_spectra = real(0,kind=lkl_cmplx_sp_k)
     allocate(output_a%solutions(nbasis,nroots))
     output_a%solutions%element = real(0,kind=lkl_cmplx_sp_k)
-    allocate(output_a%roots(ntriangle))
+    allocate(output_a%roots(nroots,nroots))
     output_a%roots= real(0,kind=lkl_cmplx_sp_k)
     output_a%lagrangian%element = real(0,kind=lkl_cmplx_sp_k)
     output_a%fro_norm = real(0,kind=lkl_cmplx_sp_k)
@@ -417,8 +417,8 @@ contains
 ! Output Parameters
 !--------------------------------------------------------------------
 !!  output parameters
-    class(libkrylov_problem_a_input_cmplx_sp) :: problem_a
-    class(libkrylov_problem_a_output_cmplx_sp) :: output_a
+    class(libkrylov_problem_a_input_csp) :: problem_a
+    class(libkrylov_problem_a_output_csp) :: output_a
 !--------------------------------------------------------------------
 !  Local Variables
 !--------------------------------------------------------------------
@@ -465,9 +465,9 @@ contains
 ! Output Parameters
 !--------------------------------------------------------------------
 !!  problem parameters
-    class(libkrylov_problem_b_input_cmplx_sp), intent(out) :: problem_b
+    class(libkrylov_problem_b_input_csp), intent(out) :: problem_b
 !!  output parameters
-    class(libkrylov_problem_b_output_cmplx_sp) :: output_b
+    class(libkrylov_problem_b_output_csp) :: output_b
 !--------------------------------------------------------------------
     problem_b%nbasis = nbasis
     problem_b%nrhs = nrhs
@@ -521,8 +521,8 @@ contains
 ! Output Parameters
 !--------------------------------------------------------------------
 !!  output parameters
-    class(libkrylov_problem_b_input_cmplx_sp) :: problem_b
-    class(libkrylov_problem_b_output_cmplx_sp) :: output_b
+    class(libkrylov_problem_b_input_csp) :: problem_b
+    class(libkrylov_problem_b_output_csp) :: output_b
 !--------------------------------------------------------------------
 !  Local Variables
 !--------------------------------------------------------------------
@@ -573,9 +573,9 @@ contains
 ! Output Parameters
 !--------------------------------------------------------------------
 !!  problem parameters
-    class(libkrylov_problem_c_input_cmplx_sp), intent(out) :: problem_c
+    class(libkrylov_problem_c_input_csp), intent(out) :: problem_c
 !!  output parameters
-    class(libkrylov_problem_c_output_cmplx_sp) :: output_c
+    class(libkrylov_problem_c_output_csp) :: output_c
 !--------------------------------------------------------------------
 !  Local Variables
 !--------------------------------------------------------------------
@@ -645,8 +645,8 @@ contains
 ! Output Parameters
 !--------------------------------------------------------------------
 !!  output parameters
-    class(libkrylov_problem_c_input_cmplx_sp) :: problem_c
-    class(libkrylov_problem_c_output_cmplx_sp) :: output_c
+    class(libkrylov_problem_c_input_csp) :: problem_c
+    class(libkrylov_problem_c_output_csp) :: output_c
 !--------------------------------------------------------------------
 !  Local Variables
 !--------------------------------------------------------------------

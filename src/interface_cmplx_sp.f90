@@ -21,19 +21,13 @@ module libkrylovinterface
   &   libkrylov_vector_subroutine => libkrylov_vector_cmplx_sp, &
   &   libkrylov_start_subroutine => libkrylov_start_cmplx_sp, &
   &   libkrylov_guess_subroutine => libkrylov_guess_cmplx_sp, &
-  &   libkrylov_mvp_subroutine => libkrylov_mvp_cmplx_sp, &
-  &   libkrylov_problem_a_input => &
-  &   libkrylov_problem_a_input_cmplx_sp, &
-  &   libkrylov_problem_a_output => &
-  &   libkrylov_problem_a_output_cmplx_sp, &
-  &   libkrylov_problem_b_input => &
-  &   libkrylov_problem_b_input_cmplx_sp, &
-  &   libkrylov_problem_b_output => &
-  &   libkrylov_problem_b_output_cmplx_sp, &
-  &   libkrylov_problem_c_input => &
-  &   libkrylov_problem_c_input_cmplx_sp, &
-  &   libkrylov_problem_c_output => &
-  &   libkrylov_problem_c_output_cmplx_sp
+  &   libkrylov_mvprod_subroutine => libkrylov_mvprod_cmplx_sp, &
+  &   libkrylov_problem_a_input => libkrylov_problem_a_input_csp, &
+  &   libkrylov_problem_a_output => libkrylov_problem_a_output_csp, &
+  &   libkrylov_problem_b_input => libkrylov_problem_b_input_csp, &
+  &   libkrylov_problem_b_output => libkrylov_problem_b_output_csp, &
+  &   libkrylov_problem_c_input => libkrylov_problem_c_input_csp, &
+  &   libkrylov_problem_c_output => libkrylov_problem_c_output_csp
 !--------------------------------------------------------------------
 ! Implicit none
 !--------------------------------------------------------------------

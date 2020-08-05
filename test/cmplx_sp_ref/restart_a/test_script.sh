@@ -45,10 +45,9 @@ echo 'test/cmplx_sp_testing.results/restart_a/cmplx_sp_a_restart_1.out' >> ../te
 mv cmplx_sp_1a_vals.json cmplx_sp_1a_1_vals.json
 mv cmplx_sp_1a_vecs.json cmplx_sp_1a_1_vecs.json
 grep 'Converged' cmplx_sp_a_restart_1.out >> ../testing.summary
+grep 'Final L' cmplx_sp_a_restart_1.out >> ../testing.summary
 echo 'error statments:' >> ../testing.summary
 grep 'failed' cmplx_sp_a_restart_1.out >> ../testing.summary
-echo 'eigenvalues:' >> ../testing.summary
-sed '7,11!d' cmplx_sp_1a_1_vals.json >> ../testing.summary
 echo '' >> ../testing.summary
 echo 'generating restart files for' >> ../testing.summary
 echo 'restart levels' >> ../testing.summary
@@ -67,10 +66,9 @@ echo 'test/cmplx_sp_testing.results/restart_a/cmplx_sp_a_restart_2.out' >> ../te
 mv cmplx_sp_1a_vals.json cmplx_sp_1a_2_vals.json
 mv cmplx_sp_1a_vecs.json cmplx_sp_1a_2_vecs.json
 grep 'Converged' cmplx_sp_a_restart_2.out >> ../testing.summary
+grep 'Final L' cmplx_sp_a_restart_2.out >> ../testing.summary
 echo 'error statments:' >> ../testing.summary
 grep 'failed' cmplx_sp_a_restart_2.out >> ../testing.summary
-echo 'eigenvalues:' >> ../testing.summary
-sed '7,11!d' cmplx_sp_1a_2_vals.json >> ../testing.summary
 echo '' >> ../testing.summary
 echo 'generating restart files for' >> ../testing.summary
 echo 'restart levels' >> ../testing.summary
@@ -89,9 +87,8 @@ echo 'test/cmplx_sp_testing.results/restart_a/cmplx_sp_a_restart_3.out' >> ../te
 mv cmplx_sp_1a_vals.json cmplx_sp_1a_3_vals.json
 mv cmplx_sp_1a_vecs.json cmplx_sp_1a_3_vecs.json
 grep 'Converged' cmplx_sp_a_restart_3.out >> ../testing.summary
+grep 'Final L' cmplx_sp_a_restart_3.out >> ../testing.summary
 echo 'error statments:' >> ../testing.summary
 grep 'failed' cmplx_sp_a_restart_3.out >> ../testing.summary
-echo 'eigenvalues:' >> ../testing.summary
-sed '7,11!d' cmplx_sp_1a_3_vals.json >> ../testing.summary
 echo '' >> ../testing.summary
 echo '~~~~~Complex Single restart_a test done~~~~~'

@@ -16,10 +16,6 @@ echo 'on random matrix problem and'  >> ../testing.summary
 echo 'with right hand side (rhs) and freq in'  >> ../testing.summary
 echo ' libkrylov/src/real_dp_ref/ref_1c/' >> ../testing.summary
 echo 'comparing to exact solutions' >> ../testing.summary
-echo ' freq:' >> ../testing.summary
-sed '7,8!d' real_dp_1c_freq.json >> ../testing.summary
-echo ' lagrangian:' >> ../testing.summary
-sed '7,12!d' real_dp_1c_exact_lagr.json >> ../testing.summary
 echo '' >> ../testing.summary
 rm real_dp_1c_vecs.json 2>/dev/null
 rm real_dp_1c_indx.json 2>/dev/null
