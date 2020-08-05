@@ -6425,7 +6425,7 @@ contains
   &            residuals(1:nbasis,j),1,numerator,ierr)
           do k = 1, nbasis
             residuals(k,j) = &
-  &           (residuals(k,j)/(approx_spectra(k)-omega(j)))&
+  &           (residuals(k,j))&
   &         - ( ((numerator/denominator)*full_solutions(k,j)) &
   &         / (approx_spectra(k)-omega(j)) )
           end do
@@ -6440,7 +6440,7 @@ contains
   &            residuals(1:nbasis,k+m),1,numerator,ierr)
             do l = 1, nbasis
               residuals(l,k+m) = &
-  &             (residuals(l,k+m)/(approx_spectra(l)-omega(j)))&
+  &             (residuals(l,k+m))&
   &         -   ( ((numerator/denominator)*full_solutions(l,k+m)) &
   &           / (approx_spectra(l)-omega(j)) )
             end do
