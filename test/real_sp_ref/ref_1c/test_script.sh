@@ -15,8 +15,6 @@ echo 'using libkrylov/src/real_sp_test/driver1c_real_sp'  >> ../testing.summary
 echo 'on random matrix problem and'  >> ../testing.summary
 echo 'with right hand side (rhs) and freq in'  >> ../testing.summary
 echo ' libkrylov/src/real_sp_ref/ref_1c/' >> ../testing.summary
-echo 'comparing to exact solutions' >> ../testing.summary
-cat exact_lagr.out >> ../testing.summary
 echo '' >> ../testing.summary
 rm real_sp_1c_lagr.json 2>/dev/null
 rm real_sp_1c_vecs.json 2>/dev/null

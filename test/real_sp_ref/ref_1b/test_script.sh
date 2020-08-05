@@ -16,9 +16,6 @@ echo 'on random matrix problem and'  >> ../testing.summary
 echo 'with right hand side (rhs) in'  >> ../testing.summary
 echo ' libkrylov/src/real_sp_ref/ref_1b/' >> ../testing.summary
 echo 'at zero frequency'  >> ../testing.summary
-echo 'comparing to exact lagrangians' >> ../testing.summary
-sed '7,9!d' real_sp_1b_exact_lagr.json >> ../testing.summary
-cat exact_lagr.out >> ../testing.summary
 echo '' >> ../testing.summary
 rm real_sp_1b_vecs.json 2>/dev/null
 mv real_sp_npc_driver1b.out real_sp_npc_driver1b.out.old 2>/dev/null
