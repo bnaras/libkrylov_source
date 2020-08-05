@@ -353,12 +353,12 @@ program krylovdriver_1c
     krylov_problem%threshold = real(-logeps/2,kind=kind_float)
   end if
   if (maxiter.le.0) then
-    krylov_problem%maxiter = 30
+    krylov_problem%maxiter = 50
   else
     krylov_problem%maxiter = maxiter
   end if 
   if (totalmaxiter.le.0) then
-    krylov_problem%totalmaxiter = 80
+    krylov_problem%totalmaxiter = 100
   else
     krylov_problem%totalmaxiter = totalmaxiter
   end if 
