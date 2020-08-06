@@ -1,27 +1,36 @@
 ----------------------------------------------------------------------
-Solver Libraries are installed in:
-   $(libkrylov)/src/<type>_<precision>_lib
-Alongside utility programs   
+Solver Libraries and Modules are installed in:
+   $(libkrylov)/lib
 
-Unit testing programs, are installed in:
+Utility programs are found in: 
+   $(libkrylov)/src/<type>_<precision>_lib
+
+Unit testing programs are installed in:
    $(libkrylov)/src/<type>_<precision>_test
+
+Python scripts are in:
+   $(libkrylov)/python
 
 Modules are backed up in:
    $(libkrylov)/src/<type>_<precision>_mods
 if the main directory is cleaned.
 
-Linking Fortran files requires linking
-both a library/object file and module files used.
+Linking Fortran libraries requires linking:
+both a library/object file(-L ) and module file(-I).
 ax_f90_library_setup of autoconf-archives is a convenient
 macro to use or reference.
 
-Flags to include for linking are
--I$(libkrylov)/src/ \
--L$(libkrylov)/src/<type>_<precision>_lib/libkrylov_<type>_<precision>.a \
--Wl,-rpath -Wl,$(libkrylov)/src/<type>_<precision>_lib
+Flags to include for static linking of the library are:
+-I$(libkrylov)/lib \
+-L $(libkrylov)/lib \
+-lkrylov_<type>_<precision>
 
-with the first line replaced by 
--I$(libkrylov)/src/<type>_<precision>_mods/ \
-if the backup is to be used.
+(unsupported) Flags to include for dynamic linking are:
+-I$(libkrylov)/lib \
+-L $(libkrylov)/lib \
+-Wl,-rpath -Wl,$(libkrylov)/lib
+
+advanced usage of other libkrylov modules may require:
+-I$(libkrylov)/src/<type>_<precision>_mods
 ----------------------------------------------------------------------
 

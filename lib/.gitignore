@@ -1,3 +1,4 @@
 #ignore library files
 *.mod
 *.o
+*.a

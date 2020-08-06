@@ -3,7 +3,8 @@
 ACLOCAL_AMFLAGS = -I Placeholder
 # Real Single precision
 # library
-real_sp_libdir = $(PWD)/real_sp_lib
+#real_sp_libdir = $(PWD)/real_sp_lib
+real_sp_libdir = $(PWD)/../lib
 real_sp_lib_LTLIBRARIES = libkrylov_real_sp.la
 # file printing/reading unit test
 real_sp_arrayfiledir = $(PWD)/real_sp_test
@@ -66,7 +67,8 @@ driver_1c.f90
 driver1c_real_sp_LDADD = libkrylov_real_sp.la
 # complex single precision
 # Library
-cmplx_sp_libdir = $(PWD)/cmplx_sp_lib
+cmplx_sp_libdir = $(PWD)/../lib
+#cmplx_sp_libdir = $(PWD)/cmplx_sp_lib
 cmplx_sp_lib_LTLIBRARIES = libkrylov_cmplx_sp.la
 # file printing/reading unit test
 cmplx_sp_arrayfiledir = $(PWD)/cmplx_sp_test
@@ -129,7 +131,8 @@ driver_1c.f90
 driver1c_cmplx_sp_LDADD = libkrylov_cmplx_sp.la
 # Real Double precision
 # library
-real_dp_libdir = $(PWD)/real_dp_lib
+real_dp_libdir = $(PWD)/../lib
+#real_dp_libdir = $(PWD)/real_dp_lib
 real_dp_lib_LTLIBRARIES = libkrylov_real_dp.la
 # file printing/reading unit test
 real_dp_arrayfiledir = $(PWD)/real_dp_test
@@ -192,7 +195,8 @@ driver_1c.f90
 driver1c_real_dp_LDADD = libkrylov_real_dp.la
 # complex double precision
 # Library
-cmplx_dp_libdir = $(PWD)/cmplx_dp_lib
+cmplx_dp_libdir = $(PWD)/../lib
+#cmplx_dp_libdir = $(PWD)/cmplx_dp_lib
 cmplx_dp_lib_LTLIBRARIES = libkrylov_cmplx_dp.la
 # file printing/reading unit test
 cmplx_dp_arrayfiledir = $(PWD)/cmplx_dp_test
