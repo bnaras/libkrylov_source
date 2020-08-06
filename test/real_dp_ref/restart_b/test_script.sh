@@ -43,6 +43,7 @@ echo 'test/real_dp_testing.results/restart_b/real_dp_b_restart_1.out' >> ../test
 ../../../src/real_dp_test/driver1b_real_dp -irestart 1 > real_dp_b_restart_1.out
 mv real_dp_1b_vecs.json real_dp_1b_1_vecs.json
 grep 'Converged' real_dp_b_restart_1.out >> ../testing.summary
+grep 'Final L' real_dp_b_restart_1.out >> ../testing.summary
 echo 'error statments:' >> ../testing.summary
 grep 'failed' real_dp_b_restart_1.out >> ../testing.summary
 echo '' >> ../testing.summary
@@ -62,6 +63,7 @@ echo 'test/real_dp_testing.results/restart_b/real_dp_b_restart_2.out' >> ../test
 ../../../src/real_dp_test/driver1b_real_dp -irestart 2 > real_dp_b_restart_2.out
 mv real_dp_1b_vecs.json real_dp_1b_2_vecs.json
 grep 'Converged' real_dp_b_restart_2.out >> ../testing.summary
+grep 'Final L' real_dp_b_restart_2.out >> ../testing.summary
 echo 'error statments:' >> ../testing.summary
 grep 'failed' real_dp_b_restart_2.out >> ../testing.summary
 echo '' >> ../testing.summary
@@ -81,6 +83,7 @@ echo 'test/real_dp_testing.results/restart_b/real_dp_b_restart_3.out' >> ../test
 ../../../src/real_dp_test/driver1b_real_dp -irestart 3 > real_dp_b_restart_3.out
 mv real_dp_1b_vecs.json real_dp_1b_3_vecs.json
 grep 'Converged' real_dp_b_restart_3.out >> ../testing.summary
+grep 'Final L' real_dp_b_restart_3.out >> ../testing.summary
 echo 'error statments:' >> ../testing.summary
 grep 'failed' real_dp_b_restart_3.out >> ../testing.summary
 echo '' >> ../testing.summary
@@ -100,6 +103,7 @@ echo 'test/real_dp_testing.results/restart_b/real_dp_b_restart_4.out' >> ../test
 ../../../src/real_dp_test/driver1b_real_dp -irestart 4 > real_dp_b_restart_4.out
 mv real_dp_1b_vecs.json real_dp_1b_4_vecs.json
 grep 'Converged' real_dp_b_restart_4.out >> ../testing.summary
+grep 'Final L' real_dp_b_restart_4.out >> ../testing.summary
 echo 'error statments:' >> ../testing.summary
 grep 'failed' real_dp_b_restart_4.out >> ../testing.summary
 echo '' >> ../testing.summary

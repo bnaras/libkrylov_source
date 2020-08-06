@@ -14,6 +14,7 @@ echo '' >> ../testing.summary
 echo 'using libkrylov/src/cmplx_sp_test/driver1a_cmplx_sp'  >> ../testing.summary
 echo 'on reference matrix problem found in'  >> ../testing.summary
 echo ' libkrylov/test/cmplx_sp_ref/ref_1a/cmplx_sp_1a_prob.json' >> ../testing.summary
+echo 'Exact Lagrangian:    221.209183' >> ../testing.summary
 echo '' >> ../testing.summary
 rm cmplx_sp_1a_vals.json 2>/dev/null
 rm cmplx_sp_1a_vecs.json 2>/dev/null

@@ -14,6 +14,7 @@ echo '' >> ../testing.summary
 echo 'using libkrylov/src/real_dp_test/driver1a_real_dp'  >> ../testing.summary
 echo 'on reference matrix problem found in'  >> ../testing.summary
 echo ' libkrylov/test/real_dp_ref/ref_1a/real_dp_1a_prob.json' >> ../testing.summary
+echo 'Exact Lagrangian:    368.84427813272072' >> ../testing.summary
 echo '' >> ../testing.summary
 rm real_dp_1a_vals.json 2>/dev/null
 rm real_dp_1a_vecs.json 2>/dev/null
