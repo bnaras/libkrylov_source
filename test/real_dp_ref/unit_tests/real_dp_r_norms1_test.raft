@@ -1,9 +1,0 @@
-$real(kind_float)array=
- real_dp_r_norms1_test           
-  dimensions=           3
-  precision=
-   doubleprecision                 
-    column      real
-         1      0.0969616418211876
-         2      0.0972631607288835
-         3      0.0974656569367203
