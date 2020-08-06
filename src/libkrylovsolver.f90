@@ -2487,12 +2487,11 @@ contains
       print *, ''
       print *, 'describing each input arguments:'
       print *, 'first argument, derived type contains problem parameters'
-      print *, 'second argument, contains real array of matrix D'
-      print *, 'third argument, contains start subroutine for nstart'
-      print *, 'fourth argument, guess subroutine for initial basis vectors'
-      print *, 'fifth argument, mvp subroutine for MV product'
-      print *, 'sixth argument, derived type array for solution vectors'
-      print *, 'seventh argument, derived type for other output'
+      print *, 'second argument, contains start subroutine for nstart'
+      print *, 'third argument, guess subroutine for initial basis vectors'
+      print *, 'fourth argument, mvp subroutine for MV product'
+      print *, 'fifth argument, derived type array for solution vectors'
+      print *, 'sixth argument, integer error variable'
       ierr = -1200
       return
     end if
@@ -4348,13 +4347,11 @@ contains
       print *, ''
       print *, 'describing each input arguments:'
       print *, 'first argument, derived type contains problem parameters'
-      print *, 'second argument, contains real array of matrix D'
-      print *, 'third argument, derived type array for rhs'
-      print *, 'fourth argument, contains start subroutine for nstart'
-      print *, 'fifth argument, guess subroutine for initial basis vectors'
-      print *, 'sixth argument, mvp subroutine for MV product'
-      print *, 'seventh argument, derived type array for solution vectors'
-      print *, 'eighth argument, derived type for other output'
+      print *, 'second argument, contains start subroutine for nstart'
+      print *, 'third argument, guess subroutine for initial basis vectors'
+      print *, 'fourth argument, mvp subroutine for MV product'
+      print *, 'fifth argument, derived type array for solution vectors'
+      print *, 'sixth argument, integer error variable'
       ierr = -1200
       return
     end if
@@ -6743,14 +6740,11 @@ contains
       print *, ''
       print *, 'describing each input arguments:'
       print *, 'first argument, derived type contains problem parameters'
-      print *, 'second argument, contains real array of matrix D'
-      print *, 'third argument, contains real array for input frequencies'
-      print *, 'fourth argument, derived type array for rhs'
-      print *, 'fifth argument, contains start subroutine for nstart'
-      print *, 'sixth argument, guess subroutine for initial basis vectors'
-      print *, 'seventh argument, mvp subroutine for MV product'
-      print *, 'eighth argument, derived type array for solution vectors'
-      print *, 'ninth argument, derived type for other output'
+      print *, 'second argument, contains start subroutine for nstart'
+      print *, 'third argument, guess subroutine for initial basis vectors'
+      print *, 'fourth argument, mvp subroutine for MV product'
+      print *, 'fifth argument, derived type array for solution vectors'
+      print *, 'sixth argument, integer error variable'
       ierr = -1200
       return
     end if
