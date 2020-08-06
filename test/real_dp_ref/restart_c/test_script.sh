@@ -47,6 +47,7 @@ echo 'test/real_dp_testing.results/restart_c/real_dp_c_restart_1.out' >> ../test
 mv real_dp_1c_vecs.json real_dp_1c_1_vecs.json
 mv real_dp_1c_indx.json real_dp_1c_1_indx.json
 grep 'Converged' real_dp_c_restart_1.out >> ../testing.summary
+grep 'Final L' real_dp_c_restart_1.out >> ../testing.summary
 echo 'error statments:' >> ../testing.summary
 grep 'failed' real_dp_c_restart_1.out >> ../testing.summary
 echo '' >> ../testing.summary
@@ -67,6 +68,7 @@ echo 'test/real_dp_testing.results/restart_c/real_dp_c_restart_2.out' >> ../test
 mv real_dp_1c_vecs.json real_dp_1c_2_vecs.json
 mv real_dp_1c_indx.json real_dp_1c_2_indx.json
 grep 'Converged' real_dp_c_restart_2.out >> ../testing.summary
+grep 'Final L' real_dp_c_restart_2.out >> ../testing.summary
 echo 'error statments:' >> ../testing.summary
 grep 'failed' real_dp_c_restart_2.out >> ../testing.summary
 echo '' >> ../testing.summary
@@ -87,6 +89,7 @@ echo 'test/real_dp_testing.results/restart_c/real_dp_c_restart_3.out' >> ../test
 mv real_dp_1c_vecs.json real_dp_1c_3_vecs.json
 mv real_dp_1c_indx.json real_dp_1c_3_indx.json
 grep 'Converged' real_dp_c_restart_3.out >> ../testing.summary
+grep 'Final L' real_dp_c_restart_3.out >> ../testing.summary
 echo 'error statments:' >> ../testing.summary
 grep 'failed' real_dp_c_restart_3.out >> ../testing.summary
 echo '' >> ../testing.summary
@@ -107,6 +110,7 @@ echo 'test/real_dp_testing.results/restart_c/real_dp_c_restart_4.out' >> ../test
 mv real_dp_1c_vecs.json real_dp_1c_4_vecs.json
 mv real_dp_1c_indx.json real_dp_1c_4_indx.json
 grep 'Converged' real_dp_c_restart_4.out >> ../testing.summary
+grep 'Final L' real_dp_c_restart_4.out >> ../testing.summary
 echo 'error statments:' >> ../testing.summary
 grep 'failed' real_dp_c_restart_4.out >> ../testing.summary
 echo '' >> ../testing.summary

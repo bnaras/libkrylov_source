@@ -16,6 +16,7 @@ echo 'on random matrix problem and'  >> ../testing.summary
 echo 'with right hand side (rhs) in'  >> ../testing.summary
 echo ' libkrylov/src/real_dp_ref/ref_1b/' >> ../testing.summary
 echo 'at zero frequency'  >> ../testing.summary
+echo 'Exact Lagrangian:   -2.1128137952249222E-002' >> ../testing.summary
 echo '' >> ../testing.summary
 rm real_dp_1b_vecs.json 2>/dev/null
 mv real_dp_npc_driver1b.out real_dp_npc_driver1b.out.old 2>/dev/null

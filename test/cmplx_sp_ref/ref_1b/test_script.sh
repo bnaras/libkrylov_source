@@ -16,6 +16,7 @@ echo 'on random matrix problem and'  >> ../testing.summary
 echo 'with right hand side (rhs) in'  >> ../testing.summary
 echo ' libkrylov/src/cmplx_sp_ref/ref_1b/' >> ../testing.summary
 echo 'at zero frequency'  >> ../testing.summary
+echo 'Exact Lagrangian:   -2.006185241E-02' >> ../testing.summary
 echo '' >> ../testing.summary
 rm cmplx_sp_1b_vecs.json 2>/dev/null
 mv cmplx_sp_npc_driver1b.out cmplx_sp_npc_driver1b.out.old 2>/dev/null

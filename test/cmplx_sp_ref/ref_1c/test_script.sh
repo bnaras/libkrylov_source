@@ -15,6 +15,7 @@ echo 'using libkrylov/src/cmplx_sp_test/driver1c_cmplx_sp'  >> ../testing.summar
 echo 'on random matrix problem and'  >> ../testing.summary
 echo 'with right hand side (rhs) and freq in'  >> ../testing.summary
 echo ' libkrylov/src/cmplx_sp_ref/ref_1c/' >> ../testing.summary
+echo 'Exact Lagrangian:   -5.633527413E-02' >> ../testing.summary
 echo '' >> ../testing.summary
 rm cmplx_sp_1c_vecs.json 2>/dev/null
 rm cmplx_sp_1c_indx.json 2>/dev/null
