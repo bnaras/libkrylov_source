@@ -1,9 +1,0 @@
-$real(kind_float)array=
- real_dp_roots1_test             
-  dimensions=           3
-  precision=
-   doubleprecision                 
-    column      real
-         1      3.9999480987519207
-         2      7.9999790633075847
-         3     11.9999998437540629
