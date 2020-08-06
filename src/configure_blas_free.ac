@@ -14,7 +14,7 @@ AC_CONFIG_AUX_DIR([build_aux])
 # call autoconf-archive macros installed from
 # using "git clone git://git.sv.gnu.org/autoconf-archive.git"
 # in this source directory
-AC_CONFIG_MACRO_DIR([autoconf-archive/m4])
+AC_CONFIG_MACRO_DIR([Placeholder])
 
 # Starting Automake, ignore GNU standards with 'foreign'
 AM_INIT_AUTOMAKE([-Wall -Werror foreign subdir-objects])
