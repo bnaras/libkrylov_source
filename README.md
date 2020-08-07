@@ -1,47 +1,22 @@
-# libkrylov
+## Description
 
-The official libkrylov repo (for now)
+libkrylov is a modular open-source software library for extremely
+large eigenvalue and linear problems.
 
-## Funding
+## Getting Started
 
-The development of this library is funded by the National
-Science Foundation of the Federal Government of the United
-States of America.
+Please see the libkrylov [user guide and
+documentation](https://gitlab.com/libkrylov/libkrylov-stable/-/wikis/home).
 
-Award No. OAC-1835909
+## License and Fair Use
 
-## Licence and fair use
+This repository is released under the 3-Clause BSD license, see
+LICENSE. 
 
-This repository is released under the 3-Clause BSD license.
+Please refer to the [user guide and
+documentation](https://gitlab.com/libkrylov/libkrylov-stable/-/wikis/home)
+for publications, 
+and releases. These sources should be adequately cited and/or credited in
+any publications, implementations, and other producs directly or
+indirectly using contents of this repository.
 
-Copyright 2018 Filipp Furche Research Group
-
-## About Library
-
-Please see the wiki for more information about the library:
-
-https://gitlab.com/libkrylov/libkrylov-master/-/wikis/home
-
-
-## Collaborators and Acknowledgements
-
-Currently maintained by: Luke Nambi Mohanam
-
-The textbook "Modern Fortran explained" by Michael Metcalf et al
-has been instructive.
-
-Generalizing matrix element types was carried out by Naje' George.
-
-Zoey Shen Ziyue improved the unit testing for generic matrix
-element operations and the generic matrix element operations, which 
-achieves compile-time polymorphism.
-She is improving users-friendliness of calling any 
-compiled solver for various matrix element types and precision.
-
-Samuel Bekoe has written most of the wiki while debugging 
-the code. Sam is responsible for the testing of the solver
-on problems in the test suite, and some python scripts for
-visualization.
-
-The project would like to thank 
-Dr. Shane M. Parker for useful discussions.
