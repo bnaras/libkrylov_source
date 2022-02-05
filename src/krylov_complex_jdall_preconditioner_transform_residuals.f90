@@ -1,0 +1,90 @@
+function krylov_complex_jdall_preconditioner_transform_residuals( &
+    preconditioner, full_dim, solution_dim, residuals, preconditioned_residuals) result(error)
+
+    use kinds, only: IK, RK, CK
+    use lapackwrapper, only: complex_gesv
+    use errors, only: OK, INVALID_DIMENSION, INCOMPLETE_CONFIGURATION, INCOMPLETE_PRECONDITIONER, &
+                      LINEAR_ALGEBRA_ERROR
+    use krylov, only: complex_jdall_preconditioner_t
+    implicit none
+
+    class(complex_jdall_preconditioner_t), intent(inout) :: preconditioner
+    integer(IK), intent(in) :: full_dim, solution_dim
+    complex(CK), intent(in) :: residuals(full_dim, solution_dim)
+    complex(CK), intent(out) :: preconditioned_residuals(full_dim, solution_dim)
+    integer(IK) :: error
+
+    integer(IK) :: info, ful, sol1, sol2
+    complex(CK) :: tmp1, tmp2
+    real(RK) :: diag, min_diag
+    complex(CK), allocatable :: eps(:, :), denom(:, :)
+    integer(IK), allocatable :: ipiv(:)
+
+    if (full_dim /= preconditioner%full_dim) then
+        error = INVALID_DIMENSION
+        return
+    end if
+
+    if (solution_dim /= preconditioner%solution_dim) then
+        error = INVALID_DIMENSION
+        return
+    end if
+
+    if (preconditioner%get_status() /= OK) then
+        error = INCOMPLETE_PRECONDITIONER
+        return
+    end if
+
+    if (preconditioner%config%find_option('min_diagonal_scaling') /= OK) then
+        error = INCOMPLETE_CONFIGURATION
+        return
+    end if
+
+    min_diag = preconditioner%config%get_real_option('min_diagonal_scaling')
+
+    allocate (eps(solution_dim, solution_dim), denom(solution_dim, solution_dim))
+
+    eps = (0.0_CK, 0.0_CK)
+    denom = (0.0_CK, 0.0_CK)
+    do sol1 = 1, solution_dim
+        do ful = 1, full_dim
+            diag = preconditioner%diagonal(ful) - preconditioner%eigenvalues(sol1)
+            if (abs(diag) < min_diag) diag = sign(min_diag, diag)
+            tmp1 = preconditioner%solutions(ful, sol1) / diag
+            tmp2 = residuals(ful, sol1) / diag
+            do sol2 = 1, solution_dim
+                eps(sol2, sol1) = eps(sol2, sol1) + conjg(preconditioner%solutions(ful, sol2)) * tmp2
+                denom(sol2, sol1) = denom(sol2, sol1) + conjg(preconditioner%solutions(ful, sol2)) * tmp1
+            end do
+        end do
+    end do
+
+    allocate (ipiv(solution_dim))
+    info = 0_IK
+    call complex_gesv(solution_dim, solution_dim, denom, solution_dim, ipiv, eps, solution_dim, info)
+    if (info /= 0_IK) then
+        error = LINEAR_ALGEBRA_ERROR
+        deallocate (ipiv, eps, denom)
+        return
+    end if
+    deallocate (ipiv)
+
+    do sol1 = 1, solution_dim
+        do ful = 1, full_dim
+            diag = preconditioner%diagonal(ful) - preconditioner%eigenvalues(sol1)
+            if (abs(diag) < min_diag) diag = sign(min_diag, diag)
+            preconditioned_residuals(ful, sol1) = residuals(ful, sol1) / diag
+            do sol2 = 1, solution_dim
+                diag = preconditioner%diagonal(ful) - preconditioner%eigenvalues(sol2)
+                if (abs(diag) < min_diag) diag = sign(min_diag, diag)
+                preconditioned_residuals(ful, sol1) = preconditioned_residuals(ful, sol1) - &
+                                                      eps(sol2, sol1) * preconditioner%solutions(ful, sol2) / diag
+            end do
+        end do
+    end do
+
+    deallocate (eps, denom)
+
+    error = OK
+
+end function krylov_complex_jdall_preconditioner_transform_residuals

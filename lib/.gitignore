@@ -1,8 +1,0 @@
-#ignore library files
-*.mod
-*.o
-*.a
-*.la
-*.so
-*.so.0
-*.so.0.0.0

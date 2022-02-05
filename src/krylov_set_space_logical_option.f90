@@ -1,0 +1,20 @@
+function krylov_set_space_logical_option(index, key, value) result(error)
+
+    use kinds, only: IK
+    use errors, only: NO_SUCH_SPACE
+    use krylov, only: spaces, krylov_get_num_spaces
+    implicit none
+
+    integer(IK), intent(in) :: index
+    character(len=*), intent(in) :: key
+    logical, intent(in) :: value
+    integer(IK) :: error
+
+    if (index > krylov_get_num_spaces()) then
+        error = NO_SUCH_SPACE
+        return
+    end if
+
+    error = spaces(index)%space_p%config%set_logical_option(key, value)
+
+end function krylov_set_space_logical_option
