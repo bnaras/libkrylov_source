@@ -12,9 +12,10 @@ program test_complex_nks_orthonormalizer_prepare_transform
     complex(CK) :: vectors(4_IK, 2_IK), gram_factor(2_IK, 2_IK)
     integer(IK) :: error
 
-    vectors = reshape((/(0.5_CK, 0.1_CK), (0.5_CK, 0.1_CK), (-0.5_CK, -0.1_CK), (-0.5_CK, -0.1_CK), &
-                        (0.5_CK, 0.1_CK), (0.5_CK, 0.1_CK), (0.5_CK, 0.1_CK), (0.5_CK, 0.1_CK)/), (/4_IK, 2_IK/))
-    gram_factor = reshape((/(1.0_CK, 0.0_CK), (0.0_CK, 0.0_CK), (0.0_CK, 0.0_CK), (1.0_CK, 0.0_CK)/), (/2_IK, 2_IK/))
+    vectors = reshape((/(0.4_CK, 0.3_CK), (0.4_CK, 0.3_CK), (-0.4_CK, -0.3_CK), (-0.4_CK, -0.3_CK), &
+                        (0.2_CK, 0.2_CK), (0.2_CK, 0.2_CK), (0.0_CK, 0.0_CK), (0.0_CK, 0.0_CK)/), (/4_IK, 2_IK/))
+    gram_factor = reshape((/(1.0_CK, 0.0_CK), (0.7_CK, -0.1_CK), (0.7_CK, 0.1_CK), (0.70710678118654757_CK, 0.0_CK)/), &
+                          (/2_IK, 2_IK/))
 
     error = config%initialize()
     if (error /= OK) stop 1

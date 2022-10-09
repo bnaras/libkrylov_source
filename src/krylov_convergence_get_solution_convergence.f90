@@ -9,8 +9,9 @@ function krylov_convergence_get_solution_convergence(convergence, index) result(
     integer(IK), intent(in) :: index
     integer(IK) :: status
 
-    integer(IK) :: num_iterations
-    real(RK) :: residual_norm, max_residual_norm
+    integer(IK) :: num_iterations, err
+    real(RK) :: max_residual_norm
+    real(RK), allocatable :: residual_norms(:)
 
     num_iterations = convergence%get_num_iterations()
 
@@ -31,11 +32,21 @@ function krylov_convergence_get_solution_convergence(convergence, index) result(
 
     max_residual_norm = convergence%config%get_real_option('max_residual_norm')
 
-    residual_norm = convergence%iterations(num_iterations)%residual_norms(index)
-    if (residual_norm > max_residual_norm) then
+    allocate (residual_norms(convergence%solution_dim))
+
+    err = convergence%iterations(num_iterations)%get_residual_norms(convergence%solution_dim, residual_norms)
+    if (err /= OK) then
+        status = err
+        deallocate (residual_norms)
+        return
+    end if
+
+    if (residual_norms(index) > max_residual_norm) then
         status = NOT_CONVERGED
     else
         status = OK
     end if
+
+    deallocate (residual_norms)
 
 end function krylov_convergence_get_solution_convergence

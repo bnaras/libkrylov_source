@@ -17,6 +17,7 @@ function krylov_complex_jdall_preconditioner_transform_residuals( &
     integer(IK) :: info, ful, sol1, sol2
     complex(CK) :: tmp1, tmp2
     real(RK) :: diag, min_diag
+    real(RK), allocatable :: shifts(:)
     complex(CK), allocatable :: eps(:, :), denom(:, :)
     integer(IK), allocatable :: ipiv(:)
 
@@ -42,13 +43,23 @@ function krylov_complex_jdall_preconditioner_transform_residuals( &
 
     min_diag = preconditioner%config%get_real_option('min_diagonal_scaling')
 
-    allocate (eps(solution_dim, solution_dim), denom(solution_dim, solution_dim))
+    allocate (eps(solution_dim, solution_dim), denom(solution_dim, solution_dim), &
+             shifts(solution_dim))
+
+    if (preconditioner%config%get_logical_option('has_eigenvalues')) then
+        shifts = preconditioner%eigenvalues
+    else if (preconditioner%config%get_logical_option('has_shifts')) then
+        shifts = preconditioner%shifts
+    else
+        shifts = 0.0_RK
+    end if
 
     eps = (0.0_CK, 0.0_CK)
     denom = (0.0_CK, 0.0_CK)
+    
     do sol1 = 1, solution_dim
         do ful = 1, full_dim
-            diag = preconditioner%diagonal(ful) - preconditioner%eigenvalues(sol1)
+            diag = preconditioner%diagonal(ful) - shifts(sol1)
             if (abs(diag) < min_diag) diag = sign(min_diag, diag)
             tmp1 = preconditioner%solutions(ful, sol1) / diag
             tmp2 = residuals(ful, sol1) / diag
@@ -58,6 +69,7 @@ function krylov_complex_jdall_preconditioner_transform_residuals( &
             end do
         end do
     end do
+    
 
     allocate (ipiv(solution_dim))
     info = 0_IK
@@ -69,13 +81,14 @@ function krylov_complex_jdall_preconditioner_transform_residuals( &
     end if
     deallocate (ipiv)
 
+    
     do sol1 = 1, solution_dim
         do ful = 1, full_dim
-            diag = preconditioner%diagonal(ful) - preconditioner%eigenvalues(sol1)
+            diag = preconditioner%diagonal(ful) - shifts(sol1)
             if (abs(diag) < min_diag) diag = sign(min_diag, diag)
             preconditioned_residuals(ful, sol1) = residuals(ful, sol1) / diag
             do sol2 = 1, solution_dim
-                diag = preconditioner%diagonal(ful) - preconditioner%eigenvalues(sol2)
+                diag = preconditioner%diagonal(ful) - shifts(sol2)
                 if (abs(diag) < min_diag) diag = sign(min_diag, diag)
                 preconditioned_residuals(ful, sol1) = preconditioned_residuals(ful, sol1) - &
                                                       eps(sol2, sol1) * preconditioner%solutions(ful, sol2) / diag
@@ -83,7 +96,7 @@ function krylov_complex_jdall_preconditioner_transform_residuals( &
         end do
     end do
 
-    deallocate (eps, denom)
+    deallocate (eps, denom, shifts)
 
     error = OK
 

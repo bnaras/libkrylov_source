@@ -14,14 +14,15 @@ program test_get_space_real_option
     index = krylov_add_space('r', 's', 'e', 10_IK, 1_IK, 3_IK)
     if (index /= 1_IK) stop 1
 
-    error = krylov_set_space_real_option(1_IK, 'real', 1.0_RK)
+    error = krylov_set_space_real_option(index, 'real', 1.0_RK)
     if (error /= OK) stop 1
 
-    if (krylov_get_space_real_option(1_IK, 'real') /= 1.0_RK) stop 1
+    if (krylov_get_space_real_option(index, 'real') /= 1.0_RK) stop 1
 
-    if (krylov_get_space_real_option(1_IK, 'missing') /= -huge(1.0_RK)) stop 1
+    if (krylov_get_space_real_option(index, 'missing') /= -huge(1.0_RK)) stop 1
 
-    if (krylov_get_space_real_option(2_IK, 'real') /= -huge(1.0_RK)) stop 1
+    index = 2_IK
+    if (krylov_get_space_real_option(index, 'real') /= -huge(1.0_RK)) stop 1
 
     error = krylov_finalize()
     if (error /= OK) stop 1

@@ -1,4 +1,4 @@
-function krylov_get_real_block_dims(num_spaces, full_dims, subset_dims, offsets, total_size) result(error)
+function krylov_get_real_block_dims(num_spaces, full_dims, subset_dims, offsets) result(error)
 
     use kinds, only: IK
     use errors, only: OK, INVALID_DIMENSION
@@ -7,7 +7,7 @@ function krylov_get_real_block_dims(num_spaces, full_dims, subset_dims, offsets,
 
     integer(IK), intent(in) :: num_spaces
     integer(IK), intent(out) :: full_dims(num_spaces), subset_dims(num_spaces), &
-                                offsets(num_spaces), total_size
+                                offsets(num_spaces)
     integer(IK) :: error
 
     integer(IK) :: index, offset
@@ -32,7 +32,6 @@ function krylov_get_real_block_dims(num_spaces, full_dims, subset_dims, offsets,
             offsets(index) = 0_IK
         end select
     end do
-    total_size = offset
 
     error = OK
 

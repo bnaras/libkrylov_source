@@ -9,17 +9,15 @@ program test_complex_ortho_orthonormalizer_prepare_vectors
 
     type(complex_ortho_orthonormalizer_t) :: orthonormalizer
     type(config_t) :: config
-    complex(CK) :: vectors(4_IK, 2_IK), residuals(4_IK, 2_IK), new_vectors(4_IK, 2_IK), ref(4_IK, 2_IK)
+    complex(CK) :: vectors(4_IK, 2_IK), residuals(4_IK, 2_IK), new_vectors(4_IK, 2_IK), new_vectors_ref(4_IK, 2_IK)
     integer(IK) :: error, new_dim
 
-    vectors = reshape((/(0.5_CK, 0.1_CK), (0.5_CK, 0.1_CK), (-0.5_CK, -0.1_CK), (-0.5_CK, -0.1_CK), &
-                        (0.5_CK, 0.1_CK), (0.5_CK, 0.1_CK), (0.5_CK, 0.1_CK), (0.5_CK, 0.1_CK)/), (/4_IK, 2_IK/))
-    residuals = reshape((/(1.0_CK, 0.1_CK), (-1.0_CK, -0.1_CK), (-3.0_CK, -0.1_CK), (3.0_CK, 0.1_CK), &
-                          (1.5_CK, 0.1_CK), (-1.5_CK, -0.1_CK), (0.5_CK, 0.1_CK), (-0.5_CK, -0.1_CK)/), (/4_IK, 2_IK/))
-    ref = reshape((/(0.223438723324904_CK, 0.002234387233249_CK), (-0.223438723324904_CK, -0.022343872332490_CK), &
-                    (-0.670316169974712_CK, -0.022343872332490_CK), (0.670316169974712_CK, 0.022343872332490_CK), &
-                    (0.668966912755992_CK, 0.054945248252818_CK), (-0.668035241170813_CK, -0.054963280606080_CK), &
-                    (0.223390802988257_CK, 0.013515582701985_CK), (-0.223390802988257_CK, -0.013515582701985_CK)/), (/4_IK, 2_IK/))
+    vectors = reshape((/(0.4_CK, 0.3_CK), (0.4_CK, 0.3_CK), (-0.4_CK, -0.3_CK), (-0.4_CK, -0.3_CK), &
+                        (0.4_CK, 0.3_CK), (0.4_CK, 0.3_CK), (0.4_CK, 0.3_CK), (0.4_CK, 0.3_CK)/), (/4_IK, 2_IK/))
+    residuals = reshape((/(0.1_CK, 0.1_CK), (0.1_CK, -0.1_CK), (-0.3_CK, -0.1_CK), (-0.3_CK, 0.1_CK), &
+                          (0.1_CK, 0.1_CK), (0.1_CK, -0.3_CK), (0.1_CK, 0.1_CK), (0.1_CK, -0.3_CK)/), (/4_IK, 2_IK/))
+    new_vectors_ref = reshape((/(0.0_CK, 0.5_CK), (0.0_CK, -0.5_CK), (0.0_CK, -0.5_CK), (0.0_CK, 0.5_CK), &
+                                (0.0_CK, 0.5_CK), (0.0_CK, -0.5_CK), (0.0_CK, 0.5_CK), (0.0_CK, -0.5_CK)/), (/4_IK, 2_IK/))
 
     error = config%initialize()
     if (error /= OK) stop 1
@@ -37,6 +35,6 @@ program test_complex_ortho_orthonormalizer_prepare_vectors
     if (error /= OK) stop 1
     if (new_dim /= 2_IK) stop 1
 
-    if (new_vectors /= near_complex_mat(ref, thr=1.0E-01_RK)) stop 1
+    if (new_vectors /= near_complex_mat(new_vectors_ref, thr=1.0E-12_RK)) stop 1
 
 end program test_complex_ortho_orthonormalizer_prepare_vectors

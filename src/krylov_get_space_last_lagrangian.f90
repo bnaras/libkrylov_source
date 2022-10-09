@@ -9,10 +9,9 @@ function krylov_get_space_last_lagrangian(index) result(last_lagrangian)
 
     if (index > krylov_get_num_spaces()) then
         last_lagrangian = huge(1.0_RK)
+        return
     end if
 
-    associate (space => spaces(index)%space_p)
-        last_lagrangian = space%convergence%get_last_lagrangian()
-    end associate
+    last_lagrangian = spaces(index)%space_p%convergence%get_last_lagrangian()
 
 end function krylov_get_space_last_lagrangian

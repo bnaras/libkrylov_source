@@ -3,7 +3,7 @@ function krylov_set_real_space_rhs(index, full_dim, solution_dim, rhs) result(er
     use kinds, only: IK, RK
     use errors, only: OK, INVALID_DIMENSION, NO_SUCH_SPACE, INCOMPATIBLE_SPACE, INCOMPATIBLE_EQUATION
     use krylov, only: spaces, real_space_t, real_linear_equation_t, real_sylvester_equation_t, &
-                      krylov_get_num_spaces
+                      real_shifted_linear_equation_t, krylov_get_num_spaces
     implicit none
 
     integer(IK), intent(in) :: index, full_dim, solution_dim
@@ -30,6 +30,8 @@ function krylov_set_real_space_rhs(index, full_dim, solution_dim, rhs) result(er
         type is (real_space_t)
             select type (equation => space%equation)
             type is (real_linear_equation_t)
+                equation%rhs = rhs
+            type is (real_shifted_linear_equation_t)
                 equation%rhs = rhs
             type is (real_sylvester_equation_t)
                 equation%rhs = rhs

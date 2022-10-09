@@ -24,7 +24,7 @@ module errors
     integer(IK), parameter :: NO_SUCH_SOLUTION = -208_IK
     integer(IK), parameter :: INVALID_CONFIGURATION = -209_IK
     integer(IK), parameter :: INCOMPLETE_CONFIGURATION = -210_IK
-    integer(IK), parameter :: INCOMPATIBLE_CONFIG = -211_IK
+    integer(IK), parameter :: INCOMPATIBLE_CONFIGURATION = -211_IK
     integer(IK), parameter :: INCOMPATIBLE_EQUATION = -212_IK
     integer(IK), parameter :: INCOMPLETE_EQUATION = -213_IK
     integer(IK), parameter :: INCOMPATIBLE_PRECONDITIONER = -214_IK

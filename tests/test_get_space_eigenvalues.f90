@@ -1,14 +1,19 @@
 program test_get_space_eigenvalues
 
     use kinds, only: IK, RK
-    use errors, only: OK, INVALID_DIMENSION, INCOMPATIBLE_EQUATION
+    use errors, only: OK, NO_SUCH_SPACE, INVALID_DIMENSION, INCOMPATIBLE_EQUATION
+    use testing, only: near_real_vec
     use krylov, only: spaces, real_space_t, complex_space_t, krylov_initialize, krylov_finalize, &
                       krylov_add_space, krylov_get_space_eigenvalues, real_eigenvalue_equation_t, &
                       complex_eigenvalue_equation_t
     implicit none
 
     integer(IK) :: error, index
-    real(RK) :: eigenvalues_1(2_IK), eigenvalues_2(3_IK), eigenvalues_3(1_IK)
+    real(RK) :: eigenvalues_1(2_IK), eigenvalues_2(3_IK), eigenvalues_3(1_IK), &
+                eigenvalues1_ref(2_IK), eigenvalues2_ref(3_IK)
+
+    eigenvalues1_ref = (/1.0_RK, 1.0_RK/)
+    eigenvalues2_ref = (/3.0_RK, 3.0_RK, 3.0_RK/)
 
     error = krylov_initialize()
     if (error /= OK) stop 1
@@ -35,7 +40,7 @@ program test_get_space_eigenvalues
     end select
     error = krylov_get_space_eigenvalues(1_IK, 2_IK, eigenvalues_1)
     if (error /= OK) stop 1
-    if (eigenvalues_1(1_IK) /= 1.0_RK) stop 1
+    if (eigenvalues_1 /= near_real_vec(eigenvalues1_ref)) stop 1
 
     ! Get eigenvalues on complex space
     select type (space => spaces(2_IK)%space_p)
@@ -47,7 +52,7 @@ program test_get_space_eigenvalues
     end select
     error = krylov_get_space_eigenvalues(2_IK, 3_IK, eigenvalues_2)
     if (error /= OK) stop 1
-    if (eigenvalues_2(1_IK) /= 3.0_RK) stop 1
+    if (eigenvalues_2 /= near_real_vec(eigenvalues2_ref)) stop 1
 
     ! Get eigenvalues from incompatible equation
     error = krylov_get_space_eigenvalues(3_IK, 1_IK, eigenvalues_3)

@@ -1,13 +1,13 @@
 function krylov_set_space_orthonormalizer(index, orthonormalizer) result(error)
 
-    use kinds, only: IK
+    use kinds, only: IK, AK
     use errors, only: OK, NO_SUCH_SPACE, INVALID_KIND
     use krylov, only: spaces, real_space_t, complex_space_t, krylov_get_num_spaces, &
                       krylov_set_space_enum_option
     implicit none
 
     integer(IK), intent(in) :: index
-    character(len=*), intent(in) :: orthonormalizer
+    character(len=*, kind=AK), intent(in) :: orthonormalizer
     integer(IK) :: error
 
     integer(IK) :: err

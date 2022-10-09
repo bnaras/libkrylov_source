@@ -1,22 +1,22 @@
 module utils
 
+    use kinds, only: IK, RK, AK, LK
     implicit none
 
 contains
 
     function lowercase(string)
 
-        use kinds, only: IK
         implicit none
 
-        character(len=*), intent(in) :: string
-        character(len=:), allocatable :: lowercase
+        character(len=*, kind=AK), intent(in) :: string
+        character(len=:, kind=AK), allocatable :: lowercase
 
         integer(IK), parameter :: shift = iachar('a', kind=IK) - iachar('A', kind=IK)
         integer(IK) :: pos
         character :: char
 
-        allocate (character(len=len(string)) :: lowercase)
+        allocate (character(len=len(string), kind=AK) :: lowercase)
 
         do pos = 1_IK, len(string)
             char = string(pos:pos)
@@ -30,19 +30,17 @@ contains
 
     end function lowercase
 
-    function count(string, substring)
+    function count(string, sstring)
 
         ! Count occurrences of substring in string
-
-        use kinds, only: IK
         implicit none
 
-        character(len=*), intent(in) :: string, substring
+        character(len=*, kind=AK), intent(in) :: string, sstring
         integer(IK) :: count
 
         integer(IK) :: pos, pos1
 
-        if (len(substring, kind=IK) == 0_IK) then
+        if (len(sstring, kind=IK) == 0_IK) then
             count = len(string, kind=IK) - 1_IK
             return
         end if
@@ -52,129 +50,234 @@ contains
         pos1 = 0_IK
         do
             if (pos > len(string, kind=IK)) exit
-            pos1 = index(string(pos:), substring, kind=IK)
+            pos1 = index(string(pos:), sstring, kind=IK)
             if (pos1 == 0_IK) exit
             count = count + 1_IK
-            pos = pos + pos1 + len(substring, kind=IK) - 1_IK
+            pos = pos + pos1 + len(sstring, kind=IK) - 1_IK
         end do
 
     end function count
 
-    function find(string, substring, idx) result(pos)
+    function position(string, sstring, idx)
 
         ! Find index of substring number idx in string
-
-        use kinds, only: IK
         implicit none
 
-        character(len=*), intent(in) :: string, substring
+        character(len=*, kind=AK), intent(in) :: string, sstring
         integer(IK), intent(in) :: idx
-        integer(IK) :: pos
+        integer(IK) :: position
 
         integer(IK) :: idx1, pos1
 
         if (len(string, kind=IK) == 0_IK) then
-            pos = 0_IK
+            position = 0_IK
             return
         end if
 
-        if (len(substring, kind=IK) == 0_IK) then
-            pos = max(idx, len(string, kind=IK))
+        if (len(sstring, kind=IK) == 0_IK) then
+            position = max(idx, len(string, kind=IK))
             return
         end if
 
         if (idx < 1_IK) then
-            pos = 0_IK
+            position = 0_IK
             return
         end if
 
-        pos = 1_IK
+        position = 1_IK
         do idx1 = 1_IK, idx - 1_IK
-            if (pos > len(string, kind=IK)) exit
-            pos1 = index(string(pos:), substring, kind=IK)
+            if (position > len(string, kind=IK)) exit
+            pos1 = index(string(position:), sstring, kind=IK)
             if (pos1 == 0_IK) then
-                pos = len(string, kind=IK) + len(substring, kind=IK) + 1_IK
+                position = len(string, kind=IK) + len(sstring, kind=IK) + 1_IK
                 exit
             end if
-            pos = pos + pos1 + len(substring, kind=IK) - 1_IK
+            position = position + pos1 + len(sstring, kind=IK) - 1_IK
+        end do
+
+    end function position
+
+    function contains(string, sstring, delim)
+
+        implicit none
+
+        ! Check if substring is present in delimited string
+        character(len=*, kind=AK), intent(in) :: string, sstring, delim
+        logical(LK) :: contains
+
+        contains = find(string, sstring, delim) > 0_IK
+
+    end function contains
+
+    function substring(string, idx, delim)
+
+        implicit none
+
+        ! Retrieve substring by index from delimited string
+        character(len=*, kind=AK), intent(in) :: string, delim
+        integer(IK), intent(in) :: idx
+        character(len=:, kind=AK), allocatable :: substring
+
+        integer(IK) :: pos, pos1
+
+        if (string == '') then
+            substring = ''
+            return
+        end if
+
+        if (idx > count(string, delim) + 1_IK) then
+            substring = ''
+            return
+        end if
+
+        pos = position(string, delim, idx)
+        pos1 = position(string, delim, idx + 1_IK) - len(delim, kind=IK) - 1_IK
+        substring = string(pos:pos1)
+
+    end function substring
+
+    function find(string, sstring, delim)
+
+        implicit none
+
+        ! Find index of substring in delimited string
+        character(len=*, kind=AK), intent(in) :: string, sstring, delim
+        integer(IK) :: find
+
+        integer(IK) :: idx, pos, pos1
+
+        find = 0_IK
+        if (string == '') return
+
+        do idx = 1_IK, count(string, delim) + 1_IK
+            pos = position(string, delim, idx)
+            pos1 = position(string, delim, idx + 1_IK) - len(delim, kind=IK) - 1_IK
+            if (string(pos:pos1) == sstring) then
+                find = idx
+                exit
+            end if
         end do
 
     end function find
 
-    function contains(string, substring, delim)
+    function longest(string, delim)
 
-        use kinds, only: IK
         implicit none
 
-        character(len=*), intent(in) :: string, substring, delim
-        logical :: contains
+        ! Get length of longest substring in delimited string
+        character(len=*, kind=AK), intent(in) :: string, delim
+        integer(IK) :: longest
 
         integer(IK) :: idx, pos, pos1
 
-        contains = .false.
-        if (string == '') then
-            return
-        end if
+        longest = 0_IK
+        if (string == '') return
 
         do idx = 1_IK, count(string, delim) + 1_IK
-            pos = find(string, delim, idx)
-            pos1 = find(string, delim, idx + 1_IK) - len(delim, kind=IK) - 1_IK
-            if (string(pos:pos1) == substring) then
-                contains = .true.
-                exit
-            end if
+            pos = position(string, delim, idx)
+            pos1 = position(string, delim, idx + 1_IK) - len(delim, kind=IK) - 1_IK
+            longest = max(longest, pos1 - pos + 1_IK)
         end do
 
-    end function contains
+    end function longest
 
-    recursive logical function circle_sort(a, left, right, n) result(swapped)
+    recursive function circle_sort(a, left, right, n) result(swapped)
         ! This code is a Fortran adaptation of a Forth algorithm laid out by "thebeez" at this URL;
         ! https://sourceforge.net/p/forth-4th/wiki/Circle%20sort/
-        use kinds, only: IK, RK
         implicit none
 
         integer(IK), intent(in) :: left, right, n
-        real(IK), intent(inout) :: a(n)
+        real(RK), intent(inout) :: a(n)
+        logical(LK) :: swapped
+
         integer(IK) :: lo, hi, mid
         real(RK) :: tmp
-        logical :: lefthalf, righthalf
+        logical(LK) :: lefthalf, righthalf
 
-        swapped = .false.
+        swapped = .false._LK
         if (right <= left) return
-        lo = left   !Store the upper and lower bounds of list for
-        hi = right  !Recursion later
+        ! Store the upper and lower bounds of list for recursion
+        lo = left
+        hi = right
 
         do while (lo < hi)
-        ! Swap the pair of elements if hi < lo
+            ! Swap the pair of elements if hi < lo
             if (a(hi) < a(lo)) then
-                swapped = .true.
+                swapped = .true._LK
                 tmp = a(lo)
                 a(lo) = a(hi)
                 a(hi) = tmp
-            endif
+            end if
             lo = lo + 1_IK
             hi = hi - 1_IK
         end do
 
         ! Special case if array is an odd size (not even)
-        if (lo == hi)then
-            if(a(hi+1_IK) < a(lo))then
-                swapped = .true.
-                tmp = a(hi+1_IK)
-                a(hi+1_IK) = a(lo)
+        if (lo == hi) then
+            if (a(hi + 1_IK) < a(lo)) then
+                swapped = .true._LK
+                tmp = a(hi + 1_IK)
+                a(hi + 1_IK) = a(lo)
                 a(lo) = tmp
-            endif
-        endif
-        mid = (left + right) / 2_IK ! Bisection point
-        lefthalf = circle_sort(a, left, mid,n)
-        righthalf = circle_sort(a, mid + 1_IK, right,n)
+            end if
+        end if
+        mid = (left + right)/2_IK ! Bisection point
+        lefthalf = circle_sort(a, left, mid, n)
+        righthalf = circle_sort(a, mid + 1_IK, right, n)
         swapped = swapped .or. lefthalf .or. righthalf
 
     end function circle_sort
 
+    recursive function circle_argsort(ind, a, left, right, n) result(swapped)
+        implicit none
+
+        ! This code is a Fortran adaptation of a Forth algorithm laid out by "thebeez" at this URL;
+        ! https://sourceforge.net/p/forth-4th/wiki/Circle%20sort/
+        ! This variant sorts index ind while comparing elements of a
+        integer(IK), intent(in) :: left, right, n
+        integer(IK), intent(inout) :: ind(n)
+        real(RK), intent(in) :: a(n)
+        logical(LK) :: swapped
+
+        integer(IK) :: lo, hi, mid, tmp
+        logical(LK) :: lefthalf, righthalf
+
+        swapped = .false._LK
+        if (right <= left) return
+        ! Store the upper and lower bounds of list for recursion
+        lo = left
+        hi = right
+
+        do while (lo < hi)
+            ! Swap the pair of elements if hi < lo
+            if (a(ind(hi)) < a(ind(lo))) then
+                swapped = .true._LK
+                tmp = ind(lo)
+                ind(lo) = ind(hi)
+                ind(hi) = tmp
+            end if
+            lo = lo + 1_IK
+            hi = hi - 1_IK
+        end do
+
+        ! Special case if array is an odd size (not even)
+        if (lo == hi) then
+            if (a(ind(hi + 1_IK)) < a(ind(lo))) then
+                swapped = .true._LK
+                tmp = ind(hi + 1_IK)
+                ind(hi + 1_IK) = ind(lo)
+                ind(lo) = tmp
+            end if
+        end if
+        mid = (left + right)/2_IK ! Bisection point
+        lefthalf = circle_argsort(ind, a, left, mid, n)
+        righthalf = circle_argsort(ind, a, mid + 1_IK, right, n)
+        swapped = swapped .or. lefthalf .or. righthalf
+
+    end function circle_argsort
+
     function real_argsort(a, n, index) result(error)
-        
-        use kinds, only: IK, RK
+
         use errors, only: OK
         implicit none
 
@@ -183,17 +286,13 @@ contains
         integer(IK), intent(out) :: index(n)
         integer(IK) :: error
 
-        real(RK) :: tmp(n)
-        integer(IK) :: i, j
-    
-        tmp = a
-        do while (circle_sort(tmp, 1_IK, n, n))
-        end do
+        integer(IK) :: i
 
         do i = 1_IK, n
-            do j = 1_IK, n
-                if (tmp(i) == a(j)) index(i) = j
-            end do
+            index(i) = i
+        end do
+
+        do while (circle_argsort(index, a, 1_IK, n, n))
         end do
 
         error = OK

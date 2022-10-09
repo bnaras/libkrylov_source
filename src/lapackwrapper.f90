@@ -12,14 +12,14 @@ module lapackwrapper
         spocon, dpocon, cpocon, zpocon, sgesvd, dgesvd, cgesvd, zgesvd, &
         sgeqrf, dgeqrf, cgeqrf, zgeqrf, sorgqr, dorgqr, cungqr, zungqr
 
-#ifdef USE_REAL32
+#if (defined USE_REAL32 || USE_C_FLOAT)
     procedure(real(RK)), pointer :: real_lansy => slansy
     procedure(), pointer :: real_gesv => sgesv, real_sysv => ssysv, &
         real_trsm => strsm, real_syev => ssyev, &
         real_potrf => spotrf, real_potri => spotri, &
         real_pocon => spocon, real_gesvd => sgesvd, &
         real_geqrf => sgeqrf, real_orgqr => sorgqr
-#elif defined USE_REAL64
+#elif (defined USE_REAL64 || USE_C_DOUBLE)
     procedure(real(RK)), pointer :: real_lansy => dlansy
     procedure(), pointer :: real_gesv => dgesv, real_sysv => dsysv, &
         real_trsm => dtrsm, real_syev => dsyev, &
@@ -28,14 +28,14 @@ module lapackwrapper
         real_geqrf => dgeqrf, real_orgqr => dorgqr
 #endif
 
-#ifdef USE_COMPLEX32
+#if (defined USE_COMPLEX32 || USE_COMPLEX_C_FLOAT)
     procedure(real(RK)), pointer :: complex_lanhe => clanhe
     procedure(), pointer :: complex_gesv => cgesv, complex_hesv => chesv, &
         complex_trsm => ctrsm, complex_heev => cheev, &
         complex_potrf => cpotrf, complex_potri => cpotri, &
         complex_pocon => cpocon, complex_gesvd => cgesvd, &
         complex_geqrf => cgeqrf, complex_ungqr => cungqr
-#elif defined USE_COMPLEX64
+#elif (defined USE_COMPLEX64 || USE_COMPLEX_C_DOUBLE)
     procedure(real(RK)), pointer :: complex_lanhe => zlanhe
     procedure(), pointer :: complex_gesv => zgesv, complex_hesv => zhesv, &
         complex_trsm => ztrsm, complex_heev => zheev, &

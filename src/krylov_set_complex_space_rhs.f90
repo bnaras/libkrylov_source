@@ -4,7 +4,8 @@ function krylov_set_complex_space_rhs(index, full_dim, solution_dim, rhs) result
     use errors, only: OK, INVALID_DIMENSION, NO_SUCH_SPACE, INCOMPATIBLE_SPACE, &
                       INCOMPATIBLE_EQUATION
     use krylov, only: spaces, complex_space_t, complex_linear_equation_t, &
-                      complex_sylvester_equation_t, krylov_get_num_spaces
+                      complex_shifted_linear_equation_t, complex_sylvester_equation_t, &
+                      krylov_get_num_spaces
     implicit none
 
     integer(IK), intent(in) :: index, full_dim, solution_dim
@@ -31,6 +32,8 @@ function krylov_set_complex_space_rhs(index, full_dim, solution_dim, rhs) result
         type is (complex_space_t)
             select type (equation => space%equation)
             type is (complex_linear_equation_t)
+                equation%rhs = rhs
+            type is (complex_shifted_linear_equation_t)
                 equation%rhs = rhs
             type is (complex_sylvester_equation_t)
                 equation%rhs = rhs

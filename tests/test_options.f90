@@ -1,6 +1,6 @@
 program test_options
 
-    use kinds, only: IK, RK
+    use kinds, only: IK, RK, LK
     use errors, only: OK, NO_SUCH_OPTION, INVALID_OPTION
     use options, only: config_t
     implicit none
@@ -32,6 +32,7 @@ program test_options
     if (c1%count_local() /= 2_IK) stop 1
     if (c1%count() /= 2_IK) stop 1
     if (c1%get_string_option('string') /= 'abc') stop 1
+    if (c1%length_string_option('string') /= 3_IK) stop 1
 
     error = c1%set_real_option('real', 1.0_RK)
     if (error /= OK) stop 1
@@ -41,13 +42,13 @@ program test_options
     if (c1%count() /= 3_IK) stop 1
     if (c1%get_real_option('real') /= 1.0_RK) stop 1
 
-    error = c1%set_logical_option('logical', .true.)
+    error = c1%set_logical_option('logical', .true._LK)
     if (error /= OK) stop 1
     if (c1%find_option_local('logical') /= OK) stop 1
     if (c1%find_option('logical') /= OK) stop 1
     if (c1%count_local() /= 4_IK) stop 1
     if (c1%count() /= 4_IK) stop 1
-    if (c1%get_logical_option('logical') .neqv. .true.) stop 1
+    if (c1%get_logical_option('logical') .neqv. .true._LK) stop 1
 
     error = c1%define_enum_option('enum', 'a;b')
     if (error /= OK) stop 1
@@ -56,14 +57,26 @@ program test_options
     if (c1%validate_enum_option('enum', 'a') /= OK) stop 1
     if (c1%validate_enum_option('enum', 'b') /= OK) stop 1
     if (c1%validate_enum_option('enum', 'c') /= INVALID_OPTION) stop 1
+    if (c1%count_enum_option('enum') /= 2_IK) stop 1
+    if (c1%longest_enum_option('enum') /= 1_IK) stop 1
+    if (c1%index_enum_option('enum', 1_IK) /= 'a') stop 1
+    if (c1%index_enum_option('enum', 2_IK) /= 'b') stop 1
+    if (c1%index_enum_option('enum', 3_IK) /= '') stop 1
+    if (c1%search_enum_option('enum', 'a') /= 1_IK) stop 1
+    if (c1%search_enum_option('enum', 'b') /= 2_IK) stop 1
+    if (c1%search_enum_option('enum', 'c') /= INVALID_OPTION) stop 1
     error = c1%set_enum_option('enum', 'a')
     if (error /= OK) stop 1
     if (c1%count_local() /= 5_IK) stop 1
     if (c1%count() /= 5_IK) stop 1
     if (c1%get_enum_option('enum') /= 'a') stop 1
+    if (c1%length_enum_option('enum') /= 1_IK) stop 1
     error = c1%set_enum_option('enum', 'c')
     if (error /= INVALID_OPTION) stop 1
     if (c1%validate_enum_option('missing', 'a') /= NO_SUCH_OPTION) stop 1
+    if (c1%count_enum_option('missing') /= NO_SUCH_OPTION) stop 1
+    if (c1%index_enum_option('missing', 1_IK) /= '') stop 1
+    if (c1%search_enum_option('missing', 'a') /= NO_SUCH_OPTION) stop 1
 
     c2 = c1
     if (c2%count_local() /= 5_IK) stop 1
@@ -74,15 +87,29 @@ program test_options
     if (c2%find_option('integer') /= OK) stop 1
     if (c2%get_integer_option('integer') /= 1_IK) stop 1
     if (c2%get_string_option('string') /= 'abc') stop 1
+    if (c2%length_string_option('string') /= 3_IK) stop 1
     if (c2%get_real_option('real') /= 1.0_RK) stop 1
-    if (c2%get_logical_option('logical') .neqv. .true.) stop 1
+    if (c2%get_logical_option('logical') .neqv. .true._LK) stop 1
     if (c2%validate_enum_option('enum', 'a') /= OK) stop 1
     if (c2%validate_enum_option('enum', 'b') /= OK) stop 1
     if (c2%validate_enum_option('enum', 'c') /= INVALID_OPTION) stop 1
+    if (c2%count_enum_option('enum') /= 2_IK) stop 1
+    if (c2%longest_enum_option('enum') /= 1_IK) stop 1
+    if (c2%index_enum_option('enum', 1_IK) /= 'a') stop 1
+    if (c2%index_enum_option('enum', 2_IK) /= 'b') stop 1
+    if (c2%index_enum_option('enum', 3_IK) /= '') stop 1
+    if (c2%search_enum_option('enum', 'a') /= 1_IK) stop 1
+    if (c2%search_enum_option('enum', 'b') /= 2_IK) stop 1
+    if (c2%search_enum_option('enum', 'c') /= INVALID_OPTION) stop 1
     if (c2%get_enum_option('enum') /= 'a') stop 1
+    if (c2%length_enum_option('enum') /= 1_IK) stop 1
     error = c2%set_enum_option('enum', 'c')
     if (error /= INVALID_OPTION) stop 1
     if (c2%validate_enum_option('missing', 'a') /= NO_SUCH_OPTION) stop 1
+    if (c2%count_enum_option('missing') /= NO_SUCH_OPTION) stop 1
+    if (c2%longest_enum_option('missing') /= NO_SUCH_OPTION) stop 1
+    if (c2%index_enum_option('missing', 1_IK) /= '') stop 1
+    if (c2%search_enum_option('missing', 'a') /= NO_SUCH_OPTION) stop 1
 
     c3 = c1%link()
     if (c3%count_local() /= 0_IK) stop 1
@@ -108,9 +135,18 @@ program test_options
     if (c3%find_option_local('string') /= OK) stop 1
     if (c3%find_option('string') /= OK) stop 1
     if (c3%get_string_option('string') /= 'xyz') stop 1
+    if (c3%length_string_option('string') /= 3_IK) stop 1
     if (c3%validate_enum_option('enum', 'a') /= OK) stop 1
     if (c3%validate_enum_option('enum', 'b') /= OK) stop 1
     if (c3%validate_enum_option('enum', 'c') /= INVALID_OPTION) stop 1
+    if (c3%count_enum_option('enum') /= 2_IK) stop 1
+    if (c3%longest_enum_option('enum') /= 1_IK) stop 1
+    if (c3%index_enum_option('enum', 1_IK) /= 'a') stop 1
+    if (c3%index_enum_option('enum', 2_IK) /= 'b') stop 1
+    if (c3%index_enum_option('enum', 3_IK) /= '') stop 1
+    if (c3%search_enum_option('enum', 'a') /= 1_IK) stop 1
+    if (c3%search_enum_option('enum', 'b') /= 2_IK) stop 1
+    if (c3%search_enum_option('enum', 'c') /= INVALID_OPTION) stop 1
     error = c3%set_enum_option('enum', 'b')
     if (error /= OK) stop 1
     if (c3%count_local() /= 3_IK) stop 1
@@ -120,6 +156,12 @@ program test_options
     if (error /= OK) stop 1
     if (c3%validate_enum_option('enum', 'p') /= OK) stop 1
     if (c3%validate_enum_option('enum', 'q') /= INVALID_OPTION) stop 1
+    if (c3%count_enum_option('enum') /= 1_IK) stop 1
+    if (c3%longest_enum_option('enum') /= 1_IK) stop 1
+    if (c3%index_enum_option('enum', 1_IK) /= 'p') stop 1
+    if (c3%index_enum_option('enum', 2_IK) /= '') stop 1
+    if (c3%search_enum_option('enum', 'p') /= 1_IK) stop 1
+    if (c3%search_enum_option('enum', 'q') /= INVALID_OPTION) stop 1
     error = c3%set_enum_option('enum', 'p')
     if (error /= OK) stop 1
     error = c3%set_enum_option('enum', 'a')
@@ -146,8 +188,15 @@ program test_options
     if (c4%find_option_local('string') /= OK) stop 1
     if (c4%find_option('string') /= OK) stop 1
     if (c4%get_string_option('string') /= 'xyz') stop 1
+    if (c4%length_string_option('string') /= 3_IK) stop 1
     if (c4%validate_enum_option('enum', 'p') /= OK) stop 1
     if (c4%validate_enum_option('enum', 'q') /= INVALID_OPTION) stop 1
+    if (c4%count_enum_option('enum') /= 1_IK) stop 1
+    if (c4%longest_enum_option('enum') /= 1_IK) stop 1
+    if (c4%index_enum_option('enum', 1_IK) /= 'p') stop 1
+    if (c4%index_enum_option('enum', 2_IK) /= '') stop 1
+    if (c4%search_enum_option('enum', 'p') /= 1_IK) stop 1
+    if (c4%search_enum_option('enum', 'q') /= INVALID_OPTION) stop 1
     error = c4%set_enum_option('enum', 'p')
     if (error /= OK) stop 1
     error = c4%set_enum_option('enum', 'a')

@@ -16,6 +16,6 @@ function krylov_convergence_get_last_lagrangian(convergence) result(last_lagrang
         return
     end if
 
-    last_lagrangian = convergence%iterations(index)%lagrangian
+    last_lagrangian = convergence%iterations(index)%get_lagrangian()
 
 end function krylov_convergence_get_last_lagrangian

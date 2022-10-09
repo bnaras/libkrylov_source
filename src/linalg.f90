@@ -1,10 +1,10 @@
 module linalg
 
     use iso_fortran_env, only: real32, real64
-    use kinds, only: RK, CK
+    use kinds, only: RK, CK, AK
     implicit none
 
-    character(len=1), parameter :: uplo = 'u'
+    character(len=1, kind=AK), parameter :: uplo = 'u'
 
 contains
 
@@ -62,6 +62,8 @@ contains
 
     function real_ge_block_orthonormalize(a, q, m, n, n_q, thr_zero, n_out) result(error)
 
+        ! This function orthonormalizes the input vectors in place against each other
+        ! and against reference vectors q
         use kinds, only: IK, RK
         use errors, only: OK
         use blaswrapper, only: real_nrm2, real_dot, real_gemm, real_scal, real_axpy
@@ -83,22 +85,25 @@ contains
         ! Uses modified Gram-Schmidt (MGS) algorithm for intra-block orthonormalization
         integer(IK), parameter :: num_iter = 2_IK
 
-        allocate (s(n_q, n), q1(m))
-
         ! Orthogonalize a against q using B2GS
-        do iter = 1_IK, num_iter
-            call real_gemm('t', 'n', n_q, n, m, 1.0_RK, q, m, a, m, 0.0_RK, s, n_q)
-            call real_gemm('n', 'n', m, n, n_q, -1.0_RK, q, m, s, n_q, 1.0_RK, a, m)
-        end do
+        if (n_q > 0_IK) then
+            allocate (s(n_q, n))
+            do iter = 1_IK, num_iter
+                call real_gemm('t', 'n', n_q, n, m, 1.0_RK, q, m, a, m, 0.0_RK, s, n_q)
+                call real_gemm('n', 'n', m, n, n_q, -1.0_RK, q, m, s, n_q, 1.0_RK, a, m)
+            end do
+            deallocate (s)
+        end if
 
         ! Orthonormalize a using MGS
+        allocate (q1(m))
         n_out = 0_IK
         do i = 1_IK, n
             q1 = a(1_IK:m, i)
             s1 = real_nrm2(m, q1, 1_IK)
 
             if (s1 >= thr_zero) then
-                call real_scal(m, 1.0_RK / s1, q1, 1_IK)
+                call real_scal(m, 1.0_RK/s1, q1, 1_IK)
 
                 do j = i + 1_IK, n
                     s2 = -real_dot(m, q1, 1_IK, a(1_IK, j), 1_IK)
@@ -109,8 +114,7 @@ contains
                 a(1_IK:m, n_out) = q1
             end if
         end do
-
-        deallocate (s, q1)
+        deallocate (q1)
 
         error = OK
 
@@ -118,6 +122,8 @@ contains
 
     function complex_ge_block_orthonormalize(a, q, m, n, n_q, thr_zero, n_out) result(error)
 
+        ! This function orthonormalizes the input vectors in place against each other
+        ! and against reference vectors q
         use kinds, only: IK, RK, CK
         use errors, only: OK
         use blaswrapper, only: complex_nrm2, complex_dotc, complex_gemm, complex_scal, complex_axpy
@@ -141,22 +147,25 @@ contains
         ! Uses modified Gram-Schmidt (MGS) algorithm for intra-block orthonormalization
         integer(IK), parameter :: num_iter = 2_IK
 
-        allocate (s(n_q, n), q1(m))
-
         ! Orthogonalize a against q using B2GS
-        do iter = 1_IK, num_iter
-            call complex_gemm('c', 'n', n_q, n, m, (1.0_CK, 0.0_CK), q, m, a, m, (0.0_CK, 0.0_CK), s, n_q)
-            call complex_gemm('n', 'n', m, n, n_q, (-1.0_CK, 0.0_CK), q, m, s, n_q, (1.0_CK, 0.0_CK), a, m)
-        end do
+        if (n_q > 0_IK) then
+            allocate (s(n_q, n))
+            do iter = 1_IK, num_iter
+                call complex_gemm('c', 'n', n_q, n, m, (1.0_CK, 0.0_CK), q, m, a, m, (0.0_CK, 0.0_CK), s, n_q)
+                call complex_gemm('n', 'n', m, n, n_q, (-1.0_CK, 0.0_CK), q, m, s, n_q, (1.0_CK, 0.0_CK), a, m)
+            end do
+            deallocate (s)
+        end if
 
         ! Orthonormalize a using MGS
+        allocate (q1(m))
         n_out = 0_IK
         do i = 1_IK, n
             q1 = a(1_IK:m, i)
             s1 = complex_nrm2(m, q1, 1_IK)
 
             if (s1 >= thr_zero) then
-                call complex_scal(m, cmplx(1.0_RK / s1, kind=CK), q1, 1_IK)
+                call complex_scal(m, cmplx(1.0_RK/s1, kind=CK), q1, 1_IK)
 
                 do j = i + 1_IK, n
                     s2 = -complex_dotc(m, q1, 1_IK, a(1_IK, j), 1_IK)
@@ -167,15 +176,58 @@ contains
                 a(1_IK:m, n_out) = q1
             end if
         end do
-
-        deallocate (s, q1)
+        deallocate (q1)
 
         error = OK
 
     end function complex_ge_block_orthonormalize
 
+    function real_ge_orthonormalize(a, m, n, thr_zero, n_out) result(error)
+
+        ! This function orthonormalizes the input vectors in place
+        ! Implemented as a special case of the real_ge_block_orthonormalize function
+        ! If the output vectors should not be renormalized, use real_ge_orthogonalize
+        use kinds, only: IK, RK
+        use errors, only: OK
+        implicit none
+
+        integer(IK), intent(in) :: m, n
+        real(RK), intent(inout) :: a(m, n)
+        real(RK), intent(in) :: thr_zero
+        integer(IK), intent(out) :: n_out
+        integer(IK) :: error
+
+        real(RK) :: dum(1_IK, 1_IK)
+
+        error = real_ge_block_orthonormalize(a, dum, m, n, 0_IK, thr_zero, n_out)
+
+    end function real_ge_orthonormalize
+
+    function complex_ge_orthonormalize(a, m, n, thr_zero, n_out) result(error)
+
+        ! This function orthonormalizes the input vectors in place
+        ! Implemented as a special case of the complex_ge_block_orthonormalize function
+        ! If the output vectors should not be renormalized, use complex_ge_orthogonalize
+        use kinds, only: IK, RK, CK
+        use errors, only: OK
+        implicit none
+
+        integer(IK), intent(in) :: m, n
+        complex(CK), intent(inout) :: a(m, n)
+        real(RK), intent(in) :: thr_zero
+        integer(IK), intent(out) :: n_out
+        integer(IK) :: error
+
+        complex(RK) :: dum(1_IK, 1_IK)
+
+        error = complex_ge_block_orthonormalize(a, dum, m, n, 0_IK, thr_zero, n_out)
+
+    end function complex_ge_orthonormalize
+
     function real_ge_orthogonalize(a, m, n, thr_zero, n_out) result(error)
 
+        ! Orthogonalize vectors in place but do not renormalize
+        ! If renormalization is desired, use real_ge_orthonormalize
         use kinds, only: IK, RK
         use errors, only: OK, LINEAR_ALGEBRA_ERROR
         use blaswrapper, only: real_scal
@@ -234,6 +286,8 @@ contains
 
     function complex_ge_orthogonalize(a, m, n, thr_zero, n_out) result(error)
 
+        ! Orthogonalize vectors in place but do not renormalize
+        ! If renormalization is desired, use complex_ge_orthonormalize
         use kinds, only: IK, RK, CK
         use errors, only: OK, LINEAR_ALGEBRA_ERROR
         use blaswrapper, only: complex_scal
@@ -251,7 +305,7 @@ contains
         real(RK), allocatable :: s(:), rwork(:)
         complex(CK), allocatable :: q1(:), work(:)
 
-        allocate (s(n), q1(m), rwork(5_IK * m))
+        allocate (s(n), q1(m), rwork(5_IK*m))
 
         ! Compute requirement for SVD (returned on work1(1))
         info = 0_IK
@@ -303,7 +357,7 @@ contains
         real(RK), intent(out) :: eig(n)
         integer(IK) :: error
 
-        real(RK), allocatable :: work(:)
+        real(RK), allocatable :: tmp(:, :), work(:)
         integer(IK) :: info, lwork
         real(RK) :: work1(1_IK)
 
@@ -316,15 +370,17 @@ contains
             return
         end if
 
-        ! Compute eigenvalues, matrix is unchanged
-        allocate (work(lwork))
-        call real_syev('n', uplo, n, a, n, eig, work, lwork, info)
+        ! Copy matrix to temporary array
+        ! Compute eigenvalues, tmp is destroyed
+        allocate (tmp(n, n), work(lwork))
+        tmp = a
+        call real_syev('n', uplo, n, tmp, n, eig, work, lwork, info)
         if (info /= 0_IK) then
             error = LINEAR_ALGEBRA_ERROR
-            deallocate (work)
+            deallocate (tmp, work)
             return
         end if
-        deallocate (work)
+        deallocate (tmp, work)
 
         error = OK
 
@@ -349,7 +405,7 @@ contains
 
         ! Compute space requirement for diagonalization (returned on work1(1))
         info = 0_IK
-        allocate (rwork(3_IK * n - 2_IK))
+        allocate (rwork(3_IK*n - 2_IK))
         call complex_heev('n', uplo, n, a, n, eig, work1, -1_IK, rwork, info)
         lwork = int(work1(1_IK), kind=IK)
         if (info /= 0_IK .or. lwork <= 0_IK) then
@@ -431,7 +487,7 @@ contains
 
         ! Compute space requirement for diagonalization (returned on work1(1))
         info = 0_IK
-        allocate (rwork(3_IK * n - 2_IK))
+        allocate (rwork(3_IK*n - 2_IK))
         call complex_heev('v', uplo, n, a, n, eig, work1, -1_IK, rwork, info)
         lwork = int(work1(1_IK), IK)
         if (info /= 0_IK .or. lwork <= 0_IK) then
@@ -464,7 +520,7 @@ contains
         real(RK), intent(in) :: a(m, n)
         real(RK) :: norm
 
-        norm = real_nrm2(m * n, a, 1_IK)
+        norm = real_nrm2(m*n, a, 1_IK)
 
     end function real_ge_frobenius_norm
 
@@ -478,7 +534,7 @@ contains
         complex(CK), intent(in) :: a(m, n)
         real(RK) :: norm
 
-        norm = complex_nrm2(m * n, a, 1_IK)
+        norm = complex_nrm2(m*n, a, 1_IK)
 
     end function complex_ge_frobenius_norm
 
@@ -636,7 +692,7 @@ contains
         end if
 
         ! Compute inverse 1-norm condition number
-        allocate (work(3_IK * m), iwork(m))
+        allocate (work(3_IK*m), iwork(m))
         info = 0_IK
         call real_pocon(uplo, m, chol, m, norm, rcond, work, iwork, info)
         if (info /= 0_IK) then
@@ -660,7 +716,7 @@ contains
         real(RK) :: rcond
 
         complex(CK), allocatable :: chol(:, :), work(:)
-        real(IK), allocatable :: rwork(:)
+        real(RK), allocatable :: rwork(:)
         real(RK) :: norm
         integer(IK) :: info
 
@@ -680,7 +736,7 @@ contains
 
         ! Compute inverse 1-norm condition number
         info = 0_IK
-        allocate (work(2_IK * m), rwork(m))
+        allocate (work(2_IK*m), rwork(m))
         call complex_pocon(uplo, m, chol, m, norm, rcond, work, rwork, info)
         if (info /= 0_IK) then
             deallocate (chol, work, rwork)
@@ -713,7 +769,7 @@ contains
             return
         end if
 
-        rcond = abs(eig(1_IK)) / abs(eig(m))
+        rcond = abs(eig(1_IK))/abs(eig(m))
         deallocate (eig)
 
     end function real_sy_rcond_spectral_norm
@@ -739,7 +795,7 @@ contains
             return
         end if
 
-        rcond = abs(eig(1_IK)) / abs(eig(m))
+        rcond = abs(eig(1_IK))/abs(eig(m))
         deallocate (eig)
 
     end function complex_he_rcond_spectral_norm
@@ -761,11 +817,11 @@ contains
 
         allocate (d1(n))
 
-        d1 = 1.0_RK / sqrt(d)
+        d1 = 1.0_RK/sqrt(d)
 
         do j = 1_IK, n
             do i = 1_IK, n
-                a(i, j) = a(i, j) * d1(i)
+                a(i, j) = a(i, j)*d1(i)
             end do
             call real_scal(n, d1(j), a(1_IK, j), 1_IK)
         end do
@@ -793,11 +849,11 @@ contains
 
         allocate (d1(n))
 
-        d1 = cmplx(1.0_RK / sqrt(d), kind=CK)
+        d1 = cmplx(1.0_RK/sqrt(d), kind=CK)
 
         do j = 1_IK, n
             do i = 1_IK, n
-                a(i, j) = a(i, j) * d1(i)
+                a(i, j) = a(i, j)*d1(i)
             end do
             call complex_scal(n, d1(j), a(1_IK, j), 1_IK)
         end do

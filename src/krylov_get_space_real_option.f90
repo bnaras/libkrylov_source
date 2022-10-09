@@ -1,12 +1,12 @@
 function krylov_get_space_real_option(index, key) result(value)
 
-    use kinds, only: IK, RK
+    use kinds, only: IK, RK, AK
     use errors, only: NO_SUCH_OPTION
     use krylov, only: spaces, krylov_get_num_spaces
     implicit none
 
     integer(IK), intent(in) :: index
-    character(len=*), intent(in) :: key
+    character(len=*, kind=AK), intent(in) :: key
     real(RK) :: value
 
     if (index > krylov_get_num_spaces()) then

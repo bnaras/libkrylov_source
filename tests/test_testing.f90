@@ -1,6 +1,6 @@
 program test_testing
 
-    use kinds, only: IK, RK, CK
+    use kinds, only: IK, RK, CK, LK
     use testing, only: near_real_num_t, near_real_vec_t, near_real_mat_t, &
                        near_real_num, near_real_vec, near_real_mat, fix_phase_real_num, &
                        fix_phase_real_vec, fix_phase_real_mat, near_complex_num_t, &
@@ -41,8 +41,8 @@ program test_testing
     if (fix_phase_real_num(1.0_RK) /= near_real_num(1.0_RK)) stop 1
     if (fix_phase_real_num(-1.0_RK) /= near_real_num(1.0_RK)) stop 1
     if (-1.0_RK == near_real_num(1.0_RK)) stop 1
-    if (-1.0_RK /= near_real_num(1.0_RK, fix_phase=.true.)) stop 1
-    if (-1.01_RK /= near_real_num(1.0_RK, fix_phase=.true., thr=0.1_RK)) stop 1
+    if (-1.0_RK /= near_real_num(1.0_RK, fix_phase=.true._LK)) stop 1
+    if (-1.01_RK /= near_real_num(1.0_RK, fix_phase=.true._LK, thr=0.1_RK)) stop 1
 
     ! Initialization of approximate vector using type constructor
     v = near_real_vec_t(2_IK, (/1.0_RK, 2.0_RK/))
@@ -68,7 +68,7 @@ program test_testing
     v4 = fix_phase_real_vec((/0.0_RK, -1.0_RK/))
     if (v4 /= near_real_vec((/0.0_RK, 1.0_RK/))) stop 1
     if ((/0.0_RK, 1.0_RK/) == near_real_vec((/0.0_RK, -1.0_RK/))) stop 1
-    if ((/0.0_RK, 1.0_RK/) /= near_real_vec((/0.0_RK, -1.0_RK/), fix_phase=.true.)) stop 1
+    if ((/0.0_RK, 1.0_RK/) /= near_real_vec((/0.0_RK, -1.0_RK/), fix_phase=.true._LK)) stop 1
 
     ! Initialization of approximate matrix using type constructor
     m = near_real_mat_t(4_IK, 1_IK, reshape((/1.0_RK, 2.0_RK, 3.0_RK, 4.0_RK/), (/4_IK, 1_IK/)))
@@ -94,7 +94,7 @@ program test_testing
     m5 = fix_phase_real_mat(m4)
     if (m5 /= near_real_mat(reshape((/1.0_RK, 0.0_RK, 0.0_RK, 1.0_RK/), (/2_IK, 2_IK/)))) stop 1
     if (m4 == near_real_mat(reshape((/1.0_RK, 0.0_RK, 0.0_RK, 1.0_RK/), (/2_IK, 2_IK/)))) stop 1
-    if (m4 /= near_real_mat(reshape((/1.0_RK, 0.0_RK, 0.0_RK, 1.0_RK/), (/2_IK, 2_IK/)), fix_phase=.true.)) stop 1
+    if (m4 /= near_real_mat(reshape((/1.0_RK, 0.0_RK, 0.0_RK, 1.0_RK/), (/2_IK, 2_IK/)), fix_phase=.true._LK)) stop 1
 
     ! Initialization of approximate complex numbers using type constructor
     c = near_complex_num_t((0.0_CK, 1.0_CK))
@@ -117,7 +117,7 @@ program test_testing
     if (fix_phase_complex_num((3.0_CK, 4.0_CK)) /= near_complex_num((5.0_CK, 0.0_CK))) stop 1
     if (fix_phase_complex_num((-1.0_CK, 0.0_CK)) /= near_complex_num((1.0_CK, 0.0_CK))) stop 1
     if ((3.0_CK, 4.0_CK) == near_complex_num((-5.0_CK, 0.0_CK))) stop 1
-    if ((3.0_CK, 4.0_CK) /= near_complex_num((-5.0_CK, 0.0_CK), fix_phase=.true.)) stop 1
+    if ((3.0_CK, 4.0_CK) /= near_complex_num((-5.0_CK, 0.0_CK), fix_phase=.true._LK)) stop 1
 
     ! Complex vectors
     v5 = (/(0.0_CK, 1.0_CK), (1.0_CK, 0.0_CK)/)
@@ -125,7 +125,7 @@ program test_testing
     v6 = fix_phase_complex_vec(v5)
     if (v6 /= near_complex_vec((/(1.0_CK, 0.0_CK), (0.0_CK, -1.0_CK)/))) stop 1
     if (v5 == near_complex_vec((/(1.0_CK, 0.0_CK), (0.0_CK, -1.0_CK)/))) stop 1
-    if (v5 /= near_complex_vec((/(1.0_CK, 0.0_CK), (0.0_CK, -1.0_CK)/), fix_phase=.true.)) stop 1
+    if (v5 /= near_complex_vec((/(1.0_CK, 0.0_CK), (0.0_CK, -1.0_CK)/), fix_phase=.true._LK)) stop 1
 
     ! Complex matrices
     m6 = reshape((/(0.0_CK, 1.0_CK), (1.0_CK, 0.0_CK), (0.0_CK, 0.0_CK), (-1.0_CK, 0.0_CK)/), &
@@ -137,6 +137,6 @@ program test_testing
     if (m6 == near_complex_mat(reshape((/(1.0_CK, 0.0_CK), (0.0_CK, -1.0_CK), (0.0_CK, 0.0_CK), (1.0_CK, 0.0_CK)/), &
                                        (/2_IK, 2_IK/)))) stop 1
     if (m6 /= near_complex_mat(reshape((/(1.0_CK, 0.0_CK), (0.0_CK, -1.0_CK), (0.0_CK, 0.0_CK), (1.0_CK, 0.0_CK)/), &
-                                       (/2_IK, 2_IK/)), fix_phase=.true.)) stop 1
+                                       (/2_IK, 2_IK/)), fix_phase=.true._LK)) stop 1
 
 end program test_testing

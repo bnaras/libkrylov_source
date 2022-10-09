@@ -1,6 +1,6 @@
 function krylov_add_space(kind, structure, equation, full_dim, solution_dim, basis_dim) result(index)
 
-    use kinds, only: IK
+    use kinds, only: IK, AK
     use errors, only: OK, NO_SPACES, INVALID_KIND, INVALID_STRUCTURE, INVALID_EQUATION, INVALID_DIMENSION, &
                       INVALID_INPUT
     use options, only: config_t
@@ -8,12 +8,12 @@ function krylov_add_space(kind, structure, equation, full_dim, solution_dim, bas
     use krylov, only: real_space_t, complex_space_t, space_pointer_t, config, spaces, krylov_validate_enum_option
     implicit none
 
-    character(len=1), intent(in) :: kind, structure, equation
+    character(len=*, kind=AK), intent(in) :: kind, structure, equation
     integer(IK), intent(in) :: full_dim, solution_dim, basis_dim
     integer(IK) :: index
 
     integer(IK) :: err
-    character(len=1) :: kind_l, structure_l, equation_l
+    character(len=:, kind=AK), allocatable :: kind_l, structure_l, equation_l
     type(space_pointer_t), allocatable  :: spaces_tmp(:)
 
     if (.not. allocated(spaces)) then
@@ -75,10 +75,12 @@ function krylov_add_space(kind, structure, equation, full_dim, solution_dim, bas
         index = INVALID_INPUT
     end if
 
-    err = spaces(index)%space_p%initialize(equation, full_dim, solution_dim, basis_dim, config%link())
+    err = spaces(index)%space_p%initialize(equation_l, full_dim, solution_dim, basis_dim, config%link())
     if (err /= OK) then
         index = err
         return
     end if
+
+    deallocate(kind_l, structure_l, equation_l)
 
 end function krylov_add_space

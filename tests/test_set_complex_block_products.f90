@@ -35,7 +35,7 @@ program test_set_complex_block_products
     offsets(index) = 3_IK
 
     error = krylov_set_complex_block_products(2_IK, 5_IK, full_dims, subset_dims, &
-                                           offsets, products)
+                                              offsets, products)
     if (error /= OK) stop 1
 
     select type (space => spaces(1_IK)%space_p)

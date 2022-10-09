@@ -1,13 +1,13 @@
 function krylov_set_space_preconditioner(index, preconditioner) result(error)
 
-    use kinds, only: IK
+    use kinds, only: IK, AK
     use errors, only: OK, NO_SUCH_SPACE, INVALID_KIND
     use krylov, only: spaces, real_space_t, complex_space_t, krylov_get_num_spaces, &
                       krylov_set_space_enum_option
     implicit none
 
     integer(IK), intent(in) :: index
-    character(len=*), intent(in) :: preconditioner
+    character(len=*, kind=AK), intent(in) :: preconditioner
     integer(IK) :: error
 
     integer(IK) :: err

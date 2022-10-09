@@ -1,6 +1,6 @@
 program test_real_sy_diagonalize
 
-    use kinds, only: IK, RK
+    use kinds, only: IK, RK, LK
     use errors, only: OK
     use linalg, only: real_sy_diagonalize
     use testing, only: near_real_vec, near_real_mat
@@ -23,6 +23,6 @@ program test_real_sy_diagonalize
     if (error /= OK) stop 1
 
     if (eig /= near_real_vec(eig_ref)) stop 1
-    if (eigv /= near_real_mat(eigv_ref, fix_phase=.true.)) stop 1
+    if (eigv /= near_real_mat(eigv_ref, fix_phase=.true._LK)) stop 1
 
 end program test_real_sy_diagonalize

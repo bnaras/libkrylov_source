@@ -1,6 +1,6 @@
 function krylov_real_cg_preconditioner_set_diagonal(preconditioner, full_dim, diagonal) result(error)
 
-    use kinds, only: IK, RK
+    use kinds, only: IK, RK, LK
     use errors, only: OK, INVALID_DIMENSION
     use krylov, only: real_cg_preconditioner_t
     implicit none
@@ -19,7 +19,7 @@ function krylov_real_cg_preconditioner_set_diagonal(preconditioner, full_dim, di
 
     preconditioner%diagonal = diagonal
 
-    err = preconditioner%config%set_logical_option('has_diagonal', .true.)
+    err = preconditioner%config%set_logical_option('has_diagonal', .true._LK)
     if (err /= OK) then
         error = err
         return

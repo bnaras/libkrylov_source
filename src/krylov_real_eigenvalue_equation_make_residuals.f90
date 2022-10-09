@@ -12,7 +12,7 @@ function krylov_real_eigenvalue_equation_make_residuals(equation) result(error)
     integer(IK) :: sol
 
     do sol = 1_IK, equation%solution_dim
-        equation%residuals(:, sol) = -equation%solutions(:, sol) * equation%eigenvalues(sol)
+        equation%residuals(:, sol) = -equation%solutions(:, sol)*equation%eigenvalues(sol)
     end do
 
     call real_gemm('n', 'n', equation%full_dim, equation%solution_dim, equation%basis_dim, &

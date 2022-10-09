@@ -13,10 +13,11 @@ program test_complex_semi_orthonormalizer_transform_basis_rhs
                    orthonormalized_ref(2_IK, 2_IK)
     integer(IK) :: error
 
-    vectors = reshape((/(0.5_CK, 0.001_CK), (0.5_CK, 0.001_CK), (-0.5_CK, -0.001_CK), (-0.5_CK, -0.001_CK), &
-                        (0.5_CK, 0.001_CK), (0.5_CK, 0.001_CK), (0.5_CK, 0.001_CK), (0.5_CK, 0.001_CK)/), (/4_IK, 2_IK/))
-    basis_rhs = reshape((/(1.0_CK, 0.1_CK), (2.0_CK, -0.1_CK), (2.0_CK, 0.1_CK), (3.0_CK, 0.1_CK)/), (/2_IK, 2_IK/))
-    orthonormalized_ref = reshape((/(1.0_CK, 0.1_CK), (2.0_CK, -0.1_CK), (2.0_CK, 0.1_CK), (3.0_CK, 0.1_CK)/), (/2_IK, 2_IK/))
+    vectors = reshape((/(0.4_CK, 0.3_CK), (0.4_CK, 0.3_CK), (-0.4_CK, -0.3_CK), (-0.4_CK, -0.3_CK), &
+                        (0.2_CK, 0.2_CK), (0.2_CK, 0.2_CK), (0.0_CK, 0.0_CK), (0.0_CK, 0.0_CK)/), (/4_IK, 2_IK/))
+    basis_rhs = reshape((/(0.1_CK, 0.1_CK), (0.1_CK, -0.1_CK), (0.1_CK, 0.1_CK), (0.1_CK, -0.3_CK)/), (/2_IK, 2_IK/))
+    orthonormalized_ref = reshape((/(0.1_CK, 0.1_CK), (0.24041630560342611_CK, -0.43840620433565941_CK), &
+                                    (0.1_CK, 0.1_CK), (0.24041630560342611_CK, -1.1455129855222066_CK)/), (/2_IK, 2_IK/))
 
     error = config%initialize()
     if (error /= OK) stop 1
@@ -33,6 +34,6 @@ program test_complex_semi_orthonormalizer_transform_basis_rhs
     error = orthonormalizer%transform_basis_rhs(2_IK, 2_IK, basis_rhs, orthonormalized)
     if (error /= OK) stop 1
 
-    if (orthonormalized /= near_complex_mat(orthonormalized_ref, thr=1.0E-5_RK)) stop 1
+    if (orthonormalized /= near_complex_mat(orthonormalized_ref, thr=1.0E-12_RK)) stop 1
 
 end program test_complex_semi_orthonormalizer_transform_basis_rhs

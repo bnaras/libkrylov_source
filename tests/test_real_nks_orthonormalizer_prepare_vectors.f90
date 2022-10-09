@@ -12,7 +12,7 @@ program test_real_nks_orthonormalizer_prepare_vectors
     real(RK) :: vectors(4_IK, 2_IK), residuals(4_IK, 2_IK), new_vectors(4_IK, 2_IK), new_vectors_ref(4_IK, 2_IK)
     integer(IK) :: error, new_dim
 
-    vectors = reshape((/0.5_RK, 0.5_RK, -0.5_RK, -0.5_RK, 0.5_RK, 0.5_RK, 0.5_RK, 0.5_RK/), (/4_IK, 2_IK/))
+    vectors = reshape((/0.5_RK, 0.5_RK, -0.5_RK, -0.5_RK, 0.2_RK, 0.2_RK, 0.0_RK, 0.0_RK/), (/4_IK, 2_IK/))
     residuals = reshape((/1.0_RK, -1.0_RK, -3.0_RK, 3.0_RK, 1.5_RK, -1.5_RK, 0.5_RK, -0.5_RK/), (/4_IK, 2_IK/))
     new_vectors_ref = reshape((/1.0_RK, -1.0_RK, -3.0_RK, 3.0_RK, 1.5_RK, -1.5_RK, 0.5_RK, -0.5_RK/), (/4_IK, 2_IK/))
 

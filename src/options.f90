@@ -1,10 +1,10 @@
 module options
 
-    use kinds, only: IK, RK
-    use dict, only: entry_t, dict_t
+    use kinds, only: IK, RK, AK, LK
+    use dict, only: entry_t, dict_t, make_entry
     implicit none
 
-    character(len=*), parameter :: delim = ';'
+    character(len=*, kind=AK), parameter :: delim = ';'
     integer(IK), parameter :: max_depth = 10_IK
 
     type config_t
@@ -24,16 +24,22 @@ module options
         procedure, pass :: get_enum_entry => config_get_enum_entry
         procedure, pass :: get_integer_option => config_get_integer_option
         procedure, pass :: set_integer_option => config_set_integer_option
+        procedure, pass :: length_string_option => config_length_string_option
         procedure, pass :: get_string_option => config_get_string_option
         procedure, pass :: set_string_option => config_set_string_option
         procedure, pass :: get_real_option => config_get_real_option
         procedure, pass :: set_real_option => config_set_real_option
         procedure, pass :: get_logical_option => config_get_logical_option
         procedure, pass :: set_logical_option => config_set_logical_option
-        procedure, pass :: validate_enum_option => config_validate_enum_option
         procedure, pass :: get_enum_option => config_get_enum_option
-        procedure, pass :: define_enum_option => config_define_enum_option
         procedure, pass :: set_enum_option => config_set_enum_option
+        procedure, pass :: length_enum_option => config_length_enum_option
+        procedure, pass :: define_enum_option => config_define_enum_option
+        procedure, pass :: validate_enum_option => config_validate_enum_option
+        procedure, pass :: count_enum_option => config_count_enum_option
+        procedure, pass :: longest_enum_option => config_longest_enum_option
+        procedure, pass :: index_enum_option => config_index_enum_option
+        procedure, pass :: search_enum_option => config_search_enum_option
         final :: config_finalize
     end type config_t
 
@@ -41,7 +47,6 @@ contains
 
     function config_initialize(config) result(error)
 
-        use kinds, only: IK
         use errors, only: OK
         implicit none
 
@@ -73,7 +78,6 @@ contains
 
     function config_link(config) result(child)
 
-        use kinds, only: IK
         use errors, only: OK
         implicit none
 
@@ -94,7 +98,6 @@ contains
 
     function config_count_local(config) result(count)
 
-        use kinds, only: IK
         implicit none
 
         class(config_t), intent(in) :: config
@@ -106,7 +109,6 @@ contains
 
     recursive function config_count(config) result(count)
 
-        use kinds, only: IK
         implicit none
 
         class(config_t), intent(in) :: config
@@ -119,12 +121,11 @@ contains
 
     function config_find_option_local(config, key) result(error)
 
-        use kinds, only: IK
         use errors, only: OK, KEY_NOT_FOUND, NO_SUCH_OPTION
         implicit none
 
         class(config_t), intent(in) :: config
-        character(len=*), intent(in) :: key
+        character(len=*, kind=AK), intent(in) :: key
         integer(IK) :: error
 
         integer(IK) :: pos
@@ -140,12 +141,11 @@ contains
 
     recursive function config_find_option(config, key) result(error)
 
-        use kinds, only: IK
         use errors, only: OK, KEY_NOT_FOUND, NO_SUCH_OPTION
         implicit none
 
         class(config_t), intent(in) :: config
-        character(len=*), intent(in) :: key
+        character(len=*, kind=AK), intent(in) :: key
         integer(IK) :: error
 
         integer(IK) :: pos
@@ -165,12 +165,11 @@ contains
 
     function config_find_enum_local(config, key) result(error)
 
-        use kinds, only: IK
         use errors, only: OK, KEY_NOT_FOUND, NO_SUCH_OPTION
         implicit none
 
         class(config_t), intent(in) :: config
-        character(len=*), intent(in) :: key
+        character(len=*, kind=AK), intent(in) :: key
         integer(IK) :: error
 
         integer(IK) :: pos
@@ -186,12 +185,11 @@ contains
 
     recursive function config_find_enum(config, key) result(error)
 
-        use kinds, only: IK
         use errors, only: OK, KEY_NOT_FOUND, NO_SUCH_OPTION
         implicit none
 
         class(config_t), intent(in) :: config
-        character(len=*), intent(in) :: key
+        character(len=*, kind=AK), intent(in) :: key
         integer(IK) :: error
 
         integer(IK) :: pos
@@ -211,13 +209,12 @@ contains
 
     recursive function config_get_option_entry(config, key) result(entry)
 
-        use kinds, only: IK
         use errors, only: KEY_NOT_FOUND
         implicit none
 
         class(config_t), intent(inout) :: config
-        character(len=*), intent(in) :: key
-        type(entry_t), allocatable :: entry
+        character(len=*, kind=AK), intent(in) :: key
+        type(entry_t) :: entry
 
         integer(IK) :: pos
 
@@ -226,7 +223,7 @@ contains
             if (associated(config%parent)) then
                 entry = config%parent%get_option_entry(key)
             else
-                entry = entry_t(key, '')
+                entry = make_entry(key, '')
             end if
         else
             entry = config%options%retrieve_entry(pos)
@@ -236,13 +233,12 @@ contains
 
     recursive function config_get_enum_entry(config, key) result(entry)
 
-        use kinds, only: IK
         use errors, only: KEY_NOT_FOUND
         implicit none
 
         class(config_t), intent(inout) :: config
-        character(len=*), intent(in) :: key
-        type(entry_t), allocatable :: entry
+        character(len=*, kind=AK), intent(in) :: key
+        type(entry_t) :: entry
 
         integer(IK) :: pos
 
@@ -251,7 +247,7 @@ contains
             if (associated(config%parent)) then
                 entry = config%parent%get_enum_entry(key)
             else
-                entry = entry_t(key, '')
+                entry = make_entry(key, '')
             end if
         else
             entry = config%enums%retrieve_entry(pos)
@@ -259,137 +255,208 @@ contains
 
     end function config_get_enum_entry
 
-    function config_get_integer_option(config, key) result(value)
+    function config_get_integer_option(config, key) result(val)
 
-        use kinds, only: IK
         implicit none
 
         class(config_t), intent(inout) :: config
-        character(len=*), intent(in) :: key
-        integer(IK) :: value
+        character(len=*, kind=AK), intent(in) :: key
+        integer(IK) :: val
 
         type(entry_t) :: entry
 
         entry = config%get_option_entry(key)
-        value = entry%as_integer()
+        val = entry%as_integer()
 
     end function config_get_integer_option
 
-    function config_set_integer_option(config, key, value) result(error)
+    function config_set_integer_option(config, key, val) result(error)
 
-        use kinds, only: IK
         implicit none
 
         class(config_t), intent(inout) :: config
-        character(len=*), intent(in) :: key
-        integer(IK), intent(in) :: value
+        character(len=*, kind=AK), intent(in) :: key
+        integer(IK), intent(in) :: val
         integer(IK) :: error
 
-        error = config%options%put(key, value)
+        error = config%options%put(key, val)
 
     end function config_set_integer_option
 
-    function config_get_string_option(config, key) result(value)
+    function config_get_string_option(config, key) result(val)
 
         implicit none
 
         class(config_t), intent(inout) :: config
-        character(len=*), intent(in) :: key
-        character(len=:), allocatable :: value
+        character(len=*, kind=AK), intent(in) :: key
+        character(len=:, kind=AK), allocatable :: val
 
         type(entry_t) :: entry
 
         entry = config%get_option_entry(key)
-        value = entry%as_string()
+        val = entry%as_string()
 
     end function config_get_string_option
 
-    function config_set_string_option(config, key, value) result(error)
+    function config_set_string_option(config, key, val) result(error)
 
-        use kinds, only: IK
         implicit none
 
         class(config_t), intent(inout) :: config
-        character(len=*), intent(in) :: key, value
+        character(len=*, kind=AK), intent(in) :: key, val
         integer(IK) :: error
 
-        error = config%options%put(key, value)
+        error = config%options%put(key, val)
 
     end function config_set_string_option
 
-    function config_get_real_option(config, key) result(value)
+    function config_length_string_option(config, key) result(length)
 
-        use kinds, only: RK
         implicit none
 
         class(config_t), intent(inout) :: config
-        character(len=*), intent(in) :: key
-        real(RK) :: value
+        character(len=*, kind=AK), intent(in) :: key
+        integer(IK) :: length
 
         type(entry_t) :: entry
 
         entry = config%get_option_entry(key)
-        value = entry%as_real()
+        length = entry%get_length()
+
+    end function config_length_string_option
+
+    function config_get_real_option(config, key) result(val)
+
+        implicit none
+
+        class(config_t), intent(inout) :: config
+        character(len=*, kind=AK), intent(in) :: key
+        real(RK) :: val
+
+        type(entry_t) :: entry
+
+        entry = config%get_option_entry(key)
+        val = entry%as_real()
 
     end function config_get_real_option
 
-    function config_set_real_option(config, key, value) result(error)
+    function config_set_real_option(config, key, val) result(error)
 
-        use kinds, only: IK, RK
         implicit none
 
         class(config_t), intent(inout) :: config
-        character(len=*), intent(in) :: key
-        real(RK), intent(in) :: value
+        character(len=*, kind=AK), intent(in) :: key
+        real(RK), intent(in) :: val
         integer(IK) :: error
 
-        error = config%options%put(key, value)
+        error = config%options%put(key, val)
 
     end function config_set_real_option
 
-    function config_get_logical_option(config, key) result(value)
+    function config_get_logical_option(config, key) result(val)
 
         implicit none
 
         class(config_t), intent(inout) :: config
-        character(len=*), intent(in) :: key
-        logical :: value
+        character(len=*, kind=AK), intent(in) :: key
+        logical(LK) :: val
 
         type(entry_t) :: entry
 
         entry = config%get_option_entry(key)
-        value = entry%as_logical()
+        val = entry%as_logical()
 
     end function config_get_logical_option
 
-    function config_set_logical_option(config, key, value) result(error)
+    function config_set_logical_option(config, key, val) result(error)
 
-        use kinds, only: IK
         implicit none
 
         class(config_t), intent(inout) :: config
-        character(len=*), intent(in) :: key
-        logical, intent(in) :: value
+        character(len=*, kind=AK), intent(in) :: key
+        logical(LK), intent(in) :: val
         integer(IK) :: error
 
-        error = config%options%put(key, value)
+        error = config%options%put(key, val)
 
     end function config_set_logical_option
 
-    function config_validate_enum_option(config, key, value) result(error)
+    function config_get_enum_option(config, key) result(val)
 
-        use kinds, only: IK
-        use errors, only: OK, KEY_NOT_FOUND, NO_SUCH_OPTION, INVALID_OPTION
+        implicit none
+
+        class(config_t), intent(inout) :: config
+        character(len=*, kind=AK), intent(in) :: key
+        character(len=:, kind=AK), allocatable :: val
+
+        type(entry_t) :: entry
+
+        entry = config%get_option_entry(key)
+        val = entry%as_string()
+
+    end function config_get_enum_option
+
+    function config_set_enum_option(config, key, val) result(error)
+
+        use errors, only: OK
+        implicit none
+
+        class(config_t), intent(inout) :: config
+        character(len=*, kind=AK), intent(in) :: key, val
+        integer(IK) :: error
+
+        integer(IK) :: err
+
+        err = config%validate_enum_option(key, val)
+        if (err /= OK) then
+            error = err
+            return
+        end if
+
+        error = config%options%put(key, val)
+
+    end function config_set_enum_option
+
+    function config_length_enum_option(config, key) result(length)
+
+        implicit none
+
+        class(config_t), intent(inout) :: config
+        character(len=*, kind=AK), intent(in) :: key
+        integer(IK) :: length
+
+        type(entry_t) :: entry
+
+        entry = config%get_option_entry(key)
+        length = entry%get_length()
+
+    end function config_length_enum_option
+
+    function config_define_enum_option(config, key, vals) result(error)
+
+        implicit none
+
+        class(config_t), intent(inout) :: config
+        character(len=*, kind=AK), intent(in) :: key, vals
+        integer(IK) :: error
+
+        error = config%enums%put(key, vals)
+
+    end function config_define_enum_option
+
+    function config_validate_enum_option(config, key, val) result(error)
+
+        use errors, only: OK, INVALID_OPTION
         use utils, only: contains
         implicit none
 
         class(config_t), intent(inout) :: config
-        character(len=*), intent(in) :: key, value
+        character(len=*, kind=AK), intent(in) :: key, val
         integer(IK) :: error
 
         integer(IK) :: err
         type(entry_t) :: entry
-        character(len=:), allocatable :: values
+        character(len=:, kind=AK), allocatable :: vals
 
         err = config%find_enum(key)
         if (err /= OK) then
@@ -398,65 +465,141 @@ contains
         end if
 
         entry = config%get_enum_entry(key)
-        values = entry%as_string()
-        if (contains(values, value, delim)) then
+        vals = entry%as_string()
+        if (contains(vals, val, delim)) then
             error = OK
         else
             error = INVALID_OPTION
         end if
 
+        deallocate (vals)
+
     end function config_validate_enum_option
 
-    function config_get_enum_option(config, key) result(value)
+    function config_count_enum_option(config, key) result(count1)
 
-        implicit none
-
-        class(config_t), intent(inout) :: config
-        character(len=*), intent(in) :: key
-        character(len=:), allocatable :: value
-
-        type(entry_t) :: entry
-
-        entry = config%get_option_entry(key)
-        value = entry%as_string()
-
-    end function config_get_enum_option
-
-    function config_define_enum_option(config, key, values) result(error)
-
-        use kinds, only: IK
-        implicit none
-
-        class(config_t), intent(inout) :: config
-        character(len=*), intent(in) :: key, values
-        integer(IK) :: error
-
-        error = config%enums%put(key, values)
-
-    end function config_define_enum_option
-
-    function config_set_enum_option(config, key, value) result(error)
-
-        use kinds, only: IK
-        use utils, only: contains
+        use utils, only: count
         use errors, only: OK
         implicit none
 
         class(config_t), intent(inout) :: config
-        character(len=*), intent(in) :: key, value
-        integer(IK) :: error
+        character(len=*, kind=AK), intent(in) :: key
+        integer(IK) :: count1
 
         integer(IK) :: err
+        type(entry_t) :: entry
+        character(len=:, kind=AK), allocatable :: vals
 
-        err = config%validate_enum_option(key, value)
+        err = config%find_enum(key)
         if (err /= OK) then
-            error = err
+            count1 = err
             return
         end if
 
-        error = config%options%put(key, value)
+        entry = config%get_enum_entry(key)
+        vals = entry%as_string()
 
-    end function config_set_enum_option
+        if (vals == '') then
+            count1 = 0_IK
+        else
+            count1 = count(vals, delim) + 1_IK
+        end if
+
+        deallocate (vals)
+
+    end function config_count_enum_option
+
+    function config_longest_enum_option(config, key) result(length)
+
+        use utils, only: longest
+        use errors, only: OK
+        implicit none
+
+        class(config_t), intent(inout) :: config
+        character(len=*, kind=AK), intent(in) :: key
+        integer(IK) :: length
+
+        integer(IK) :: err
+        type(entry_t) :: entry
+        character(len=:, kind=AK), allocatable :: vals
+
+        err = config%find_enum(key)
+        if (err /= OK) then
+            length = err
+            return
+        end if
+
+        entry = config%get_enum_entry(key)
+        vals = entry%as_string()
+
+        length = longest(vals, delim)
+
+        deallocate (vals)
+
+    end function config_longest_enum_option
+
+    function config_index_enum_option(config, key, index) result(val)
+
+        use errors, only: OK
+        use utils, only: substring
+        implicit none
+
+        class(config_t), intent(inout) :: config
+        character(len=*, kind=AK), intent(in) :: key
+        integer(IK), intent(in) :: index
+        character(len=:, kind=AK), allocatable :: val
+
+        integer(IK) :: err
+        type(entry_t) :: entry
+        character(len=:, kind=AK), allocatable :: vals
+
+        err = config%find_enum(key)
+        if (err /= OK) then
+            val = ''
+            return
+        end if
+
+        entry = config%get_enum_entry(key)
+        vals = entry%as_string()
+        val = substring(vals, index, delim)
+
+        deallocate (vals)
+
+    end function config_index_enum_option
+
+    function config_search_enum_option(config, key, val) result(index)
+
+        use errors, only: OK, NO_SUCH_OPTION, INVALID_OPTION
+        use utils, only: contains, find
+        implicit none
+
+        class(config_t), intent(inout) :: config
+        character(len=*, kind=AK), intent(in) :: key, val
+        integer(IK) :: index
+
+        integer(IK) :: err
+        type(entry_t) :: entry
+        character(len=:, kind=AK), allocatable :: vals
+
+        err = config%find_enum(key)
+        if (err /= OK) then
+            index = NO_SUCH_OPTION
+            return
+        end if
+
+        entry = config%get_enum_entry(key)
+        vals = entry%as_string()
+
+        if (.not. contains(vals, val, delim)) then
+            index = INVALID_OPTION
+            return
+        end if
+
+        index = find(vals, val, delim)
+
+        deallocate (vals)
+
+    end function config_search_enum_option
 
     subroutine config_finalize(config)
         implicit none

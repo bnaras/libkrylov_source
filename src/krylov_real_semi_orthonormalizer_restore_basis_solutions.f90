@@ -19,7 +19,7 @@ function krylov_real_semi_orthonormalizer_restore_basis_solutions( &
     basis_solutions = orthonormal_basis_solutions
 
     ! Transform out of orthogonal basis in place
-    call real_trsm('l', uplo, 'c', 'n', basis_dim, solution_dim, 1.0_RK, orthonormalizer%gram_matrix_decomposed, &
+    call real_trsm('l', uplo, 'n', 'n', basis_dim, solution_dim, 1.0_RK, orthonormalizer%gram_matrix_decomposed, &
                    basis_dim, basis_solutions, basis_dim)
 
     ! Rescale basis_solutions

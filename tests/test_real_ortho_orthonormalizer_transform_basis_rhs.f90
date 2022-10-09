@@ -13,8 +13,7 @@ program test_real_ortho_orthonormalizer_transform_basis_rhs
                 orthonormalized_ref(2_IK, 2_IK)
     integer(IK) :: error
 
-    vectors = reshape((/0.5_RK, 0.5_RK, -0.5_RK, -0.5_RK, 0.5_RK, 0.5_RK, 0.5_RK, 0.5_RK/), &
-                      (/4_IK, 2_IK/))
+    vectors = reshape((/0.5_RK, 0.5_RK, -0.5_RK, -0.5_RK, 0.5_RK, 0.5_RK, 0.5_RK, 0.5_RK/), (/4_IK, 2_IK/))
     basis_rhs = reshape((/1.0_RK, 2.0_RK, 1.0_RK, 3.0_RK/), (/2_IK, 2_IK/))
     orthonormalized_ref = reshape((/1.0_RK, 2.0_RK, 1.0_RK, 3.0_RK/), (/2_IK, 2_IK/))
 

@@ -13,15 +13,15 @@ program test_get_real_space_vectors
     error = krylov_initialize()
     if (error /= OK) stop 1
 
-    ! Add real space with full dimension 100, current dimension 3
+    ! Add real space with full dimension 10, current dimension 3
     index = krylov_add_space('r', 's', 'e', 10_IK, 2_IK, 3_IK)
     if (index /= 1_IK) stop 1
 
-    ! Add second real space with full dimension 40, current dimension 4
+    ! Add second real space with full dimension 8, current dimension 4
     index = krylov_add_space('r', 's', 'e', 8_IK, 2_IK, 4_IK)
     if (index /= 2_IK) stop 1
 
-    ! Add complex space with full dimension 50, current dimension 4
+    ! Add complex space with full dimension 10, current dimension 4
     index = krylov_add_space('c', 'h', 'e', 10_IK, 2_IK, 4_IK)
     if (index /= 3_IK) stop 1
 

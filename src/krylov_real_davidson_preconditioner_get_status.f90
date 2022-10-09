@@ -18,8 +18,12 @@ function krylov_real_davidson_preconditioner_get_status(preconditioner) result(s
         return
     end if
 
-    if (preconditioner%config%get_logical_option('has_diagonal') .and. &
-        preconditioner%config%get_logical_option('has_eigenvalues')) then
+    if (preconditioner%config%find_option('has_shifts') /= OK) then
+        status = INCOMPLETE_CONFIGURATION
+        return
+    end if
+
+    if (preconditioner%config%get_logical_option('has_diagonal')) then
         status = OK
     else
         status = INCOMPLETE_PRECONDITIONER

@@ -1,13 +1,13 @@
 function krylov_set_space_logical_option(index, key, value) result(error)
 
-    use kinds, only: IK
+    use kinds, only: IK, AK, LK
     use errors, only: NO_SUCH_SPACE
     use krylov, only: spaces, krylov_get_num_spaces
     implicit none
 
     integer(IK), intent(in) :: index
-    character(len=*), intent(in) :: key
-    logical, intent(in) :: value
+    character(len=*, kind=AK), intent(in) :: key
+    logical(LK), intent(in) :: value
     integer(IK) :: error
 
     if (index > krylov_get_num_spaces()) then

@@ -16,6 +16,6 @@ function krylov_convergence_get_last_gram_rcond(convergence) result(last_gram_rc
         return
     end if
 
-    last_gram_rcond = convergence%iterations(index)%gram_rcond
+    last_gram_rcond = convergence%iterations(index)%get_gram_rcond()
 
 end function krylov_convergence_get_last_gram_rcond

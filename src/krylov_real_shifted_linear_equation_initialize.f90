@@ -1,6 +1,6 @@
 function krylov_real_shifted_linear_equation_initialize(equation, full_dim, solution_dim, basis_dim, config) result(error)
 
-    use kinds, only: IK
+    use kinds, only: IK, RK
     use errors, only: OK
     use options, only: config_t
     use krylov, only: real_shifted_linear_equation_t
@@ -39,6 +39,16 @@ function krylov_real_shifted_linear_equation_initialize(equation, full_dim, solu
               equation%rayleigh(basis_dim, basis_dim), &
               equation%basis_solutions(basis_dim, solution_dim), &
               equation%basis_rhs(basis_dim, solution_dim))
+
+    equation%vectors = 0.0_RK
+    equation%products = 0.0_RK
+    equation%solutions = 0.0_RK
+    equation%residuals = 0.0_RK
+    equation%rhs = 0.0_RK
+    equation%shifts = 0.0_RK
+    equation%rayleigh = 0.0_RK
+    equation%basis_solutions = 0.0_RK
+    equation%basis_rhs = 0.0_RK
 
     error = OK
 

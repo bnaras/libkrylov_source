@@ -30,6 +30,11 @@ function krylov_real_semi_orthonormalizer_initialize(orthonormalizer, config) re
               orthonormalizer%scaled_gram_matrix(basis_dim, basis_dim), &
               orthonormalizer%gram_matrix_decomposed(basis_dim, basis_dim))
 
+    orthonormalizer%vector_norm_squared = 0.0_RK
+    orthonormalizer%gram_matrix = 0.0_RK
+    orthonormalizer%scaled_gram_matrix = 0.0_RK
+    orthonormalizer%gram_matrix_decomposed = 0.0_RK
+
     error = OK
 
 end function krylov_real_semi_orthonormalizer_initialize

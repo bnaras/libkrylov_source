@@ -14,6 +14,7 @@ module equations
         procedure(krylov_real_equation_i_initialize), deferred, pass :: initialize
         procedure(krylov_real_equation_i_expand_equation), deferred, pass :: expand_equation
         procedure(krylov_real_equation_i_solve_projected), deferred, pass :: solve_projected
+        procedure(krylov_real_equation_i_get_expectation_vals), deferred, pass :: get_expectation_vals
         procedure(krylov_real_equation_i_get_lagrangian), deferred, pass :: get_lagrangian
         procedure(krylov_real_equation_i_make_residuals), deferred, pass :: make_residuals
         procedure(krylov_real_equation_i_resize_vectors), deferred, pass :: resize_vectors
@@ -26,6 +27,7 @@ module equations
         procedure, pass :: initialize => krylov_real_eigenvalue_equation_initialize
         procedure, pass :: expand_equation => krylov_real_eigenvalue_equation_expand_equation
         procedure, pass :: solve_projected => krylov_real_eigenvalue_equation_solve_projected
+        procedure, pass :: get_expectation_vals => krylov_real_eigenvalue_equation_get_expectation_vals
         procedure, pass :: get_lagrangian => krylov_real_eigenvalue_equation_get_lagrangian
         procedure, pass :: make_residuals => krylov_real_eigenvalue_equation_make_residuals
         procedure, pass :: resize_vectors => krylov_real_eigenvalue_equation_resize_vectors
@@ -39,6 +41,7 @@ module equations
         procedure, pass :: initialize => krylov_real_linear_equation_initialize
         procedure, pass :: expand_equation => krylov_real_linear_equation_expand_equation
         procedure, pass :: solve_projected => krylov_real_linear_equation_solve_projected
+        procedure, pass :: get_expectation_vals => krylov_real_linear_equation_get_expectation_vals
         procedure, pass :: get_lagrangian => krylov_real_linear_equation_get_lagrangian
         procedure, pass :: make_residuals => krylov_real_linear_equation_make_residuals
         procedure, pass :: resize_vectors => krylov_real_linear_equation_resize_vectors
@@ -52,6 +55,7 @@ module equations
         procedure, pass :: initialize => krylov_real_shifted_linear_equation_initialize
         procedure, pass :: expand_equation => krylov_real_shifted_linear_equation_expand_equation
         procedure, pass :: solve_projected => krylov_real_shifted_linear_equation_solve_projected
+        procedure, pass :: get_expectation_vals => krylov_real_shifted_linear_equation_get_expectation_vals
         procedure, pass :: get_lagrangian => krylov_real_shifted_linear_equation_get_lagrangian
         procedure, pass :: make_residuals => krylov_real_shifted_linear_equation_make_residuals
         procedure, pass :: resize_vectors => krylov_real_shifted_linear_equation_resize_vectors
@@ -65,6 +69,7 @@ module equations
         procedure, pass :: initialize => krylov_real_sylvester_equation_initialize
         procedure, pass :: expand_equation => krylov_real_sylvester_equation_expand_equation
         procedure, pass :: solve_projected => krylov_real_sylvester_equation_solve_projected
+        procedure, pass :: get_expectation_vals => krylov_real_sylvester_equation_get_expectation_vals
         procedure, pass :: get_lagrangian => krylov_real_sylvester_equation_get_lagrangian
         procedure, pass :: make_residuals => krylov_real_sylvester_equation_make_residuals
         procedure, pass :: resize_vectors => krylov_real_sylvester_equation_resize_vectors
@@ -81,6 +86,7 @@ module equations
         procedure(krylov_complex_equation_i_initialize), deferred, pass :: initialize
         procedure(krylov_complex_equation_i_expand_equation), deferred, pass :: expand_equation
         procedure(krylov_complex_equation_i_solve_projected), deferred, pass :: solve_projected
+        procedure(krylov_complex_equation_i_get_expectation_vals), deferred, pass :: get_expectation_vals
         procedure(krylov_complex_equation_i_get_lagrangian), deferred, pass :: get_lagrangian
         procedure(krylov_complex_equation_i_make_residuals), deferred, pass :: make_residuals
         procedure(krylov_complex_equation_i_resize_vectors), deferred, pass :: resize_vectors
@@ -93,6 +99,7 @@ module equations
         procedure, pass :: initialize => krylov_complex_eigenvalue_equation_initialize
         procedure, pass :: expand_equation => krylov_complex_eigenvalue_equation_expand_equation
         procedure, pass :: solve_projected => krylov_complex_eigenvalue_equation_solve_projected
+        procedure, pass :: get_expectation_vals => krylov_complex_eigenvalue_equation_get_expectation_vals
         procedure, pass :: get_lagrangian => krylov_complex_eigenvalue_equation_get_lagrangian
         procedure, pass :: make_residuals => krylov_complex_eigenvalue_equation_make_residuals
         procedure, pass :: resize_vectors => krylov_complex_eigenvalue_equation_resize_vectors
@@ -106,6 +113,7 @@ module equations
         procedure, pass :: initialize => krylov_complex_linear_equation_initialize
         procedure, pass :: expand_equation => krylov_complex_linear_equation_expand_equation
         procedure, pass :: solve_projected => krylov_complex_linear_equation_solve_projected
+        procedure, pass :: get_expectation_vals => krylov_complex_linear_equation_get_expectation_vals
         procedure, pass :: get_lagrangian => krylov_complex_linear_equation_get_lagrangian
         procedure, pass :: make_residuals => krylov_complex_linear_equation_make_residuals
         procedure, pass :: resize_vectors => krylov_complex_linear_equation_resize_vectors
@@ -120,6 +128,7 @@ module equations
         procedure, pass :: initialize => krylov_complex_shifted_linear_equation_initialize
         procedure, pass :: expand_equation => krylov_complex_shifted_linear_equation_expand_equation
         procedure, pass :: solve_projected => krylov_complex_shifted_linear_equation_solve_projected
+        procedure, pass :: get_expectation_vals => krylov_complex_shifted_linear_equation_get_expectation_vals
         procedure, pass :: get_lagrangian => krylov_complex_shifted_linear_equation_get_lagrangian
         procedure, pass :: make_residuals => krylov_complex_shifted_linear_equation_make_residuals
         procedure, pass :: resize_vectors => krylov_complex_shifted_linear_equation_resize_vectors
@@ -133,6 +142,7 @@ module equations
         procedure, pass :: initialize => krylov_complex_sylvester_equation_initialize
         procedure, pass :: expand_equation => krylov_complex_sylvester_equation_expand_equation
         procedure, pass :: solve_projected => krylov_complex_sylvester_equation_solve_projected
+        procedure, pass :: get_expectation_vals => krylov_complex_sylvester_equation_get_expectation_vals
         procedure, pass :: get_lagrangian => krylov_complex_sylvester_equation_get_lagrangian
         procedure, pass :: make_residuals => krylov_complex_sylvester_equation_make_residuals
         procedure, pass :: resize_vectors => krylov_complex_sylvester_equation_resize_vectors
@@ -163,6 +173,14 @@ module equations
             class(real_orthonormalizer_t), intent(inout) :: orthonormalizer
             integer(IK) :: error
         end function krylov_real_equation_i_solve_projected
+
+        function krylov_real_equation_i_get_expectation_vals(equation, solution_dim, expectation_vals) result(error)
+            import real_equation_t, IK, RK
+            class(real_equation_t), intent(inout) :: equation
+            integer(IK), intent(in) :: solution_dim
+            real(RK), intent(out) :: expectation_vals(solution_dim)
+            integer(IK) :: error
+        end function krylov_real_equation_i_get_expectation_vals
 
         function krylov_real_equation_i_get_lagrangian(equation) result(lagrangian)
             import real_equation_t, RK
@@ -211,6 +229,14 @@ module equations
             class(complex_orthonormalizer_t), intent(inout) :: orthonormalizer
             integer(IK) :: error
         end function krylov_complex_equation_i_solve_projected
+
+        function krylov_complex_equation_i_get_expectation_vals(equation, solution_dim, expectation_vals) result(error)
+            import complex_equation_t, IK, RK
+            class(complex_equation_t), intent(inout) :: equation
+            integer(IK), intent(in) :: solution_dim
+            real(RK), intent(out) :: expectation_vals(solution_dim)
+            integer(IK) :: error
+        end function krylov_complex_equation_i_get_expectation_vals
 
         function krylov_complex_equation_i_get_lagrangian(equation) result(lagrangian)
             import complex_equation_t, RK
@@ -264,6 +290,15 @@ module equations
             integer(IK) :: error
         end function krylov_real_eigenvalue_equation_solve_projected
 
+        function krylov_real_eigenvalue_equation_get_expectation_vals( &
+            equation, solution_dim, expectation_vals) result(error)
+            import real_eigenvalue_equation_t, IK, RK
+            class(real_eigenvalue_equation_t), intent(inout) :: equation
+            integer(IK), intent(in) :: solution_dim
+            real(RK), intent(out) :: expectation_vals(solution_dim)
+            integer(IK) :: error
+        end function krylov_real_eigenvalue_equation_get_expectation_vals
+
         function krylov_real_eigenvalue_equation_get_lagrangian(equation) result(lagrangian)
             import real_eigenvalue_equation_t, RK
             class(real_eigenvalue_equation_t), intent(inout) :: equation
@@ -311,6 +346,15 @@ module equations
             class(real_orthonormalizer_t), intent(inout) :: orthonormalizer
             integer(IK) :: error
         end function krylov_real_linear_equation_solve_projected
+
+        function krylov_real_linear_equation_get_expectation_vals( &
+            equation, solution_dim, expectation_vals) result(error)
+            import real_linear_equation_t, IK, RK
+            class(real_linear_equation_t), intent(inout) :: equation
+            integer(IK), intent(in) :: solution_dim
+            real(RK), intent(out) :: expectation_vals(solution_dim)
+            integer(IK) :: error
+        end function krylov_real_linear_equation_get_expectation_vals
 
         function krylov_real_linear_equation_get_lagrangian(equation) result(lagrangian)
             import real_linear_equation_t, RK
@@ -360,6 +404,15 @@ module equations
             integer(IK) :: error
         end function krylov_real_shifted_linear_equation_solve_projected
 
+        function krylov_real_shifted_linear_equation_get_expectation_vals( &
+            equation, solution_dim, expectation_vals) result(error)
+            import real_shifted_linear_equation_t, IK, RK
+            class(real_shifted_linear_equation_t), intent(inout) :: equation
+            integer(IK), intent(in) :: solution_dim
+            real(RK), intent(out) :: expectation_vals(solution_dim)
+            integer(IK) :: error
+        end function krylov_real_shifted_linear_equation_get_expectation_vals
+
         function krylov_real_shifted_linear_equation_get_lagrangian(equation) result(lagrangian)
             import real_shifted_linear_equation_t, RK
             class(real_shifted_linear_equation_t), intent(inout) :: equation
@@ -407,6 +460,15 @@ module equations
             class(real_orthonormalizer_t), intent(inout) :: orthonormalizer
             integer(IK) :: error
         end function krylov_real_sylvester_equation_solve_projected
+
+        function krylov_real_sylvester_equation_get_expectation_vals( &
+            equation, solution_dim, expectation_vals) result(error)
+            import real_sylvester_equation_t, IK, RK
+            class(real_sylvester_equation_t), intent(inout) :: equation
+            integer(IK), intent(in) :: solution_dim
+            real(RK), intent(out) :: expectation_vals(solution_dim)
+            integer(IK) :: error
+        end function krylov_real_sylvester_equation_get_expectation_vals
 
         function krylov_real_sylvester_equation_get_lagrangian(equation) result(lagrangian)
             import real_sylvester_equation_t, RK
@@ -456,6 +518,15 @@ module equations
             integer(IK) :: error
         end function krylov_complex_eigenvalue_equation_solve_projected
 
+        function krylov_complex_eigenvalue_equation_get_expectation_vals( &
+            equation, solution_dim, expectation_vals) result(error)
+            import complex_eigenvalue_equation_t, IK, RK
+            class(complex_eigenvalue_equation_t), intent(inout) :: equation
+            integer(IK), intent(in) :: solution_dim
+            real(RK), intent(out) :: expectation_vals(solution_dim)
+            integer(IK) :: error
+        end function krylov_complex_eigenvalue_equation_get_expectation_vals
+
         function krylov_complex_eigenvalue_equation_get_lagrangian(equation) result(lagrangian)
             import complex_eigenvalue_equation_t, RK
             class(complex_eigenvalue_equation_t), intent(inout) :: equation
@@ -503,6 +574,15 @@ module equations
             class(complex_orthonormalizer_t), intent(inout) :: orthonormalizer
             integer(IK) :: error
         end function krylov_complex_linear_equation_solve_projected
+
+        function krylov_complex_linear_equation_get_expectation_vals( &
+            equation, solution_dim, expectation_vals) result(error)
+            import complex_linear_equation_t, IK, RK
+            class(complex_linear_equation_t), intent(inout) :: equation
+            integer(IK), intent(in) :: solution_dim
+            real(RK), intent(out) :: expectation_vals(solution_dim)
+            integer(IK) :: error
+        end function krylov_complex_linear_equation_get_expectation_vals
 
         function krylov_complex_linear_equation_get_lagrangian(equation) result(lagrangian)
             import complex_linear_equation_t, RK
@@ -552,6 +632,15 @@ module equations
             integer(IK) :: error
         end function krylov_complex_shifted_linear_equation_solve_projected
 
+        function krylov_complex_shifted_linear_equation_get_expectation_vals( &
+            equation, solution_dim, expectation_vals) result(error)
+            import complex_shifted_linear_equation_t, IK, RK
+            class(complex_shifted_linear_equation_t), intent(inout) :: equation
+            integer(IK), intent(in) :: solution_dim
+            real(RK), intent(out) :: expectation_vals(solution_dim)
+            integer(IK) :: error
+        end function krylov_complex_shifted_linear_equation_get_expectation_vals
+
         function krylov_complex_shifted_linear_equation_get_lagrangian(equation) result(lagrangian)
             import complex_shifted_linear_equation_t, RK
             class(complex_shifted_linear_equation_t), intent(inout) :: equation
@@ -599,6 +688,15 @@ module equations
             class(complex_orthonormalizer_t), intent(inout) :: orthonormalizer
             integer(IK) :: error
         end function krylov_complex_sylvester_equation_solve_projected
+
+        function krylov_complex_sylvester_equation_get_expectation_vals( &
+            equation, solution_dim, expectation_vals) result(error)
+            import complex_sylvester_equation_t, IK, RK
+            class(complex_sylvester_equation_t), intent(inout) :: equation
+            integer(IK), intent(in) :: solution_dim
+            real(RK), intent(out) :: expectation_vals(solution_dim)
+            integer(IK) :: error
+        end function krylov_complex_sylvester_equation_get_expectation_vals
 
         function krylov_complex_sylvester_equation_get_lagrangian(equation) result(lagrangian)
             import complex_sylvester_equation_t, RK

@@ -1,13 +1,13 @@
 function krylov_complex_space_set_equation(space, value) result(error)
 
-    use kinds, only: IK
+    use kinds, only: IK, AK
     use errors, only: OK, INVALID_EQUATION
     use krylov, only: complex_space_t, complex_eigenvalue_equation_t, complex_linear_equation_t, &
                       complex_sylvester_equation_t, complex_shifted_linear_equation_t
     implicit none
 
     class(complex_space_t), intent(inout) :: space
-    character(len=*), intent(in) :: value
+    character(len=*, kind=AK), intent(in) :: value
     integer(IK) :: error
 
     if (space%config%validate_enum_option('equation', value) /= OK) then

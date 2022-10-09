@@ -1,11 +1,20 @@
-function krylov_get_enum_option(key) result(value)
+function krylov_get_enum_option(key, value) result(error)
 
+    use kinds, only: IK, AK
+    use errors, only: NO_SUCH_OPTION
     use krylov, only: config
     implicit none
 
-    character(len=*), intent(in) :: key
-    character(len=:), allocatable :: value
+    character(len=*, kind=AK), intent(in) :: key
+    character(len=*, kind=AK), intent(out) :: value
+    integer(IK) :: error
 
-    value = config%get_enum_option(key)
+    error = config%find_option(key)
+
+    if (error == NO_SUCH_OPTION) then
+        value = ''
+    else
+        value = config%get_enum_option(key)
+    end if
 
 end function krylov_get_enum_option

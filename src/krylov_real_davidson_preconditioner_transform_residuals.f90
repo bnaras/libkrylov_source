@@ -14,6 +14,7 @@ function krylov_real_davidson_preconditioner_transform_residuals( &
 
     integer(IK) :: ful, sol
     real(RK) :: diag, min_diag
+    real(RK), allocatable :: shifts(:)
 
     if (full_dim /= preconditioner%full_dim) then
         error = INVALID_DIMENSION
@@ -37,14 +38,26 @@ function krylov_real_davidson_preconditioner_transform_residuals( &
 
     min_diag = preconditioner%config%get_real_option('min_diagonal_scaling')
 
+    allocate (shifts(solution_dim))
+    
+    if (preconditioner%config%get_logical_option('has_eigenvalues')) then
+        shifts = preconditioner%eigenvalues
+    else if (preconditioner%config%get_logical_option('has_shifts')) then
+        shifts = preconditioner%shifts
+    else
+        shifts = 0.0_RK
+    end if
+
     do sol = 1_IK, solution_dim
         do ful = 1_IK, full_dim
-            diag = preconditioner%diagonal(ful) - preconditioner%eigenvalues(sol)
+            diag = preconditioner%diagonal(ful) - shifts(sol)
             if (abs(diag) < min_diag) diag = sign(min_diag, diag)
             preconditioned_residuals(ful, sol) = residuals(ful, sol) / diag
         end do
     end do
 
+    deallocate (shifts)
+    
     error = OK
 
 end function krylov_real_davidson_preconditioner_transform_residuals

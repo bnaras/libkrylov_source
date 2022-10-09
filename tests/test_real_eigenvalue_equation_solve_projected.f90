@@ -1,6 +1,6 @@
 program test_real_eigenvalue_equation_solve_projected
 
-    use kinds, only: IK, RK
+    use kinds, only: IK, RK, LK
     use errors, only: OK
     use options, only: config_t
     use testing, only: near_real_vec, near_real_mat
@@ -37,6 +37,6 @@ program test_real_eigenvalue_equation_solve_projected
     if (error /= OK) stop 1
 
     if (equation%eigenvalues /= near_real_vec(eigenvalues)) stop 1
-    if (equation%basis_solutions /= near_real_mat(basis_solutions, fix_phase=.true.)) stop 1
+    if (equation%basis_solutions /= near_real_mat(basis_solutions, fix_phase=.true._LK)) stop 1
 
 end program test_real_eigenvalue_equation_solve_projected

@@ -5,7 +5,7 @@ function krylov_set_complex_space_vectors_from_diagonal(index, full_dim, basis_d
                       INCOMPATIBLE_EQUATION, INCOMPATIBLE_SPACE, LINEARLY_DEPENDENT_BASIS
     use krylov, only: complex_space_t, complex_eigenvalue_equation_t, complex_linear_equation_t, &
                       complex_shifted_linear_equation_t, spaces, krylov_get_num_spaces
-    use linalg, only: complex_ge_block_orthonormalize
+    use linalg, only: complex_ge_orthonormalize
     use utils, only: real_argsort
     implicit none
 
@@ -16,7 +16,6 @@ function krylov_set_complex_space_vectors_from_diagonal(index, full_dim, basis_d
     integer(IK), allocatable :: indices(:)
     integer(IK) :: err, ful, bas, new_dim
     real(RK) :: thr_zero, min_diag, diag
-    complex(CK) :: dum(1_IK, 1_IK)
 
     if (index > krylov_get_num_spaces()) then
         error = NO_SUCH_SPACE
@@ -46,11 +45,17 @@ function krylov_set_complex_space_vectors_from_diagonal(index, full_dim, basis_d
                     return
                 end if
 
+                equation%vectors = (0.0_CK, 0.0_CK)
                 do bas = 1_IK, basis_dim
                     equation%vectors(indices(bas), bas) = (1.0_CK, 0.0_CK)
                 end do
                 deallocate (indices)
             type is (complex_linear_equation_t)
+                if (basis_dim > equation%solution_dim) then
+                    error = INVALID_DIMENSION
+                    return
+                end if
+
                 if (equation%config%find_option('min_diagonal_scaling') /= OK) then
                     error = INCOMPLETE_CONFIGURATION
                     return
@@ -58,6 +63,7 @@ function krylov_set_complex_space_vectors_from_diagonal(index, full_dim, basis_d
 
                 min_diag = equation%config%get_real_option('min_diagonal_scaling')
 
+                equation%vectors = (0.0_CK, 0.0_CK)
                 do bas = 1_IK, basis_dim
                     do ful = 1_IK, full_dim
                         diag = diagonal(ful)
@@ -73,16 +79,21 @@ function krylov_set_complex_space_vectors_from_diagonal(index, full_dim, basis_d
 
                 thr_zero = equation%config%get_real_option('min_basis_vector_norm')
 
-                err = complex_ge_block_orthonormalize(equation%vectors, dum, full_dim, basis_dim, 0_IK, thr_zero, new_dim)
+                err = complex_ge_orthonormalize(equation%vectors, full_dim, basis_dim, thr_zero, new_dim)
                 if (err /= OK) then
                     error = err
                     return
                 end if
-                if (new_dim /= full_dim) then
+                if (new_dim /= basis_dim) then
                     error = LINEARLY_DEPENDENT_BASIS
                     return
                 end if
             type is (complex_shifted_linear_equation_t)
+                if (basis_dim > equation%solution_dim) then
+                    error = INVALID_DIMENSION
+                    return
+                end if
+
                 if (equation%config%find_option('min_diagonal_scaling') /= OK) then
                     error = INCOMPLETE_CONFIGURATION
                     return
@@ -90,6 +101,7 @@ function krylov_set_complex_space_vectors_from_diagonal(index, full_dim, basis_d
 
                 min_diag = equation%config%get_real_option('min_diagonal_scaling')
 
+                equation%vectors = (0.0_CK, 0.0_CK)
                 do bas = 1_IK, basis_dim
                     do ful = 1_IK, full_dim
                         diag = diagonal(ful) - equation%shifts(bas)
@@ -105,12 +117,12 @@ function krylov_set_complex_space_vectors_from_diagonal(index, full_dim, basis_d
 
                 thr_zero = equation%config%get_real_option('min_basis_vector_norm')
 
-                err = complex_ge_block_orthonormalize(equation%vectors, dum, full_dim, basis_dim, 0_IK, thr_zero, new_dim)
+                err = complex_ge_orthonormalize(equation%vectors, full_dim, basis_dim, thr_zero, new_dim)
                 if (err /= OK) then
                     error = err
                     return
                 end if
-                if (new_dim /= full_dim) then
+                if (new_dim /= basis_dim) then
                     error = LINEARLY_DEPENDENT_BASIS
                     return
                 end if

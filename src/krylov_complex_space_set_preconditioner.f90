@@ -1,6 +1,6 @@
 function krylov_complex_space_set_preconditioner(space, value) result(error)
 
-    use kinds, only: IK
+    use kinds, only: IK, AK
     use errors, only: OK, INVALID_INPUT
     use krylov, only: complex_space_t, complex_null_preconditioner_t, &
                       complex_cg_preconditioner_t, complex_davidson_preconditioner_t, &
@@ -8,7 +8,7 @@ function krylov_complex_space_set_preconditioner(space, value) result(error)
     implicit none
 
     class(complex_space_t), intent(inout) :: space
-    character(len=*), intent(in) :: value
+    character(len=*, kind=AK), intent(in) :: value
     integer(IK) :: error
 
     if (space%config%validate_enum_option('preconditioner', value) /= OK) then

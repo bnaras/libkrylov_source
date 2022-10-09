@@ -1,13 +1,13 @@
 module testing
 
-    use kinds, only: IK, RK, CK
+    use kinds, only: IK, RK, CK, LK
     implicit none
 
     real(RK), parameter :: default_thr = 100.0_RK * epsilon(0.0_RK)
 
     type near_real_num_t
         real(RK) :: num
-        logical :: fix_phase = .false.
+        logical(LK) :: fix_phase = .false._LK
         real(RK) :: thr = default_thr
     contains
         procedure::  near_real_num_eq_near_real_num, near_real_num_eq_num, near_real_num_ne_near_real_num, &
@@ -20,7 +20,7 @@ module testing
     type near_real_vec_t
         integer(IK) :: dim
         real(RK), allocatable :: vec(:)
-        logical :: fix_phase = .false.
+        logical(LK) :: fix_phase = .false._LK
         real(RK) :: thr = default_thr
     contains
         procedure :: near_real_vec_eq_near_real_vec, near_real_vec_eq_vec, near_real_vec_ne_near_real_vec, &
@@ -33,7 +33,7 @@ module testing
     type near_real_mat_t
         integer(IK) :: dim1, dim2
         real(RK), allocatable :: mat(:, :)
-        logical :: fix_phase = .false.
+        logical(LK) :: fix_phase = .false._LK
         real(RK) :: thr = default_thr
     contains
         procedure :: near_real_mat_eq_near_real_mat, near_real_mat_eq_mat, near_real_mat_ne_near_real_mat, &
@@ -45,7 +45,7 @@ module testing
 
     type near_complex_num_t
         complex(CK) :: num
-        logical :: fix_phase = .false.
+        logical(LK) :: fix_phase = .false._LK
         real(RK) :: thr = default_thr
     contains
         procedure::  near_complex_num_eq_near_complex_num, near_complex_num_eq_num, &
@@ -60,7 +60,7 @@ module testing
     type near_complex_vec_t
         integer(IK) :: dim
         complex(CK), allocatable :: vec(:)
-        logical :: fix_phase = .false.
+        logical(LK) :: fix_phase = .false._LK
         real(RK) :: thr = default_thr
     contains
         procedure :: near_complex_vec_eq_near_complex_vec, near_complex_vec_eq_vec, &
@@ -75,7 +75,7 @@ module testing
     type near_complex_mat_t
         integer(IK) :: dim1, dim2
         complex(CK), allocatable :: mat(:, :)
-        logical :: fix_phase = .false.
+        logical(LK) :: fix_phase = .false._LK
         real(RK) :: thr = default_thr
     contains
         procedure :: near_complex_mat_eq_near_complex_mat, near_complex_mat_eq_mat, &
@@ -92,14 +92,14 @@ contains
     function near_real_num(x, fix_phase, thr) result(x_near)
         implicit none
         real(RK), intent(in) :: x
-        logical, intent(in), optional :: fix_phase
+        logical(LK), intent(in), optional :: fix_phase
         real(RK), intent(in), optional :: thr
         type(near_real_num_t) :: x_near
 
-        logical :: fix_phase1
+        logical(LK) :: fix_phase1
         real(RK) :: thr1
 
-        fix_phase1 = .false.
+        fix_phase1 = .false._LK
         if (present(fix_phase)) fix_phase1 = fix_phase
 
         thr1 = default_thr
@@ -111,14 +111,14 @@ contains
     function near_real_vec(v, fix_phase, thr) result(v_near)
         implicit none
         real(RK), intent(in) :: v(:)
-        logical, intent(in), optional :: fix_phase
+        logical(LK), intent(in), optional :: fix_phase
         real(RK), intent(in), optional :: thr
         type(near_real_vec_t) :: v_near
 
-        logical :: fix_phase1
+        logical(LK) :: fix_phase1
         real(RK) :: thr1
 
-        fix_phase1 = .false.
+        fix_phase1 = .false._LK
         if (present(fix_phase)) fix_phase1 = fix_phase
 
         thr1 = default_thr
@@ -130,14 +130,14 @@ contains
     function near_real_mat(m, fix_phase, thr) result(m_near)
         implicit none
         real(RK), intent(in) :: m(:, :)
-        logical, intent(in), optional :: fix_phase
+        logical(LK), intent(in), optional :: fix_phase
         real(RK), intent(in), optional :: thr
         type(near_real_mat_t) :: m_near
 
-        logical :: fix_phase1
+        logical(LK) :: fix_phase1
         real(RK) :: thr1
 
-        fix_phase1 = .false.
+        fix_phase1 = .false._LK
         if (present(fix_phase)) fix_phase1 = fix_phase
 
         thr1 = default_thr
@@ -211,9 +211,9 @@ contains
     function near_real_num_eq_near_real_num(x1, x2) result(eq)
         implicit none
         class(near_real_num_t), intent(in) :: x1, x2
-        logical :: eq
+        logical(LK) :: eq
 
-        logical :: fix_phase
+        logical(LK) :: fix_phase
         real(RK) :: thr, num1, num2
 
         fix_phase = x1%fix_phase .or. x2%fix_phase
@@ -233,7 +233,7 @@ contains
         implicit none
         class(near_real_num_t), intent(in) :: x1
         real(RK), intent(in) :: x2
-        logical :: eq
+        logical(LK) :: eq
 
         eq = near_real_num_eq_near_real_num(x1, near_real_num(x2, x1%fix_phase, x1%thr))
     end function near_real_num_eq_num
@@ -242,7 +242,7 @@ contains
         implicit none
         real(RK), intent(in) :: x1
         class(near_real_num_t), intent(in) :: x2
-        logical :: eq
+        logical(LK) :: eq
 
         eq = near_real_num_eq_near_real_num(near_real_num(x1, x2%fix_phase, x2%thr), x2)
     end function num_eq_near_real_num
@@ -250,14 +250,14 @@ contains
     function near_real_vec_eq_near_real_vec(v1, v2) result(eq)
         implicit none
         class(near_real_vec_t), intent(in) :: v1, v2
-        logical :: eq
+        logical(LK) :: eq
 
-        logical :: fix_phase
+        logical(LK) :: fix_phase
         integer(IK) :: dim, i
         real(RK) :: thr, s
         real(RK), allocatable :: vec1(:), vec2(:)
 
-        eq = .false.
+        eq = .false._LK
         if (v1%dim /= v2%dim) return
 
         dim = v1%dim
@@ -283,7 +283,7 @@ contains
         implicit none
         class(near_real_vec_t), intent(in) :: v1
         real(RK), intent(in) :: v2(:)
-        logical eq
+        logical(LK) :: eq
 
         eq = near_real_vec_eq_near_real_vec(v1, near_real_vec(v2, v1%fix_phase, v1%thr))
     end function near_real_vec_eq_vec
@@ -292,7 +292,7 @@ contains
         implicit none
         real(RK), intent(in) :: v1(:)
         class(near_real_vec_t), intent(in) :: v2
-        logical :: eq
+        logical(LK) :: eq
 
         eq = near_real_vec_eq_near_real_vec(near_real_vec(v1, v2%fix_phase, v2%thr), v2)
     end function vec_eq_near_real_vec
@@ -300,14 +300,14 @@ contains
     function near_real_mat_eq_near_real_mat(m1, m2) result(eq)
         implicit none
         class(near_real_mat_t), intent(in) :: m1, m2
-        logical :: eq
+        logical(LK) :: eq
 
-        logical :: fix_phase
+        logical(LK) :: fix_phase
         integer(IK) :: dim1, dim2, i, j
         real(RK) :: thr, s
         real(RK), allocatable :: mat1(:, :), mat2(:, :)
 
-        eq = .false.
+        eq = .false._LK
         if (m1%dim1 /= m2%dim1 .or. m1%dim2 /= m2%dim2) return
 
         dim1 = m1%dim1
@@ -337,7 +337,7 @@ contains
         class(near_real_mat_t), intent(in) :: m1
         real(RK), intent(in) :: m2(:, :)
 
-        logical :: eq
+        logical(LK) :: eq
 
         eq = near_real_mat_eq_near_real_mat(m1, near_real_mat(m2, m1%fix_phase, m1%thr))
     end function near_real_mat_eq_mat
@@ -347,7 +347,7 @@ contains
         real(RK), intent(in) :: m1(:, :)
         class(near_real_mat_t), intent(in) :: m2
 
-        logical :: eq
+        logical(LK) :: eq
 
         eq = near_real_mat_eq_near_real_mat(near_real_mat(m1, m2%fix_phase, m2%thr), m2)
     end function mat_eq_near_real_mat
@@ -355,7 +355,7 @@ contains
     function near_real_num_ne_near_real_num(x1, x2) result(ne)
         implicit none
         class(near_real_num_t), intent(in) :: x1, x2
-        logical :: ne
+        logical(LK) :: ne
 
         ne = .not. near_real_num_eq_near_real_num(x1, x2)
     end function near_real_num_ne_near_real_num
@@ -364,7 +364,7 @@ contains
         implicit none
         class(near_real_num_t), intent(in) :: x1
         real(RK), intent(in) :: x2
-        logical :: ne
+        logical(LK) :: ne
 
         ne = .not. near_real_num_eq_num(x1, x2)
     end function near_real_num_ne_num
@@ -373,7 +373,7 @@ contains
         implicit none
         real(RK), intent(in) :: x1
         class(near_real_num_t), intent(in) :: x2
-        logical :: ne
+        logical(LK) :: ne
 
         ne = .not. num_eq_near_real_num(x1, x2)
     end function num_ne_near_real_num
@@ -381,7 +381,7 @@ contains
     function near_real_vec_ne_near_real_vec(v1, v2) result(ne)
         implicit none
         class(near_real_vec_t), intent(in) :: v1, v2
-        logical :: ne
+        logical(LK) :: ne
 
         ne = .not. near_real_vec_eq_near_real_vec(v1, v2)
     end function near_real_vec_ne_near_real_vec
@@ -390,7 +390,7 @@ contains
         implicit none
         class(near_real_vec_t), intent(in) :: v1
         real(RK), intent(in) :: v2(:)
-        logical :: ne
+        logical(LK) :: ne
 
         ne = .not. near_real_vec_eq_vec(v1, v2)
     end function near_real_vec_ne_vec
@@ -399,7 +399,7 @@ contains
         implicit none
         real(RK), intent(in) :: v1(:)
         class(near_real_vec_t), intent(in) :: v2
-        logical :: ne
+        logical(LK) :: ne
 
         ne = .not. vec_eq_near_real_vec(v1, v2)
     end function vec_ne_near_real_vec
@@ -407,7 +407,7 @@ contains
     function near_real_mat_ne_near_real_mat(m1, m2) result(ne)
         implicit none
         class(near_real_mat_t), intent(in) :: m1, m2
-        logical :: ne
+        logical(LK) :: ne
 
         ne = .not. near_real_mat_eq_near_real_mat(m1, m2)
     end function near_real_mat_ne_near_real_mat
@@ -416,7 +416,7 @@ contains
         implicit none
         class(near_real_mat_t), intent(in) :: m1
         real(RK), intent(in) :: m2(:, :)
-        logical :: ne
+        logical(LK) :: ne
 
         ne = .not. near_real_mat_eq_mat(m1, m2)
     end function near_real_mat_ne_mat
@@ -425,7 +425,7 @@ contains
         implicit none
         real(RK), intent(in) :: m1(:, :)
         class(near_real_mat_t), intent(in) :: m2
-        logical :: ne
+        logical(LK) :: ne
 
         ne = .not. mat_eq_near_real_mat(m1, m2)
     end function mat_ne_near_real_mat
@@ -433,14 +433,14 @@ contains
     function near_complex_num(x, fix_phase, thr) result(x_near)
         implicit none
         complex(CK), intent(in) :: x
-        logical, intent(in), optional :: fix_phase
+        logical(LK), intent(in), optional :: fix_phase
         real(RK), intent(in), optional :: thr
         type(near_complex_num_t) :: x_near
 
-        logical :: fix_phase1
+        logical(LK) :: fix_phase1
         real(RK) :: thr1
 
-        fix_phase1 = .false.
+        fix_phase1 = .false._LK
         if (present(fix_phase)) fix_phase1 = fix_phase
 
         thr1 = default_thr
@@ -452,14 +452,14 @@ contains
     function near_complex_vec(v, fix_phase, thr) result(v_near)
         implicit none
         complex(CK), intent(in) :: v(:)
-        logical, intent(in), optional :: fix_phase
+        logical(LK), intent(in), optional :: fix_phase
         real(RK), intent(in), optional :: thr
         type(near_complex_vec_t) :: v_near
 
-        logical :: fix_phase1
+        logical(LK) :: fix_phase1
         real(RK) :: thr1
 
-        fix_phase1 = .false.
+        fix_phase1 = .false._LK
         if (present(fix_phase)) fix_phase1 = fix_phase
 
         thr1 = default_thr
@@ -471,14 +471,14 @@ contains
     function near_complex_mat(m, fix_phase, thr) result(m_near)
         implicit none
         complex(CK), intent(in) :: m(:, :)
-        logical, intent(in), optional :: fix_phase
+        logical(LK), intent(in), optional :: fix_phase
         real(RK), intent(in), optional :: thr
         type(near_complex_mat_t) :: m_near
 
-        logical :: fix_phase1
+        logical(LK) :: fix_phase1
         real(RK) :: thr1
 
-        fix_phase1 = .false.
+        fix_phase1 = .false._LK
         if (present(fix_phase)) fix_phase1 = fix_phase
 
         thr1 = default_thr
@@ -563,9 +563,9 @@ contains
     function near_complex_num_eq_near_complex_num(x1, x2) result(eq)
         implicit none
         class(near_complex_num_t), intent(in) :: x1, x2
-        logical :: eq
+        logical(LK) :: eq
 
-        logical :: fix_phase
+        logical(LK) :: fix_phase
         real(RK) :: thr
         complex(CK) :: num1, num2
 
@@ -586,7 +586,7 @@ contains
         implicit none
         class(near_complex_num_t), intent(in) :: x1
         complex(CK), intent(in) :: x2
-        logical :: eq
+        logical(LK) :: eq
 
         eq = near_complex_num_eq_near_complex_num(x1, near_complex_num(x2, x1%fix_phase, x1%thr))
     end function near_complex_num_eq_num
@@ -595,7 +595,7 @@ contains
         implicit none
         complex(CK), intent(in) :: x1
         class(near_complex_num_t), intent(in) :: x2
-        logical :: eq
+        logical(LK) :: eq
 
         eq = near_complex_num_eq_near_complex_num(near_complex_num(x1, x2%fix_phase, x2%thr), x2)
     end function num_eq_near_complex_num
@@ -603,14 +603,14 @@ contains
     function near_complex_vec_eq_near_complex_vec(v1, v2) result(eq)
         implicit none
         class(near_complex_vec_t), intent(in) :: v1, v2
-        logical :: eq
+        logical(LK) :: eq
 
-        logical :: fix_phase
+        logical(LK) :: fix_phase
         integer(IK) :: dim, i
         real(RK) :: thr, s
         complex(CK), allocatable :: vec1(:), vec2(:)
 
-        eq = .false.
+        eq = .false._LK
         if (v1%dim /= v2%dim) return
 
         dim = v1%dim
@@ -637,7 +637,7 @@ contains
         class(near_complex_vec_t), intent(in) :: v1
         complex(CK), intent(in) :: v2(:)
 
-        logical :: eq
+        logical(LK) :: eq
 
         eq = near_complex_vec_eq_near_complex_vec(v1, near_complex_vec(v2, v1%fix_phase, v1%thr))
     end function near_complex_vec_eq_vec
@@ -647,7 +647,7 @@ contains
         complex(CK), intent(in) :: v1(:)
         class(near_complex_vec_t), intent(in) :: v2
 
-        logical :: eq
+        logical(LK) :: eq
 
         eq = near_complex_vec_eq_near_complex_vec(near_complex_vec(v1, v2%fix_phase, v2%thr), v2)
     end function vec_eq_near_complex_vec
@@ -655,14 +655,14 @@ contains
     function near_complex_mat_eq_near_complex_mat(m1, m2) result(eq)
         implicit none
         class(near_complex_mat_t), intent(in) :: m1, m2
-        logical :: eq
+        logical(LK) :: eq
 
-        logical :: fix_phase
+        logical(LK) :: fix_phase
         integer(IK) :: dim1, dim2, i, j
         real(RK) :: thr, s
         complex(CK), allocatable :: mat1(:, :), mat2(:, :)
 
-        eq = .false.
+        eq = .false._LK
         if (m1%dim1 /= m2%dim1 .or. m1%dim2 /= m2%dim2) return
 
         dim1 = m1%dim1
@@ -691,7 +691,7 @@ contains
         implicit none
         class(near_complex_mat_t), intent(in) :: m1
         complex(CK), intent(in) :: m2(:, :)
-        logical :: eq
+        logical(LK) :: eq
 
         eq = near_complex_mat_eq_near_complex_mat(m1, near_complex_mat(m2, m1%fix_phase, m1%thr))
     end function near_complex_mat_eq_mat
@@ -700,7 +700,7 @@ contains
         implicit none
         complex(CK), intent(in) :: m1(:, :)
         class(near_complex_mat_t), intent(in) :: m2
-        logical :: eq
+        logical(LK) :: eq
 
         eq = near_complex_mat_eq_near_complex_mat(near_complex_mat(m1, m2%fix_phase, m2%thr), m2)
     end function mat_eq_near_complex_mat
@@ -708,7 +708,7 @@ contains
     function near_complex_num_ne_near_complex_num(x1, x2) result(ne)
         implicit none
         class(near_complex_num_t), intent(in) :: x1, x2
-        logical :: ne
+        logical(LK) :: ne
 
         ne = .not. near_complex_num_eq_near_complex_num(x1, x2)
     end function near_complex_num_ne_near_complex_num
@@ -717,7 +717,7 @@ contains
         implicit none
         class(near_complex_num_t), intent(in) :: x1
         complex(CK), intent(in) :: x2
-        logical :: ne
+        logical(LK) :: ne
 
         ne = .not. near_complex_num_eq_num(x1, x2)
     end function near_complex_num_ne_num
@@ -726,7 +726,7 @@ contains
         implicit none
         complex(CK), intent(in) :: x1
         class(near_complex_num_t), intent(in) :: x2
-        logical :: ne
+        logical(LK) :: ne
 
         ne = .not. num_eq_near_complex_num(x1, x2)
     end function num_ne_near_complex_num
@@ -734,7 +734,7 @@ contains
     function near_complex_vec_ne_near_complex_vec(v1, v2) result(ne)
         implicit none
         class(near_complex_vec_t), intent(in) :: v1, v2
-        logical :: ne
+        logical(LK) :: ne
 
         ne = .not. near_complex_vec_eq_near_complex_vec(v1, v2)
     end function near_complex_vec_ne_near_complex_vec
@@ -743,7 +743,7 @@ contains
         implicit none
         class(near_complex_vec_t), intent(in) :: v1
         complex(CK), intent(in) :: v2(:)
-        logical :: ne
+        logical(LK) :: ne
 
         ne = .not. near_complex_vec_eq_vec(v1, v2)
     end function near_complex_vec_ne_vec
@@ -752,7 +752,7 @@ contains
         implicit none
         complex(CK), intent(in) :: v1(:)
         class(near_complex_vec_t), intent(in) :: v2
-        logical :: ne
+        logical(LK) :: ne
 
         ne = .not. vec_eq_near_complex_vec(v1, v2)
     end function vec_ne_near_complex_vec
@@ -760,7 +760,7 @@ contains
     function near_complex_mat_ne_near_complex_mat(m1, m2) result(ne)
         implicit none
         class(near_complex_mat_t), intent(in) :: m1, m2
-        logical :: ne
+        logical(LK) :: ne
 
         ne = .not. near_complex_mat_eq_near_complex_mat(m1, m2)
     end function near_complex_mat_ne_near_complex_mat
@@ -769,7 +769,7 @@ contains
         implicit none
         class(near_complex_mat_t), intent(in) :: m1
         complex(CK), intent(in) :: m2(:, :)
-        logical :: ne
+        logical(LK) :: ne
 
         ne = .not. near_complex_mat_eq_mat(m1, m2)
     end function near_complex_mat_ne_mat
@@ -778,7 +778,7 @@ contains
         implicit none
         complex(CK), intent(in) :: m1(:, :)
         class(near_complex_mat_t), intent(in) :: m2
-        logical :: ne
+        logical(LK) :: ne
 
         ne = .not. mat_eq_near_complex_mat(m1, m2)
     end function mat_ne_near_complex_mat

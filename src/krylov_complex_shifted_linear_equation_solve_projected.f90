@@ -11,7 +11,7 @@ function krylov_complex_shifted_linear_equation_solve_projected(equation, orthon
     integer(IK) :: error
     
     integer(IK) :: err, sol, vec
-    complex(CK), allocatable :: shifted(:, :), transformed(:, :), solution(:)
+    complex(CK), allocatable :: shifted(:, :), transformed_rayleigh(:, :), transformed_basis_rhs(:, :), solution(:)
 
     if (equation%basis_dim /= orthonormalizer%basis_dim) then
         error = INVALID_DIMENSION
@@ -19,7 +19,8 @@ function krylov_complex_shifted_linear_equation_solve_projected(equation, orthon
     end if
 
     allocate (shifted(equation%basis_dim, equation%basis_dim), &
-              transformed(equation%basis_dim, equation%basis_dim), &
+              transformed_rayleigh(equation%basis_dim, equation%basis_dim), &
+              transformed_basis_rhs(equation%basis_dim, equation%solution_dim), &
               solution(equation%basis_dim))
 
     do sol = 1_IK, equation%solution_dim
@@ -29,17 +30,25 @@ function krylov_complex_shifted_linear_equation_solve_projected(equation, orthon
             shifted(vec, vec) = shifted(vec, vec) - equation%shifts(sol)
         end do
 
-        err = orthonormalizer%transform_rayleigh(equation%basis_dim, shifted, transformed)
+        err = orthonormalizer%transform_rayleigh(equation%basis_dim, shifted, transformed_rayleigh)
         if (err /= OK) then
-            deallocate (shifted, transformed, solution)
+            deallocate (shifted, transformed_rayleigh, transformed_basis_rhs, solution)
             error = err
             return
         end if
 
-        err = complex_he_solve_linear(transformed, equation%basis_rhs(:, sol), equation%basis_dim, &
+        err = orthonormalizer%transform_basis_rhs(equation%basis_dim, equation%solution_dim, equation%basis_rhs, &
+                                              transformed_basis_rhs)
+        if (err /= OK) then
+            deallocate (shifted, transformed_rayleigh, transformed_basis_rhs, solution)
+            error = err
+            return
+        end if
+
+        err = complex_he_solve_linear(transformed_rayleigh, transformed_basis_rhs(:, sol), equation%basis_dim, &
                                       1_IK, solution)
         if (err /= OK) then
-            deallocate (shifted, transformed, solution)
+            deallocate (shifted, transformed_rayleigh, transformed_basis_rhs, solution)
             error = err
             return
         end if
@@ -47,14 +56,14 @@ function krylov_complex_shifted_linear_equation_solve_projected(equation, orthon
         err = orthonormalizer%restore_basis_solutions(equation%basis_dim, 1_IK, solution, &
                                                       equation%basis_solutions(:, sol))
         if (err /= OK) then
-            deallocate (shifted, transformed, solution)
+            deallocate (shifted, transformed_rayleigh, transformed_basis_rhs, solution)
             error = err
             return
         end if
 
     end do
 
-    deallocate (shifted, transformed, solution)
+    deallocate (shifted, transformed_rayleigh, transformed_basis_rhs, solution)
 
     error = OK
 

@@ -1,6 +1,6 @@
 program test_complex_ge_orthogonalize
 
-    use kinds, only: IK, RK, CK
+    use kinds, only: IK, RK, CK, LK
     use testing, only: near_complex_mat
     use linalg, only: complex_ge_orthogonalize
     implicit none
@@ -20,6 +20,6 @@ program test_complex_ge_orthogonalize
     if (error /= 0_IK) stop 1
 
     if (n_out /= 2_IK) stop 1
-    if (a /= near_complex_mat(q1_ref, fix_phase=.true.)) stop 1
+    if (a /= near_complex_mat(q1_ref, fix_phase=.true._LK)) stop 1
 
 end program test_complex_ge_orthogonalize

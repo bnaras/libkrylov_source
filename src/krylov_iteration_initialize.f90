@@ -30,8 +30,9 @@ function krylov_iteration_initialize(iteration, basis_dim, solution_dim, gram_rc
     iteration%gram_rcond = gram_rcond
     iteration%lagrangian = lagrangian
 
+    if (allocated(iteration%expectation_vals)) deallocate (iteration%expectation_vals)
     if (allocated(iteration%residual_norms)) deallocate (iteration%residual_norms)
-    allocate (iteration%residual_norms(iteration%solution_dim))
+    allocate (iteration%expectation_vals(iteration%solution_dim), iteration%residual_norms(iteration%solution_dim))
 
     error = OK
 

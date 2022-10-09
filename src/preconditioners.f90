@@ -32,22 +32,24 @@ module preconditioners
     end type real_cg_preconditioner_t
 
     type, extends(real_preconditioner_t) :: real_davidson_preconditioner_t
-        real(RK), allocatable :: diagonal(:), eigenvalues(:)
+        real(RK), allocatable :: diagonal(:), eigenvalues(:), shifts(:)
     contains
         procedure, pass :: initialize => krylov_real_davidson_preconditioner_initialize
         procedure, pass :: set_diagonal => krylov_real_davidson_preconditioner_set_diagonal
         procedure, pass :: set_eigenvalues => krylov_real_davidson_preconditioner_set_eigenvalues
+        procedure, pass :: set_shifts => krylov_real_davidson_preconditioner_set_shifts
         procedure, pass :: get_status => krylov_real_davidson_preconditioner_get_status
         procedure, pass :: transform_residuals => krylov_real_davidson_preconditioner_transform_residuals
         final :: krylov_real_davidson_preconditioner_finalize
     end type real_davidson_preconditioner_t
 
     type, extends(real_preconditioner_t) :: real_jd_preconditioner_t
-        real(RK), allocatable :: solutions(:, :), diagonal(:), eigenvalues(:)
+        real(RK), allocatable :: solutions(:, :), diagonal(:), eigenvalues(:), shifts(:)
     contains
         procedure, pass :: initialize => krylov_real_jd_preconditioner_initialize
         procedure, pass :: set_diagonal => krylov_real_jd_preconditioner_set_diagonal
         procedure, pass :: set_eigenvalues => krylov_real_jd_preconditioner_set_eigenvalues
+        procedure, pass :: set_shifts => krylov_real_jd_preconditioner_set_shifts
         procedure, pass :: set_solutions => krylov_real_jd_preconditioner_set_solutions
         procedure, pass :: get_status => krylov_real_jd_preconditioner_get_status
         procedure, pass :: transform_residuals => krylov_real_jd_preconditioner_transform_residuals
@@ -55,11 +57,12 @@ module preconditioners
     end type real_jd_preconditioner_t
 
     type, extends(real_preconditioner_t) :: real_jdall_preconditioner_t
-        real(RK), allocatable :: solutions(:, :), diagonal(:), eigenvalues(:)
+        real(RK), allocatable :: solutions(:, :), diagonal(:), eigenvalues(:), shifts(:)
     contains
         procedure, pass :: initialize => krylov_real_jdall_preconditioner_initialize
         procedure, pass :: set_diagonal => krylov_real_jdall_preconditioner_set_diagonal
         procedure, pass :: set_eigenvalues => krylov_real_jdall_preconditioner_set_eigenvalues
+        procedure, pass :: set_shifts => krylov_real_jdall_preconditioner_set_shifts
         procedure, pass :: set_solutions => krylov_real_jdall_preconditioner_set_solutions
         procedure, pass :: get_status => krylov_real_jdall_preconditioner_get_status
         procedure, pass :: transform_residuals => krylov_real_jdall_preconditioner_transform_residuals
@@ -94,23 +97,25 @@ module preconditioners
     end type complex_cg_preconditioner_t
 
     type, extends(complex_preconditioner_t) :: complex_davidson_preconditioner_t
-        real(RK), allocatable :: diagonal(:), eigenvalues(:)
+        real(RK), allocatable :: diagonal(:), eigenvalues(:), shifts(:)
     contains
         procedure, pass :: initialize => krylov_complex_davidson_preconditioner_initialize
         procedure, pass :: set_diagonal => krylov_complex_davidson_preconditioner_set_diagonal
         procedure, pass :: set_eigenvalues => krylov_complex_davidson_preconditioner_set_eigenvalues
+        procedure, pass :: set_shifts => krylov_complex_davidson_preconditioner_set_shifts
         procedure, pass :: get_status => krylov_complex_davidson_preconditioner_get_status
         procedure, pass :: transform_residuals => krylov_complex_davidson_preconditioner_transform_residuals
         final :: krylov_complex_davidson_preconditioner_finalize
     end type complex_davidson_preconditioner_t
 
     type, extends(complex_preconditioner_t) :: complex_jd_preconditioner_t
-        real(RK), allocatable :: diagonal(:), eigenvalues(:)
+        real(RK), allocatable :: diagonal(:), eigenvalues(:), shifts(:)
         complex(CK), allocatable :: solutions(:, :)
     contains
         procedure, pass :: initialize => krylov_complex_jd_preconditioner_initialize
         procedure, pass :: set_diagonal => krylov_complex_jd_preconditioner_set_diagonal
         procedure, pass :: set_eigenvalues => krylov_complex_jd_preconditioner_set_eigenvalues
+        procedure, pass :: set_shifts => krylov_complex_jd_preconditioner_set_shifts
         procedure, pass :: set_solutions => krylov_complex_jd_preconditioner_set_solutions
         procedure, pass :: get_status => krylov_complex_jd_preconditioner_get_status
         procedure, pass :: transform_residuals => krylov_complex_jd_preconditioner_transform_residuals
@@ -118,12 +123,13 @@ module preconditioners
     end type complex_jd_preconditioner_t
 
     type, extends(complex_preconditioner_t) :: complex_jdall_preconditioner_t
-        real(RK), allocatable :: diagonal(:), eigenvalues(:)
+        real(RK), allocatable :: diagonal(:), eigenvalues(:), shifts(:)
         complex(CK), allocatable :: solutions(:, :)
     contains
         procedure, pass :: initialize => krylov_complex_jdall_preconditioner_initialize
         procedure, pass :: set_diagonal => krylov_complex_jdall_preconditioner_set_diagonal
         procedure, pass :: set_eigenvalues => krylov_complex_jdall_preconditioner_set_eigenvalues
+        procedure, pass :: set_shifts => krylov_complex_jdall_preconditioner_set_shifts
         procedure, pass :: set_solutions => krylov_complex_jdall_preconditioner_set_solutions
         procedure, pass :: get_status => krylov_complex_jdall_preconditioner_get_status
         procedure, pass :: transform_residuals => krylov_complex_jdall_preconditioner_transform_residuals
@@ -269,6 +275,14 @@ module preconditioners
             integer(IK) :: error
         end function krylov_real_davidson_preconditioner_set_eigenvalues
 
+        function krylov_real_davidson_preconditioner_set_shifts(preconditioner, solution_dim, shifts) result(error)
+            import real_davidson_preconditioner_t, IK, RK
+            class(real_davidson_preconditioner_t), intent(inout) :: preconditioner
+            integer(IK), intent(in) :: solution_dim
+            real(RK), intent(in) :: shifts(solution_dim)
+            integer(IK) :: error
+        end function krylov_real_davidson_preconditioner_set_shifts
+
         function krylov_real_davidson_preconditioner_get_status(preconditioner) result(status)
             import real_davidson_preconditioner_t, IK
             class(real_davidson_preconditioner_t), intent(inout) :: preconditioner
@@ -309,6 +323,14 @@ module preconditioners
             real(RK), intent(in) :: eigenvalues(solution_dim)
             integer(IK) :: error
         end function krylov_real_jd_preconditioner_set_eigenvalues
+
+        function krylov_real_jd_preconditioner_set_shifts(preconditioner, solution_dim, shifts) result(error)
+            import real_jd_preconditioner_t, IK, RK
+            class(real_jd_preconditioner_t), intent(inout) :: preconditioner
+            integer(IK), intent(in) :: solution_dim
+            real(RK), intent(in) :: shifts(solution_dim)
+            integer(IK) :: error
+        end function krylov_real_jd_preconditioner_set_shifts
 
         function krylov_real_jd_preconditioner_set_solutions(preconditioner, full_dim, solution_dim, solutions) result(error)
             import real_jd_preconditioner_t, IK, RK
@@ -358,6 +380,14 @@ module preconditioners
             real(RK), intent(in) :: eigenvalues(solution_dim)
             integer(IK) :: error
         end function krylov_real_jdall_preconditioner_set_eigenvalues
+
+        function krylov_real_jdall_preconditioner_set_shifts(preconditioner, solution_dim, shifts) result(error)
+            import real_jdall_preconditioner_t, IK, RK
+            class(real_jdall_preconditioner_t), intent(inout) :: preconditioner
+            integer(IK), intent(in) :: solution_dim
+            real(RK), intent(in) :: shifts(solution_dim)
+            integer(IK) :: error
+        end function krylov_real_jdall_preconditioner_set_shifts
 
         function krylov_real_jdall_preconditioner_set_solutions(preconditioner, full_dim, solution_dim, solutions) result(error)
             import real_jdall_preconditioner_t, IK, RK
@@ -466,6 +496,14 @@ module preconditioners
             integer(IK) :: error
         end function krylov_complex_davidson_preconditioner_set_eigenvalues
 
+        function krylov_complex_davidson_preconditioner_set_shifts(preconditioner, solution_dim, shifts) result(error)
+            import complex_davidson_preconditioner_t, IK, RK
+            class(complex_davidson_preconditioner_t), intent(inout) :: preconditioner
+            integer(IK), intent(in) :: solution_dim
+            real(RK), intent(in) :: shifts(solution_dim)
+            integer(IK) :: error
+        end function krylov_complex_davidson_preconditioner_set_shifts
+
         function krylov_complex_davidson_preconditioner_get_status(preconditioner) result(status)
             import complex_davidson_preconditioner_t, IK
             class(complex_davidson_preconditioner_t), intent(inout) :: preconditioner
@@ -506,6 +544,14 @@ module preconditioners
             real(RK), intent(in) :: eigenvalues(solution_dim)
             integer(IK) :: error
         end function krylov_complex_jd_preconditioner_set_eigenvalues
+
+        function krylov_complex_jd_preconditioner_set_shifts(preconditioner, solution_dim, shifts) result(error)
+            import complex_jd_preconditioner_t, IK, RK
+            class(complex_jd_preconditioner_t), intent(inout) :: preconditioner
+            integer(IK), intent(in) :: solution_dim
+            real(RK), intent(in) :: shifts(solution_dim)
+            integer(IK) :: error
+        end function krylov_complex_jd_preconditioner_set_shifts
 
         function krylov_complex_jd_preconditioner_set_solutions(preconditioner, full_dim, solution_dim, solutions) result(error)
             import complex_jd_preconditioner_t, IK, CK
@@ -555,6 +601,14 @@ module preconditioners
             real(RK), intent(in) :: eigenvalues(solution_dim)
             integer(IK) :: error
         end function krylov_complex_jdall_preconditioner_set_eigenvalues
+
+        function krylov_complex_jdall_preconditioner_set_shifts(preconditioner, solution_dim, shifts) result(error)
+            import complex_jdall_preconditioner_t, IK, RK
+            class(complex_jdall_preconditioner_t), intent(inout) :: preconditioner
+            integer(IK), intent(in) :: solution_dim
+            real(RK), intent(in) :: shifts(solution_dim)
+            integer(IK) :: error
+        end function krylov_complex_jdall_preconditioner_set_shifts
 
         function krylov_complex_jdall_preconditioner_set_solutions(preconditioner, full_dim, solution_dim, solutions) result(error)
             import complex_jdall_preconditioner_t, IK, CK
@@ -606,6 +660,7 @@ contains
         if (allocated(preconditioner%config)) deallocate (preconditioner%config)
         if (allocated(preconditioner%diagonal)) deallocate (preconditioner%diagonal)
         if (allocated(preconditioner%eigenvalues)) deallocate (preconditioner%eigenvalues)
+        if (allocated(preconditioner%shifts)) deallocate (preconditioner%shifts)
     end subroutine krylov_real_davidson_preconditioner_finalize
 
     subroutine krylov_real_jd_preconditioner_finalize(preconditioner)
@@ -616,6 +671,7 @@ contains
         if (allocated(preconditioner%diagonal)) deallocate (preconditioner%diagonal)
         if (allocated(preconditioner%eigenvalues)) deallocate (preconditioner%eigenvalues)
         if (allocated(preconditioner%solutions)) deallocate (preconditioner%solutions)
+        if (allocated(preconditioner%shifts)) deallocate (preconditioner%shifts)
     end subroutine krylov_real_jd_preconditioner_finalize
 
     subroutine krylov_real_jdall_preconditioner_finalize(preconditioner)
@@ -626,6 +682,7 @@ contains
         if (allocated(preconditioner%diagonal)) deallocate (preconditioner%diagonal)
         if (allocated(preconditioner%eigenvalues)) deallocate (preconditioner%eigenvalues)
         if (allocated(preconditioner%solutions)) deallocate (preconditioner%solutions)
+        if (allocated(preconditioner%shifts)) deallocate (preconditioner%shifts)
     end subroutine krylov_real_jdall_preconditioner_finalize
 
     subroutine krylov_complex_null_preconditioner_finalize(preconditioner)
@@ -650,6 +707,7 @@ contains
         if (allocated(preconditioner%config)) deallocate (preconditioner%config)
         if (allocated(preconditioner%diagonal)) deallocate (preconditioner%diagonal)
         if (allocated(preconditioner%eigenvalues)) deallocate (preconditioner%eigenvalues)
+        if (allocated(preconditioner%shifts)) deallocate (preconditioner%shifts)
     end subroutine krylov_complex_davidson_preconditioner_finalize
 
     subroutine krylov_complex_jd_preconditioner_finalize(preconditioner)
@@ -660,6 +718,7 @@ contains
         if (allocated(preconditioner%diagonal)) deallocate (preconditioner%diagonal)
         if (allocated(preconditioner%eigenvalues)) deallocate (preconditioner%eigenvalues)
         if (allocated(preconditioner%solutions)) deallocate (preconditioner%solutions)
+        if (allocated(preconditioner%shifts)) deallocate (preconditioner%shifts)
     end subroutine krylov_complex_jd_preconditioner_finalize
 
     subroutine krylov_complex_jdall_preconditioner_finalize(preconditioner)
@@ -670,6 +729,7 @@ contains
         if (allocated(preconditioner%diagonal)) deallocate (preconditioner%diagonal)
         if (allocated(preconditioner%eigenvalues)) deallocate (preconditioner%eigenvalues)
         if (allocated(preconditioner%solutions)) deallocate (preconditioner%solutions)
+        if (allocated(preconditioner%shifts)) deallocate (preconditioner%shifts)
     end subroutine krylov_complex_jdall_preconditioner_finalize
 
 end module preconditioners

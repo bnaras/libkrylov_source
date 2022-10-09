@@ -1,6 +1,6 @@
 function krylov_complex_jd_preconditioner_set_eigenvalues(preconditioner, solution_dim, eigenvalues) result(error)
 
-    use kinds, only: IK, RK
+    use kinds, only: IK, RK, LK
     use errors, only: OK, INVALID_DIMENSION
     use krylov, only: complex_jd_preconditioner_t
     implicit none
@@ -19,7 +19,7 @@ function krylov_complex_jd_preconditioner_set_eigenvalues(preconditioner, soluti
 
     preconditioner%eigenvalues = eigenvalues
 
-    err = preconditioner%config%set_logical_option('has_eigenvalues', .true.)
+    err = preconditioner%config%set_logical_option('has_eigenvalues', .true._LK)
     if (err /= OK) then
         error = err
         return

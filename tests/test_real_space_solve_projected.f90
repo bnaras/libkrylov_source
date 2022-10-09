@@ -1,6 +1,6 @@
 program test_real_space_solve_projected
 
-    use kinds, only: IK, RK
+    use kinds, only: IK, RK, LK
     use errors, only: OK
     use testing, only: near_real_vec, near_real_mat
     use krylov, only: krylov_initialize, krylov_finalize, krylov_add_space, spaces, &
@@ -38,7 +38,7 @@ program test_real_space_solve_projected
         select type (equation => space%equation)
         type is (real_eigenvalue_equation_t)
             if (equation%eigenvalues /= near_real_vec(eigenvalues)) stop 1
-            if (equation%basis_solutions /= near_real_mat(basis_solutions, fix_phase=.true.)) stop 1
+            if (equation%basis_solutions /= near_real_mat(basis_solutions, fix_phase=.true._LK)) stop 1
         end select
     end select
 

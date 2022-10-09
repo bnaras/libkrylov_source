@@ -39,7 +39,7 @@ function krylov_solve_real_equation(index, multiply) result(error)
                 exit
             end if
 
-            if (subset_dim * full_dim /= size(vectors, kind=IK)) then
+            if (subset_dim*full_dim /= size(vectors, kind=IK)) then
                 deallocate (vectors, products)
                 allocate (vectors(full_dim, subset_dim), products(full_dim, subset_dim))
             end if

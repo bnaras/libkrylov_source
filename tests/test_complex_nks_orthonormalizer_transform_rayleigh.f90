@@ -13,10 +13,11 @@ program test_complex_nks_orthonormalizer_transform_rayleigh
                    orthonormalized_ref(2_IK, 2_IK)
     integer(IK) :: error
 
-    vectors = reshape((/(0.5_CK, 0.001_CK), (0.5_CK, 0.001_CK), (-0.5_CK, -0.001_CK), (-0.5_CK, -0.001_CK), &
-                        (0.5_CK, 0.001_CK), (0.5_CK, 0.001_CK), (0.5_CK, 0.001_CK), (0.5_CK, 0.001_CK)/), (/4_IK, 2_IK/))
-    rayleigh = reshape((/(1.0_CK, 0.1_CK), (2.0_CK, -0.1_CK), (2.0_CK, 0.1_CK), (3.0_CK, 0.1_CK)/), (/2_IK, 2_IK/))
-    orthonormalized_ref = reshape((/(1.0_CK, 0.1_CK), (2.0_CK, -0.1_CK), (2.0_CK, 0.1_CK), (3.0_CK, 0.1_CK)/), (/2_IK, 2_IK/))
+    vectors = reshape((/(0.4_CK, 0.3_CK), (0.4_CK, 0.3_CK), (-0.4_CK, -0.3_CK), (-0.4_CK, -0.3_CK), &
+                        (0.2_CK, 0.2_CK), (0.2_CK, 0.2_CK), (0.0_CK, 0.0_CK), (0.0_CK, 0.0_CK)/), (/4_IK, 2_IK/))
+    rayleigh = reshape((/(1.0_CK, 0.0_CK), (2.0_CK, -1.0_CK), (2.0_CK, 1.0_CK), (3.0_CK, 0.0_CK)/), (/2_IK, 2_IK/))
+    orthonormalized_ref = reshape((/(1.0_CK, 0.0_CK), (6.0811183182043083_CK, -3.3941125496954276_CK), &
+                                    (6.0811183182043083_CK, 3.3941125496954276_CK), (23.5_CK, 0.0_CK)/), (/2_IK, 2_IK/))
 
     error = config%initialize()
     if (error /= OK) stop 1
@@ -33,6 +34,6 @@ program test_complex_nks_orthonormalizer_transform_rayleigh
     error = orthonormalizer%transform_rayleigh(2_IK, rayleigh, orthonormalized)
     if (error /= OK) stop 1
 
-    if (orthonormalized /= near_complex_mat(orthonormalized_ref, thr=1.0E-4_RK)) stop 1
+    if (orthonormalized /= near_complex_mat(orthonormalized_ref, thr=1.0E-12_RK)) stop 1
 
 end program test_complex_nks_orthonormalizer_transform_rayleigh

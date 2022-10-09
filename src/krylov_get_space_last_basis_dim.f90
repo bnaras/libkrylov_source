@@ -13,8 +13,6 @@ function krylov_get_space_last_basis_dim(index) result(last_basis_dim)
         return
     end if
 
-    associate (space => spaces(index)%space_p)
-        last_basis_dim = space%convergence%get_last_basis_dim()
-    end associate
+    last_basis_dim = spaces(index)%space_p%convergence%get_last_basis_dim()
 
 end function krylov_get_space_last_basis_dim

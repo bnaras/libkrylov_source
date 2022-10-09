@@ -1,6 +1,5 @@
-link_libraries(krylov)
-include_directories(${libkrylov_BINARY_DIR}/src)
-link_libraries(${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
+link_libraries(krylov ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
+include_directories(${libkrylov_SOURCE_DIR}/src ${libkrylov_BINARY_DIR}/src)
 
 # Module tests
 add_executable(test_kinds test_kinds.f90)
@@ -20,6 +19,12 @@ add_test(NAME test_lapackwrapper COMMAND test_lapackwrapper)
 
 add_executable(test_testing test_testing.f90)
 add_test(NAME test_testing COMMAND test_testing)
+
+add_executable(test_logging test_logging.f90)
+add_test(NAME test_logging COMMAND test_logging)
+
+add_executable(test_cutils test_cutils.f90)
+add_test(NAME test_cutils COMMAND test_cutils)
 
 # Linalg module tests
 add_executable(test_real_ge_subset test_real_ge_subset.f90)
@@ -160,11 +165,15 @@ add_test(NAME test_solve_real_block_equation
 add_executable(test_get_complex_block_dims test_get_complex_block_dims.f90)
 add_test(NAME test_get_complex_block_dims COMMAND test_get_complex_block_dims)
 
-add_executable(test_get_complex_block_vectors test_get_complex_block_vectors.f90)
-add_test(NAME test_get_complex_block_vectors COMMAND test_get_complex_block_vectors)
+add_executable(test_get_complex_block_vectors
+               test_get_complex_block_vectors.f90)
+add_test(NAME test_get_complex_block_vectors
+         COMMAND test_get_complex_block_vectors)
 
-add_executable(test_set_complex_block_products test_set_complex_block_products.f90)
-add_test(NAME test_set_complex_block_products COMMAND test_set_complex_block_products)
+add_executable(test_set_complex_block_products
+               test_set_complex_block_products.f90)
+add_test(NAME test_set_complex_block_products
+         COMMAND test_set_complex_block_products)
 
 add_executable(test_get_complex_block_convergence
                test_get_complex_block_convergence.f90)
@@ -175,14 +184,6 @@ add_executable(test_solve_complex_block_equation
                test_solve_complex_block_equation.f90)
 add_test(NAME test_solve_complex_block_equation
          COMMAND test_solve_complex_block_equation)
-
-# cmake-format: off
-
-# TODO
-# add_executable(test_solve_complex_block_equation test_solve_complex_block_equation.f90)
-# add_test(NAME test_solve_complex_block_equation COMMAND test_solve_complex_block_equation)
-
-# cmake-format: on
 
 # Global space-specific function tests (using space index)
 add_executable(test_get_space_integer_option test_get_space_integer_option.f90)
@@ -248,11 +249,17 @@ add_executable(test_get_space_sylvester_b_size
 add_test(NAME test_get_space_sylvester_b_size
          COMMAND test_get_space_sylvester_b_size)
 
+add_executable(test_get_space_convergence test_get_space_convergence.f90)
+add_test(NAME test_get_space_convergence COMMAND test_get_space_convergence)
+
 add_executable(test_get_space_eigenvalues test_get_space_eigenvalues.f90)
 add_test(NAME test_get_space_eigenvalues COMMAND test_get_space_eigenvalues)
 
-add_executable(test_get_space_convergence test_get_space_convergence.f90)
-add_test(NAME test_get_space_convergence COMMAND test_get_space_convergence)
+add_executable(test_set_space_diagonal test_set_space_diagonal.f90)
+add_test(NAME test_set_space_diagonal COMMAND test_set_space_diagonal)
+
+add_executable(test_get_space_shifts test_get_space_shifts.f90)
+add_test(NAME test_get_space_shifts COMMAND test_get_space_shifts)
 
 add_executable(test_get_real_space_vectors test_get_real_space_vectors.f90)
 add_test(NAME test_get_real_space_vectors COMMAND test_get_real_space_vectors)
@@ -287,6 +294,19 @@ add_executable(test_get_real_space_sylvester_b
 add_test(NAME test_get_real_space_sylvester_b
          COMMAND test_get_real_space_sylvester_b)
 
+add_executable(test_get_real_space_subset_vectors
+               test_get_real_space_subset_vectors.f90)
+add_test(NAME test_get_real_space_subset_vectors
+         COMMAND test_get_real_space_subset_vectors)
+
+add_executable(test_get_real_space_subset_products
+               test_get_real_space_subset_products.f90)
+add_test(NAME test_get_real_space_subset_products
+         COMMAND test_get_real_space_subset_products)
+
+add_executable(test_solve_real_equation test_solve_real_equation.f90)
+add_test(NAME test_solve_real_equation COMMAND test_solve_real_equation)
+
 add_executable(test_get_complex_space_vectors
                test_get_complex_space_vectors.f90)
 add_test(NAME test_get_complex_space_vectors
@@ -298,9 +318,9 @@ add_test(NAME test_resize_complex_space_vectors
          COMMAND test_resize_complex_space_vectors)
 
 add_executable(test_set_complex_space_vectors_from_diagonal
-         test_set_complex_space_vectors_from_diagonal.f90)
+               test_set_complex_space_vectors_from_diagonal.f90)
 add_test(NAME test_set_complex_space_vectors_from_diagonal
-   COMMAND test_set_complex_space_vectors_from_diagonal)
+         COMMAND test_set_complex_space_vectors_from_diagonal)
 
 add_executable(test_get_complex_space_products
                test_get_complex_space_products.f90)
@@ -325,21 +345,15 @@ add_executable(test_get_complex_space_sylvester_b
 add_test(NAME test_get_complex_space_sylvester_b
          COMMAND test_get_complex_space_sylvester_b)
 
-add_executable(test_get_real_space_subset_vectors
-               test_get_real_space_subset_vectors.f90)
-add_test(NAME test_get_real_space_subset_vectors
-         COMMAND test_get_real_space_subset_vectors)
+add_executable(test_get_complex_space_subset_vectors
+               test_get_complex_space_subset_vectors.f90)
+add_test(NAME test_get_complex_space_subset_vectors
+         COMMAND test_get_complex_space_subset_vectors)
 
-add_executable(test_get_real_space_subset_products
-               test_get_real_space_subset_products.f90)
-add_test(NAME test_get_real_space_subset_products
-         COMMAND test_get_real_space_subset_products)
-
-add_executable(test_set_space_diagonal test_set_space_diagonal.f90)
-add_test(NAME test_set_space_diagonal COMMAND test_set_space_diagonal)
-
-add_executable(test_solve_real_equation test_solve_real_equation.f90)
-add_test(NAME test_solve_real_equation COMMAND test_solve_real_equation)
+add_executable(test_get_complex_space_subset_products
+               test_get_complex_space_subset_products.f90)
+add_test(NAME test_get_complex_space_subset_products
+         COMMAND test_get_complex_space_subset_products)
 
 add_executable(test_solve_complex_equation test_solve_complex_equation.f90)
 add_test(NAME test_solve_complex_equation COMMAND test_solve_complex_equation)
@@ -411,6 +425,11 @@ add_executable(test_real_eigenvalue_equation_solve_projected
 add_test(NAME test_real_eigenvalue_equation_solve_projected
          COMMAND test_real_eigenvalue_equation_solve_projected)
 
+add_executable(test_real_eigenvalue_equation_get_expectation_vals
+               test_real_eigenvalue_equation_get_expectation_vals.f90)
+add_test(NAME test_real_eigenvalue_equation_get_expectation_vals
+         COMMAND test_real_eigenvalue_equation_get_expectation_vals)
+
 add_executable(test_real_eigenvalue_equation_get_lagrangian
                test_real_eigenvalue_equation_get_lagrangian.f90)
 add_test(NAME test_real_eigenvalue_equation_get_lagrangian
@@ -447,6 +466,11 @@ add_executable(test_real_linear_equation_make_residuals
 add_test(NAME test_real_linear_equation_make_residuals
          COMMAND test_real_linear_equation_make_residuals)
 
+add_executable(test_real_linear_equation_get_expectation_vals
+               test_real_linear_equation_get_expectation_vals.f90)
+add_test(NAME test_real_linear_equation_get_expectation_vals
+         COMMAND test_real_linear_equation_get_expectation_vals)
+
 add_executable(test_real_linear_equation_get_lagrangian
                test_real_linear_equation_get_lagrangian.f90)
 add_test(NAME test_real_linear_equation_get_lagrangian
@@ -468,6 +492,11 @@ add_executable(test_real_shifted_linear_equation_make_residuals
 add_test(NAME test_real_shifted_linear_equation_make_residuals
          COMMAND test_real_shifted_linear_equation_make_residuals)
 
+add_executable(test_real_shifted_linear_equation_get_expectation_vals
+               test_real_shifted_linear_equation_get_expectation_vals.f90)
+add_test(NAME test_real_shifted_linear_equation_get_expectation_vals
+         COMMAND test_real_shifted_linear_equation_get_expectation_vals)
+
 add_executable(test_real_shifted_linear_equation_get_lagrangian
                test_real_shifted_linear_equation_get_lagrangian.f90)
 add_test(NAME test_real_shifted_linear_equation_get_lagrangian
@@ -483,6 +512,11 @@ add_executable(test_complex_eigenvalue_equation_solve_projected
                test_complex_eigenvalue_equation_solve_projected.f90)
 add_test(NAME test_complex_eigenvalue_equation_solve_projected
          COMMAND test_complex_eigenvalue_equation_solve_projected)
+
+add_executable(test_complex_eigenvalue_equation_get_expectation_vals
+               test_complex_eigenvalue_equation_get_expectation_vals.f90)
+add_test(NAME test_complex_eigenvalue_equation_get_expectation_vals
+         COMMAND test_complex_eigenvalue_equation_get_expectation_vals)
 
 add_executable(test_complex_eigenvalue_equation_get_lagrangian
                test_complex_eigenvalue_equation_get_lagrangian.f90)
@@ -520,6 +554,11 @@ add_executable(test_complex_linear_equation_make_residuals
 add_test(NAME test_complex_linear_equation_make_residuals
          COMMAND test_complex_linear_equation_make_residuals)
 
+add_executable(test_complex_linear_equation_get_expectation_vals
+               test_complex_linear_equation_get_expectation_vals.f90)
+add_test(NAME test_complex_linear_equation_get_expectation_vals
+         COMMAND test_complex_linear_equation_get_expectation_vals)
+
 add_executable(test_complex_linear_equation_get_lagrangian
                test_complex_linear_equation_get_lagrangian.f90)
 add_test(NAME test_complex_linear_equation_get_lagrangian
@@ -541,13 +580,18 @@ add_executable(test_complex_shifted_linear_equation_make_residuals
 add_test(NAME test_complex_shifted_linear_equation_make_residuals
          COMMAND test_complex_shifted_linear_equation_make_residuals)
 
+add_executable(test_complex_shifted_linear_equation_get_expectation_vals
+               test_complex_shifted_linear_equation_get_expectation_vals.f90)
+add_test(NAME test_complex_shifted_linear_equation_get_expectation_vals
+         COMMAND test_complex_shifted_linear_equation_get_expectation_vals)
+
 add_executable(test_complex_shifted_linear_equation_get_lagrangian
                test_complex_shifted_linear_equation_get_lagrangian.f90)
 add_test(NAME test_complex_shifted_linear_equation_get_lagrangian
          COMMAND test_complex_shifted_linear_equation_get_lagrangian)
 
 # cmake-format: off
- 
+
 # TODO
 # real_sylvester_equation_t tests
 # complex_sylvester_equation_t tests
@@ -746,35 +790,275 @@ add_test(NAME test_complex_nks_orthonormalizer_transform_basis_rhs
 
 # complex_semi_orthonormalizer_t tests
 add_executable(test_complex_semi_orthonormalizer_prepare_vectors
-test_complex_semi_orthonormalizer_prepare_vectors.f90)
+               test_complex_semi_orthonormalizer_prepare_vectors.f90)
 add_test(NAME test_complex_semi_orthonormalizer_prepare_vectors
-COMMAND test_complex_semi_orthonormalizer_prepare_vectors)
+         COMMAND test_complex_semi_orthonormalizer_prepare_vectors)
 
 add_executable(test_complex_semi_orthonormalizer_prepare_transform
-test_complex_semi_orthonormalizer_prepare_transform.f90)
+               test_complex_semi_orthonormalizer_prepare_transform.f90)
 add_test(NAME test_complex_semi_orthonormalizer_prepare_transform
-COMMAND test_complex_semi_orthonormalizer_prepare_transform)
+         COMMAND test_complex_semi_orthonormalizer_prepare_transform)
 
 add_executable(test_complex_semi_orthonormalizer_get_gram_rcond
-test_complex_semi_orthonormalizer_get_gram_rcond.f90)
+               test_complex_semi_orthonormalizer_get_gram_rcond.f90)
 add_test(NAME test_complex_semi_orthonormalizer_get_gram_rcond
-COMMAND test_complex_semi_orthonormalizer_get_gram_rcond)
+         COMMAND test_complex_semi_orthonormalizer_get_gram_rcond)
 
 add_executable(test_complex_semi_orthonormalizer_transform_rayleigh
-test_complex_semi_orthonormalizer_transform_rayleigh.f90)
+               test_complex_semi_orthonormalizer_transform_rayleigh.f90)
 add_test(NAME test_complex_semi_orthonormalizer_transform_rayleigh
-COMMAND test_complex_semi_orthonormalizer_transform_rayleigh)
+         COMMAND test_complex_semi_orthonormalizer_transform_rayleigh)
 
 add_executable(test_complex_semi_orthonormalizer_transform_basis_rhs
-test_complex_semi_orthonormalizer_transform_basis_rhs.f90)
+               test_complex_semi_orthonormalizer_transform_basis_rhs.f90)
 add_test(NAME test_complex_semi_orthonormalizer_transform_basis_rhs
-COMMAND test_complex_semi_orthonormalizer_transform_basis_rhs)
+         COMMAND test_complex_semi_orthonormalizer_transform_basis_rhs)
 
-# complex_semi_orthonormalizer_t
+# C wrapper tests
+add_executable(test_c_add_space test_c_add_space.c)
+add_test(NAME test_c_add_space COMMAND test_c_add_space)
 
-# Use generic version of c/zdotc functions because the Accelerate version is
-# broken. See
-# http://mirror.informatimago.com/next/developer.apple.com/hardware/ve/errata.html
-if(APPLE AND "${CMAKE_Fortran_COMPILER_ID}" MATCHES "GNU")
-  target_compile_definitions(krylov PUBLIC USE_GENERIC_DOTC)
-endif()
+add_executable(test_c_set_defaults test_c_set_defaults.c)
+add_test(NAME test_c_set_defaults COMMAND test_c_set_defaults)
+
+add_executable(test_c_get_integer_option test_c_get_integer_option.c)
+add_test(NAME test_c_get_integer_option COMMAND test_c_get_integer_option)
+
+add_executable(test_c_get_string_option test_c_get_string_option.c)
+add_test(NAME test_c_get_string_option COMMAND test_c_get_string_option)
+
+add_executable(test_c_get_real_option test_c_get_real_option.c)
+add_test(NAME test_c_get_real_option COMMAND test_c_get_real_option)
+
+add_executable(test_c_get_logical_option test_c_get_logical_option.c)
+add_test(NAME test_c_get_logical_option COMMAND test_c_get_logical_option)
+
+add_executable(test_c_get_enum_option test_c_get_enum_option.c)
+add_test(NAME test_c_get_enum_option COMMAND test_c_get_enum_option)
+
+add_executable(test_c_get_real_block_dims test_c_get_real_block_dims.c)
+add_test(NAME test_c_get_real_block_dims COMMAND test_c_get_real_block_dims)
+
+add_executable(test_c_get_real_block_vectors test_c_get_real_block_vectors.c)
+add_test(NAME test_c_get_real_block_vectors
+         COMMAND test_c_get_real_block_vectors)
+
+add_executable(test_c_set_real_block_products test_c_set_real_block_products.c)
+add_test(NAME test_c_set_real_block_products
+         COMMAND test_c_set_real_block_products)
+
+add_executable(test_c_get_real_block_convergence
+               test_c_get_real_block_convergence.c)
+add_test(NAME test_c_get_real_block_convergence
+         COMMAND test_c_get_real_block_convergence)
+
+add_executable(test_c_solve_real_block_equation
+               test_c_solve_real_block_equation.c)
+add_test(NAME test_c_solve_real_block_equation
+         COMMAND test_c_solve_real_block_equation)
+
+add_executable(test_c_get_complex_block_dims test_c_get_complex_block_dims.c)
+add_test(NAME test_c_get_complex_block_dims
+         COMMAND test_c_get_complex_block_dims)
+
+add_executable(test_c_get_complex_block_vectors
+               test_c_get_complex_block_vectors.c)
+add_test(NAME test_c_get_complex_block_vectors
+         COMMAND test_c_get_complex_block_vectors)
+
+add_executable(test_c_set_complex_block_products
+               test_c_set_complex_block_products.c)
+add_test(NAME test_c_set_complex_block_products
+         COMMAND test_c_set_complex_block_products)
+
+add_executable(test_c_get_complex_block_convergence
+               test_c_get_complex_block_convergence.c)
+add_test(NAME test_c_get_complex_block_convergence
+         COMMAND test_c_get_complex_block_convergence)
+
+add_executable(test_c_solve_complex_block_equation
+               test_c_solve_complex_block_equation.c)
+add_test(NAME test_c_solve_complex_block_equation
+         COMMAND test_c_solve_complex_block_equation)
+
+add_executable(test_c_get_space_integer_option
+               test_c_get_space_integer_option.c)
+add_test(NAME test_c_get_space_integer_option
+         COMMAND test_c_get_space_integer_option)
+
+add_executable(test_c_get_space_string_option test_c_get_space_string_option.c)
+add_test(NAME test_c_get_space_string_option
+         COMMAND test_c_get_space_string_option)
+
+add_executable(test_c_get_space_real_option test_c_get_space_real_option.c)
+add_test(NAME test_c_get_space_real_option COMMAND test_c_get_space_real_option)
+
+add_executable(test_c_get_space_logical_option
+               test_c_get_space_logical_option.c)
+add_test(NAME test_c_get_space_logical_option
+         COMMAND test_c_get_space_logical_option)
+
+add_executable(test_c_get_space_enum_option test_c_get_space_enum_option.c)
+add_test(NAME test_c_get_space_enum_option COMMAND test_c_get_space_enum_option)
+
+add_executable(test_c_get_space_kind test_c_get_space_kind.c)
+add_test(NAME test_c_get_space_kind COMMAND test_c_get_space_kind)
+
+add_executable(test_c_get_space_structure test_c_get_space_structure.c)
+add_test(NAME test_c_get_space_structure COMMAND test_c_get_space_structure)
+
+add_executable(test_c_get_space_equation test_c_get_space_equation.c)
+add_test(NAME test_c_get_space_equation COMMAND test_c_get_space_equation)
+
+add_executable(test_c_get_space_preconditioner
+               test_c_get_space_preconditioner.c)
+add_test(NAME test_c_get_space_preconditioner
+         COMMAND test_c_get_space_preconditioner)
+
+add_executable(test_c_get_space_orthonormalizer
+               test_c_get_space_orthonormalizer.c)
+add_test(NAME test_c_get_space_orthonormalizer
+         COMMAND test_c_get_space_orthonormalizer)
+
+add_executable(test_c_get_space_full_dim test_c_get_space_full_dim.c)
+add_test(NAME test_c_get_space_full_dim COMMAND test_c_get_space_full_dim)
+
+add_executable(test_c_get_space_solution_dim test_c_get_space_solution_dim.c)
+add_test(NAME test_c_get_space_solution_dim
+         COMMAND test_c_get_space_solution_dim)
+
+add_executable(test_c_get_space_basis_dim test_c_get_space_basis_dim.c)
+add_test(NAME test_c_get_space_basis_dim COMMAND test_c_get_space_basis_dim)
+
+add_executable(test_c_get_space_vector_size test_c_get_space_vector_size.c)
+add_test(NAME test_c_get_space_vector_size COMMAND test_c_get_space_vector_size)
+
+add_executable(test_c_get_space_solution_size test_c_get_space_solution_size.c)
+add_test(NAME test_c_get_space_solution_size
+         COMMAND test_c_get_space_solution_size)
+
+add_executable(test_c_get_space_eigenvalue_size
+               test_c_get_space_eigenvalue_size.c)
+add_test(NAME test_c_get_space_eigenvalue_size
+         COMMAND test_c_get_space_eigenvalue_size)
+
+add_executable(test_c_get_space_rhs_size test_c_get_space_rhs_size.c)
+add_test(NAME test_c_get_space_rhs_size COMMAND test_c_get_space_rhs_size)
+
+add_executable(test_c_get_space_sylvester_b_size
+               test_c_get_space_sylvester_b_size.c)
+add_test(NAME test_c_get_space_sylvester_b_size
+         COMMAND test_c_get_space_sylvester_b_size)
+
+add_executable(test_c_get_space_convergence test_c_get_space_convergence.c)
+add_test(NAME test_c_get_space_convergence COMMAND test_c_get_space_convergence)
+
+add_executable(test_c_get_space_eigenvalues test_c_get_space_eigenvalues.c)
+add_test(NAME test_c_get_space_eigenvalues COMMAND test_c_get_space_eigenvalues)
+
+add_executable(test_c_set_space_diagonal test_c_set_space_diagonal.c)
+add_test(NAME test_c_set_space_diagonal COMMAND test_c_set_space_diagonal)
+
+add_executable(test_c_get_space_shifts test_c_get_space_shifts.c)
+add_test(NAME test_c_get_space_shifts COMMAND test_c_get_space_shifts)
+
+add_executable(test_c_get_real_space_vectors test_c_get_real_space_vectors.c)
+add_test(NAME test_c_get_real_space_vectors
+         COMMAND test_c_get_real_space_vectors)
+
+add_executable(test_c_set_real_space_vectors_from_diagonal
+               test_c_set_real_space_vectors_from_diagonal.c)
+add_test(NAME test_c_set_real_space_vectors_from_diagonal
+         COMMAND test_c_set_real_space_vectors_from_diagonal)
+
+add_executable(test_c_resize_real_space_vectors
+               test_c_resize_real_space_vectors.c)
+add_test(NAME test_c_resize_real_space_vectors
+         COMMAND test_c_resize_real_space_vectors)
+
+add_executable(test_c_get_real_space_products test_c_get_real_space_products.c)
+add_test(NAME test_c_get_real_space_products
+         COMMAND test_c_get_real_space_products)
+
+add_executable(test_c_get_real_space_solutions
+               test_c_get_real_space_solutions.c)
+add_test(NAME test_c_get_real_space_solutions
+         COMMAND test_c_get_real_space_solutions)
+
+add_executable(test_c_resize_real_space_solutions
+               test_c_resize_real_space_solutions.c)
+add_test(NAME test_c_resize_real_space_solutions
+         COMMAND test_c_resize_real_space_solutions)
+
+add_executable(test_c_get_real_space_rhs test_c_get_real_space_rhs.c)
+add_test(NAME test_c_get_real_space_rhs COMMAND test_c_get_real_space_rhs)
+
+add_executable(test_c_get_real_space_sylvester_b
+               test_c_get_real_space_sylvester_b.c)
+add_test(NAME test_c_get_real_space_sylvester_b
+         COMMAND test_c_get_real_space_sylvester_b)
+
+add_executable(test_c_get_real_space_subset_vectors
+               test_c_get_real_space_subset_vectors.c)
+add_test(NAME test_c_get_real_space_subset_vectors
+         COMMAND test_c_get_real_space_subset_vectors)
+
+add_executable(test_c_get_real_space_subset_products
+               test_c_get_real_space_subset_products.c)
+add_test(NAME test_c_get_real_space_subset_products
+         COMMAND test_c_get_real_space_subset_products)
+
+add_executable(test_c_solve_real_equation test_c_solve_real_equation.c)
+add_test(NAME test_c_solve_real_equation COMMAND test_c_solve_real_equation)
+
+add_executable(test_c_get_complex_space_vectors
+               test_c_get_complex_space_vectors.c)
+add_test(NAME test_c_get_complex_space_vectors
+         COMMAND test_c_get_complex_space_vectors)
+
+add_executable(test_c_set_complex_space_vectors_from_diagonal
+               test_c_set_complex_space_vectors_from_diagonal.c)
+add_test(NAME test_c_set_complex_space_vectors_from_diagonal
+         COMMAND test_c_set_complex_space_vectors_from_diagonal)
+
+add_executable(test_c_resize_complex_space_vectors
+               test_c_resize_complex_space_vectors.c)
+add_test(NAME test_c_resize_complex_space_vectors
+         COMMAND test_c_resize_complex_space_vectors)
+
+add_executable(test_c_get_complex_space_products
+               test_c_get_complex_space_products.c)
+add_test(NAME test_c_get_complex_space_products
+         COMMAND test_c_get_complex_space_products)
+
+add_executable(test_c_get_complex_space_solutions
+               test_c_get_complex_space_solutions.c)
+add_test(NAME test_c_get_complex_space_solutions
+         COMMAND test_c_get_complex_space_solutions)
+
+add_executable(test_c_resize_complex_space_solutions
+               test_c_resize_complex_space_solutions.c)
+add_test(NAME test_c_resize_complex_space_solutions
+         COMMAND test_c_resize_complex_space_solutions)
+
+add_executable(test_c_get_complex_space_rhs test_c_get_complex_space_rhs.c)
+add_test(NAME test_c_get_complex_space_rhs COMMAND test_c_get_complex_space_rhs)
+
+add_executable(test_c_get_complex_space_sylvester_b
+               test_c_get_complex_space_sylvester_b.c)
+add_test(NAME test_c_get_complex_space_sylvester_b
+         COMMAND test_c_get_complex_space_sylvester_b)
+
+add_executable(test_c_get_complex_space_subset_vectors
+               test_c_get_complex_space_subset_vectors.c)
+add_test(NAME test_c_get_complex_space_subset_vectors
+         COMMAND test_c_get_complex_space_subset_vectors)
+
+add_executable(test_c_get_complex_space_subset_products
+               test_c_get_complex_space_subset_products.c)
+add_test(NAME test_c_get_complex_space_subset_products
+         COMMAND test_c_get_complex_space_subset_products)
+
+add_executable(test_c_solve_complex_equation test_c_solve_complex_equation.c)
+add_test(NAME test_c_solve_complex_equation
+         COMMAND test_c_solve_complex_equation)

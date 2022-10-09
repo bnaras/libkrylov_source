@@ -40,7 +40,7 @@ program test_get_complex_block_vectors
     offsets(index) = 3_IK
 
     error = krylov_get_complex_block_vectors(2_IK, 5_IK, full_dims, subset_dims, &
-                                          offsets, vectors)
+                                             offsets, vectors)
     if (error /= OK) stop 1
 
     if (vectors /= near_complex_vec(vectors_ref)) stop 1

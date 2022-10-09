@@ -1,6 +1,6 @@
 program test_solve_complex_block_equation
 
-    use kinds, only: IK, RK, CK
+    use kinds, only: IK, RK, CK, LK
     use errors, only: OK
     use testing, only: near_real_vec, near_complex_mat
     use krylov, only: krylov_initialize, krylov_finalize, krylov_set_enum_option, &
@@ -55,7 +55,7 @@ program test_solve_complex_block_equation
     if (error /= OK) stop 1
 
     if (eigenvalues_1 /= near_real_vec(eigenvalues_ref_1)) stop 1
-    if (solutions_1 /= near_complex_mat(solutions_ref_1)) stop 1
+    if (solutions_1 /= near_complex_mat(solutions_ref_1, fix_phase=.true._LK)) stop 1
 
     error = krylov_get_space_eigenvalues(2_IK, 1_IK, eigenvalues_2)
     if (error /= OK) stop 1
@@ -64,7 +64,7 @@ program test_solve_complex_block_equation
     if (error /= OK) stop 1
 
     if (eigenvalues_2 /= near_real_vec(eigenvalues_ref_2)) stop 1
-    if (solutions_2 /= near_complex_mat(solutions_ref_2, fix_phase=.true.)) stop 1
+    if (solutions_2 /= near_complex_mat(solutions_ref_2, fix_phase=.true._LK)) stop 1
 
     error = krylov_finalize()
     if (error /= OK) stop 1

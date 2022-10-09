@@ -1,6 +1,6 @@
 program test_real_semi_orthonormalizer_prepare_vectors
 
-    use kinds, only: IK, RK
+    use kinds, only: IK, RK, LK
     use errors, only: OK
     use options, only: config_t
     use testing, only: near_real_mat
@@ -12,7 +12,7 @@ program test_real_semi_orthonormalizer_prepare_vectors
     real(RK) :: vectors(4_IK, 2_IK), residuals(4_IK, 2_IK), new_vectors(4_IK, 2_IK), new_vectors_ref(4_IK, 2_IK)
     integer(IK) :: error, new_dim
 
-    vectors = reshape((/1.0_RK, 0.0_RK, 0.0_RK, 0.0_RK, 0.0_RK, 1.0_RK, 0.0_RK, 0.0_RK/), (/4_IK, 2_IK/))
+    vectors = reshape((/0.5_RK, 0.5_RK, -0.5_RK, -0.5_RK, 0.2_RK, 0.2_RK, 0.0_RK, 0.0_RK/), (/4_IK, 2_IK/))
     residuals = reshape((/0.5_RK, 0.0_RK, 0.5_RK, 0.0_RK, 0.0_RK, 0.5_RK, 0.5_RK, 0.0_RK/), (/4_IK, 2_IK/))
     new_vectors_ref = reshape((/0.353553390593274_RK, 0.353553390593274_RK, 0.707106781186547_RK, 0.0_RK, &
                                 0.353553390593274_RK, -0.353553390593274_RK, 0.0_RK, 0.0_RK/), (/4_IK, 2_IK/))
@@ -36,6 +36,6 @@ program test_real_semi_orthonormalizer_prepare_vectors
     if (error /= OK) stop 1
 
     if (new_dim /= 2_IK) stop 1
-    if (new_vectors /= near_real_mat(new_vectors_ref, fix_phase=.true.)) stop 1
+    if (new_vectors /= near_real_mat(new_vectors_ref, fix_phase=.true._LK)) stop 1
 
 end program test_real_semi_orthonormalizer_prepare_vectors

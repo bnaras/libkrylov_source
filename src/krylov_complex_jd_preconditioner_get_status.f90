@@ -18,13 +18,17 @@ function krylov_complex_jd_preconditioner_get_status(preconditioner) result(stat
         return
     end if
 
+    if (preconditioner%config%find_option('has_shifts') /= OK) then
+        status = INCOMPLETE_CONFIGURATION
+        return
+    end if
+
     if (preconditioner%config%find_option('has_solutions') /= OK) then
         status = INCOMPLETE_CONFIGURATION
         return
     end if
 
     if (preconditioner%config%get_logical_option('has_diagonal') .and. &
-        preconditioner%config%get_logical_option('has_eigenvalues') .and. &
         preconditioner%config%get_logical_option('has_solutions')) then
         status = OK
     else

@@ -9,12 +9,11 @@ program test_real_semi_orthonormalizer_prepare_transform
 
     type(real_semi_orthonormalizer_t) :: orthonormalizer
     type(config_t) :: config
-    real(RK) :: vectors(4_IK, 2_IK), gram_matrix(2_IK, 2_IK)
+    real(RK) :: vectors(4_IK, 2_IK), gram_factor(2_IK, 2_IK)
     integer(IK) :: error
 
-    vectors = reshape((/0.5_RK, 0.5_RK, -0.5_RK, -0.5_RK, 0.5_RK, 0.5_RK, 0.5_RK, 0.5_RK/), &
-                      (/4_IK, 2_IK/))
-    gram_matrix = reshape((/1.0_RK, 0.0_RK, 0.0_RK, 1.0_RK/), (/2_IK, 2_IK/))
+    vectors = reshape((/0.5_RK, 0.5_RK, -0.5_RK, -0.5_RK, 0.2_RK, 0.2_RK, 0.0_RK, 0.0_RK/), (/4_IK, 2_IK/))
+    gram_factor = reshape((/1.0_RK, 0.70710678118654746_RK, 0.70710678118654746_RK, 0.70710678118654746_RK/), (/2_IK, 2_IK/))
 
     error = config%initialize()
     if (error /= OK) stop 1
@@ -28,6 +27,6 @@ program test_real_semi_orthonormalizer_prepare_transform
     error = orthonormalizer%prepare_transform(4_IK, 2_IK, vectors)
     if (error /= OK) stop 1
 
-    if (orthonormalizer%gram_matrix_decomposed /= near_real_mat(gram_matrix)) stop 1
+    if (orthonormalizer%gram_matrix_decomposed /= near_real_mat(gram_factor)) stop 1
 
 end program test_real_semi_orthonormalizer_prepare_transform

@@ -11,8 +11,8 @@ program test_complex_ortho_orthonormalizer_prepare_transform
     complex(CK) :: vectors(4_IK, 2_IK)
     integer(IK) :: error
 
-    vectors = reshape((/(0.5_CK, 0.1_CK), (0.5_CK, 0.1_CK), (-0.5_CK, -0.1_CK), (-0.5_CK, -0.1_CK), &
-                        (0.5_CK, 0.1_CK), (0.5_CK, 0.1_CK), (0.5_CK, 0.1_CK), (0.5_CK, 0.1_CK)/), (/4_IK, 2_IK/))
+    vectors = reshape((/(0.4_CK, 0.3_CK), (0.4_CK, 0.3_CK), (-0.4_CK, -0.3_CK), (-0.4_CK, -0.3_CK), &
+                        (0.4_CK, 0.3_CK), (0.4_CK, 0.3_CK), (0.4_CK, 0.3_CK), (0.4_CK, 0.3_CK)/), (/4_IK, 2_IK/))
 
     error = config%initialize()
     if (error /= OK) stop 1

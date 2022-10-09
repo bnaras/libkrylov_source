@@ -26,9 +26,9 @@ function krylov_complex_semi_orthonormalizer_transform_rayleigh( &
     end if
 
     ! Transform to orthogonal basis in place
-    call complex_trsm('r', uplo, 'c', 'n', basis_dim, basis_dim, (1.0_CK, 0.0_CK), &
+    call complex_trsm('r', uplo, 'n', 'n', basis_dim, basis_dim, (1.0_CK, 0.0_CK), &
                       orthonormalizer%gram_matrix_decomposed, basis_dim, orthonormal_rayleigh, basis_dim)
-    call complex_trsm('l', uplo, 'n', 'n', basis_dim, basis_dim, (1.0_CK, 0.0_CK), &
+    call complex_trsm('l', uplo, 'c', 'n', basis_dim, basis_dim, (1.0_CK, 0.0_CK), &
                       orthonormalizer%gram_matrix_decomposed, basis_dim, orthonormal_rayleigh, basis_dim)
 
     error = OK

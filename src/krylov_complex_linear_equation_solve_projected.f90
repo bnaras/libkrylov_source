@@ -11,27 +11,36 @@ function krylov_complex_linear_equation_solve_projected(equation, orthonormalize
     integer(IK) :: error
 
     integer(IK) :: err
-    complex(CK), allocatable :: transformed(:, :), solutions(:, :)
+    complex(CK), allocatable :: transformed_rayleigh(:, :), transformed_basis_rhs(:, :), solutions(:, :)
 
     if (equation%basis_dim /= orthonormalizer%basis_dim) then
         error = INVALID_DIMENSION
         return
     end if
 
-    allocate (transformed(equation%basis_dim, equation%basis_dim), &
+    allocate (transformed_rayleigh(equation%basis_dim, equation%basis_dim), &
+              transformed_basis_rhs(equation%basis_dim, equation%solution_dim), &
               solutions(equation%basis_dim, equation%solution_dim))
 
-    err = orthonormalizer%transform_rayleigh(equation%basis_dim, equation%rayleigh, transformed)
+    err = orthonormalizer%transform_rayleigh(equation%basis_dim, equation%rayleigh, transformed_rayleigh)
     if (err /= OK) then
-        deallocate (transformed, solutions)
+        deallocate (transformed_rayleigh, transformed_basis_rhs, solutions)
         error = err
         return
     end if
 
-    err = complex_he_solve_linear(transformed, equation%basis_rhs, equation%basis_dim, &
+    err = orthonormalizer%transform_basis_rhs(equation%basis_dim, equation%solution_dim, equation%basis_rhs, &
+                                              transformed_basis_rhs)
+    if (err /= OK) then
+        deallocate (transformed_rayleigh, transformed_basis_rhs, solutions)
+        error = err
+        return
+    end if
+
+    err = complex_he_solve_linear(transformed_rayleigh, transformed_basis_rhs, equation%basis_dim, &
                                   equation%solution_dim, solutions)
     if (err /= OK) then
-        deallocate (transformed, solutions)
+        deallocate (transformed_rayleigh, transformed_basis_rhs, solutions)
         error = err
         return
     end if
@@ -39,12 +48,12 @@ function krylov_complex_linear_equation_solve_projected(equation, orthonormalize
     err = orthonormalizer%restore_basis_solutions(equation%basis_dim, equation%solution_dim, &
                                                   solutions, equation%basis_solutions)
     if (err /= OK) then
-        deallocate (transformed, solutions)
+        deallocate (transformed_rayleigh, transformed_basis_rhs, solutions)
         error = err
         return
     end if
 
-    deallocate (transformed, solutions)
+    deallocate (transformed_rayleigh, transformed_basis_rhs, solutions)
 
     error = OK
 

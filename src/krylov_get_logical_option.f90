@@ -1,14 +1,15 @@
 function krylov_get_logical_option(key) result(value)
 
-    use krylov, only: config
+    use kinds, only: AK, LK
     use errors, only: NO_SUCH_OPTION
+    use krylov, only: config
     implicit none
 
-    character(len=*), intent(in) :: key
-    logical :: value
+    character(len=*, kind=AK), intent(in) :: key
+    logical(LK) :: value
 
     if (config%find_option(key) == NO_SUCH_OPTION) then
-        value = .false.
+        value = .false._LK
         return
     end if
 

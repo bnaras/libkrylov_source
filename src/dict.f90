@@ -1,9 +1,12 @@
 module dict
 
+    use kinds, only: IK, RK, AK, LK
+
     type entry_t
-        character(len=:), allocatable :: key, val
+        character(len=:, kind=AK), allocatable :: key, val
     contains
         procedure, pass :: get_key => entry_get_key
+        procedure, pass :: get_length => entry_get_length
         procedure, pass :: as_integer => entry_as_integer
         procedure, pass :: as_string => entry_as_string
         procedure, pass :: as_real => entry_as_real
@@ -23,6 +26,7 @@ module dict
         procedure, pass :: put_entry => dict_put_entry
         procedure, pass :: delete => dict_delete
         procedure, pass :: put => dict_put
+        procedure, pass :: get_length => dict_get_length
         procedure, pass :: get_integer => dict_get_integer
         procedure, pass :: get_string => dict_get_string
         procedure, pass :: get_real => dict_get_real
@@ -34,7 +38,6 @@ contains
 
     function get_length(val) result(length)
 
-        use kinds, only: IK
         implicit none
 
         class(*), intent(in) :: val
@@ -43,7 +46,7 @@ contains
         integer(IK) :: sv, sa
 
         select type (val)
-        type is (character(len=*))
+        type is (character(len=*, kind=AK))
             length = len(val, kind=IK)
         class default
             sv = storage_size(val, kind=IK)
@@ -58,15 +61,15 @@ contains
 
         implicit none
 
-        character(len=*), intent(in) :: key
+        character(len=*, kind=AK), intent(in) :: key
         class(*), intent(in) :: val
         type(entry_t) :: entry
 
         entry%key = key
 
-        allocate (character(len=get_length(val)) :: entry%val)
+        allocate (character(len=get_length(val), kind=AK) :: entry%val)
         select type (val)
-        type is (character(len=*))
+        type is (character(len=*, kind=AK))
             entry%val = val
         class default
             entry%val = transfer(val, entry%val)
@@ -78,15 +81,25 @@ contains
 
         implicit none
         class(entry_t), intent(in) :: entry
-        character(len=:), allocatable :: key
+        character(len=:, kind=AK), allocatable :: key
 
         key = entry%key
 
     end function entry_get_key
 
+    function entry_get_length(entry) result(length)
+
+        implicit none
+
+        class(entry_t) :: entry
+        integer(IK) :: length
+
+        length = get_length(entry%val)
+
+    end function entry_get_length
+
     function entry_as_integer(entry) result(val)
 
-        use kinds, only: IK
         implicit none
 
         class(entry_t), intent(in) :: entry
@@ -98,11 +111,10 @@ contains
 
     function entry_as_string(entry) result(val)
 
-        use kinds, only: IK
         implicit none
 
         class(entry_t), intent(in) :: entry
-        character(len=:), allocatable :: val
+        character(len=:, kind=AK), allocatable :: val
 
         val = entry%val
 
@@ -110,7 +122,6 @@ contains
 
     function entry_as_real(entry) result(val)
 
-        use kinds, only: RK
         implicit none
 
         class(entry_t), intent(in) :: entry
@@ -125,7 +136,7 @@ contains
         implicit none
 
         class(entry_t), intent(in) :: entry
-        logical :: val
+        logical(LK) :: val
 
         val = transfer(entry%val, val)
 
@@ -150,7 +161,7 @@ contains
         class(dict_t), intent(inout) :: dict
         integer(IK) :: error
 
-        if (allocated(dict%data)) deallocate(dict%data)
+        if (allocated(dict%data)) deallocate (dict%data)
         allocate (dict%data(0_IK))
         error = OK
 
@@ -158,7 +169,6 @@ contains
 
     function dict_count(dict) result(count)
 
-        use kinds, only: IK
         implicit none
 
         class(dict_t), intent(in) :: dict
@@ -166,16 +176,14 @@ contains
 
         if (.not. allocated(dict%data)) then
             count = 0_IK
-            return
+        else
+            count = size(dict%data, kind=IK)
         end if
-
-        count = size(dict%data, kind=IK)
 
     end function dict_count
 
     function dict_clear(dict) result(error)
 
-        use kinds, only: IK
         use errors, only: OK
         implicit none
 
@@ -191,25 +199,29 @@ contains
 
     function dict_find_key(dict, key) result(pos)
 
-        use kinds, only: IK
         use errors, only: KEY_NOT_FOUND
         implicit none
 
         class(dict_t), intent(in) :: dict
-        character(len=*), intent(in) :: key
+        character(len=*, kind=AK), intent(in) :: key
         integer(IK) :: pos
 
+        logical(LK) :: found
+
+        found = .false._LK
         do pos = 1_IK, dict%count()
-            if (dict%data(pos)%key == key) return
+            if (dict%data(pos)%key == key) then
+                found = .true._LK
+                exit
+            end if
         end do
 
-        pos = KEY_NOT_FOUND
+        if (.not.found) pos = KEY_NOT_FOUND
 
     end function dict_find_key
 
     function dict_retrieve_entry(dict, pos) result(entry)
 
-        use kinds, only: IK
         use errors, only: KEY_NOT_FOUND
         implicit none
 
@@ -218,39 +230,35 @@ contains
         type(entry_t) :: entry
 
         if (pos > dict%count()) then
-            entry = entry_t('', '')
-            return
+            entry = make_entry('', '')
+        else
+            entry = dict%data(pos)
         end if
-
-        entry = dict%data(pos)
 
     end function dict_retrieve_entry
 
     function dict_get_entry(dict, key) result(entry)
 
-        use kinds, only: IK
         use errors, only: KEY_NOT_FOUND
         implicit none
 
         class(dict_t), intent(in) :: dict
-        character(len=*), intent(in) :: key
+        character(len=*, kind=AK), intent(in) :: key
         type(entry_t) :: entry
 
         integer(IK) :: pos
 
         pos = dict%find_key(key)
         if (pos == KEY_NOT_FOUND) then
-            entry = entry_t(key, '')
-            return
+            entry = make_entry(key, '')
+        else
+            entry = dict%retrieve_entry(pos)
         end if
-
-        entry = dict%retrieve_entry(pos)
 
     end function dict_get_entry
 
     function dict_put_entry(dict, entry) result(error)
 
-        use kinds, only: IK
         use errors, only: OK, KEY_NOT_FOUND
         implicit none
 
@@ -287,12 +295,11 @@ contains
 
     function dict_delete(dict, key) result(error)
 
-        use kinds, only: IK
         use errors, only: OK, KEY_NOT_FOUND
         implicit none
 
         class(dict_t), intent(inout) :: dict
-        character(len=*), intent(in) :: key
+        character(len=*, kind=AK), intent(in) :: key
         integer(IK) :: error
 
         integer(IK) :: pos, length
@@ -317,11 +324,10 @@ contains
 
     function dict_put(dict, key, val) result(error)
 
-        use kinds, only: IK
         implicit none
 
         class(dict_t), intent(inout) :: dict
-        character(len=*), intent(in) :: key
+        character(len=*, kind=AK), intent(in) :: key
         class(*), intent(in) :: val
         integer(IK) :: error
 
@@ -331,11 +337,10 @@ contains
 
     function dict_get_integer(dict, key) result(val)
 
-        use kinds, only: IK
         implicit none
 
         class(dict_t), intent(in) :: dict
-        character(len=*), intent(in) :: key
+        character(len=*, kind=AK), intent(in) :: key
         integer(IK) :: val
 
         type(entry_t) :: entry
@@ -345,13 +350,28 @@ contains
 
     end function dict_get_integer
 
+    function dict_get_length(dict, key) result(length)
+
+        implicit none
+
+        class(dict_t), intent(in) :: dict
+        character(len=*, kind=AK), intent(in) :: key
+        integer(IK) :: length
+
+        type(entry_t) :: entry
+
+        entry = dict%get_entry(key)
+        length = entry%get_length()
+
+    end function dict_get_length
+
     function dict_get_string(dict, key) result(val)
 
         implicit none
 
         class(dict_t), intent(in) :: dict
-        character(len=*), intent(in) :: key
-        character(len=:), allocatable :: val
+        character(len=*, kind=AK), intent(in) :: key
+        character(len=:, kind=AK), allocatable :: val
 
         type(entry_t) :: entry
 
@@ -362,11 +382,10 @@ contains
 
     function dict_get_real(dict, key) result(val)
 
-        use kinds, only: RK
         implicit none
 
         class(dict_t), intent(in) :: dict
-        character(len=*), intent(in) :: key
+        character(len=*, kind=AK), intent(in) :: key
         real(RK) :: val
 
         type(entry_t) :: entry
@@ -381,8 +400,8 @@ contains
         implicit none
 
         class(dict_t), intent(in) :: dict
-        character(len=*), intent(in) :: key
-        logical :: val
+        character(len=*, kind=AK), intent(in) :: key
+        logical(LK) :: val
 
         type(entry_t) :: entry
 

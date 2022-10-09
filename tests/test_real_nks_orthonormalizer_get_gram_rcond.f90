@@ -12,7 +12,7 @@ program test_real_nks_orthonormalizer_get_gram_rcond
     real(RK) :: vectors(4_IK, 2_IK), gram_rcond
     integer(IK) :: error
 
-    vectors = reshape((/0.5_RK, 0.5_RK, -0.5_RK, -0.5_RK, 0.5_RK, 0.5_RK, 0.5_RK, 0.5_RK/), (/4_IK, 2_IK/))
+    vectors = reshape((/0.5_RK, 0.5_RK, -0.5_RK, -0.5_RK, 0.2_RK, 0.2_RK, 0.0_RK, 0.0_RK/), (/4_IK, 2_IK/))
 
     error = config%initialize()
     if (error /= OK) stop 1
@@ -28,6 +28,6 @@ program test_real_nks_orthonormalizer_get_gram_rcond
 
     gram_rcond = orthonormalizer%get_gram_rcond()
 
-    if (gram_rcond /= near_real_num(1.0_RK)) stop 1
+    if (gram_rcond /= near_real_num(0.171572875253810_RK)) stop 1
 
 end program test_real_nks_orthonormalizer_get_gram_rcond

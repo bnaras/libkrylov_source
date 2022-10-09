@@ -1,13 +1,13 @@
 function krylov_complex_space_set_orthonormalizer(space, value) result(error)
 
-    use kinds, only: IK
+    use kinds, only: IK, AK
     use errors, only: OK, INVALID_INPUT
     use krylov, only: complex_space_t, complex_ortho_orthonormalizer_t, complex_nks_orthonormalizer_t, &
                       complex_semi_orthonormalizer_t
     implicit none
 
     class(complex_space_t), intent(inout) :: space
-    character(len=*), intent(in) :: value
+    character(len=*, kind=AK), intent(in) :: value
     integer(IK) :: error
 
     if (space%config%validate_enum_option('orthonormalizer', value) /= OK) then

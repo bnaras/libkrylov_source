@@ -17,6 +17,6 @@ function krylov_convergence_get_last_basis_dim(convergence) result(last_basis_di
         return
     end if
 
-    last_basis_dim = convergence%iterations(index)%basis_dim
+    last_basis_dim = convergence%iterations(index)%get_basis_dim()
 
 end function krylov_convergence_get_last_basis_dim

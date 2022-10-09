@@ -1,6 +1,6 @@
 program test_complex_he_diagonalize
 
-    use kinds, only: IK, RK, CK
+    use kinds, only: IK, RK, CK, LK
     use errors, only: OK
     use linalg, only: complex_he_diagonalize
     use testing, only: near_real_vec, near_complex_mat
@@ -19,6 +19,6 @@ program test_complex_he_diagonalize
     if (error /= OK) stop 1
 
     if (eig /= near_real_vec(eig_ref)) stop 1
-    if (eigv /= near_complex_mat(eigv_ref, fix_phase=.true.)) stop 1
+    if (eigv /= near_complex_mat(eigv_ref, fix_phase=.true._LK)) stop 1
 
 end program test_complex_he_diagonalize

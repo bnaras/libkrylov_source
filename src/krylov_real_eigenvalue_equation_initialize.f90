@@ -1,6 +1,6 @@
 function krylov_real_eigenvalue_equation_initialize(equation, full_dim, solution_dim, basis_dim, config) result(error)
 
-    use kinds, only: IK
+    use kinds, only: IK, RK
     use errors, only: OK
     use options, only: config_t
     use krylov, only: real_eigenvalue_equation_t
@@ -35,6 +35,14 @@ function krylov_real_eigenvalue_equation_initialize(equation, full_dim, solution
               equation%eigenvalues(solution_dim), &
               equation%rayleigh(basis_dim, basis_dim), &
               equation%basis_solutions(basis_dim, solution_dim))
+
+    equation%vectors = 0.0_RK
+    equation%products = 0.0_RK
+    equation%solutions = 0.0_RK
+    equation%residuals = 0.0_RK
+    equation%eigenvalues = 0.0_RK
+    equation%rayleigh = 0.0_RK
+    equation%basis_solutions = 0.0_RK
 
     error = OK
 

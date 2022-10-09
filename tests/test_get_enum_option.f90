@@ -1,12 +1,15 @@
 program test_get_enum_option
 
-    use kinds, only: IK
+    use kinds, only: IK, AK
     use errors, only: OK, NO_SUCH_OPTION, INVALID_OPTION
-    use krylov, only: krylov_initialize, krylov_finalize, krylov_validate_enum_option, krylov_get_enum_option, &
-                      krylov_define_enum_option, krylov_set_enum_option
+    use krylov, only: krylov_initialize, krylov_finalize, krylov_validate_enum_option, &
+                      krylov_get_enum_option, krylov_define_enum_option, krylov_set_enum_option, &
+                      krylov_length_enum_option
+
     implicit none
 
     integer(IK) :: error
+    character(len=1, kind=AK) :: value
 
     error = krylov_initialize()
     if (error /= OK) stop 1
@@ -26,8 +29,16 @@ program test_get_enum_option
     error = krylov_set_enum_option('enum', 'c')
     if (error /= INVALID_OPTION) stop 1
 
-    if (krylov_get_enum_option('enum') /= 'a') stop 1
-    if (krylov_get_enum_option('missing') /= '') stop 1
+    error = krylov_get_enum_option('enum', value)
+    if (error /= OK) stop 1
+    if (value /= 'a') stop 1
+
+    if (krylov_length_enum_option('enum') /= 1_IK) stop 1
+
+    error = krylov_get_enum_option('missing', value)
+    if (error /= NO_SUCH_OPTION) stop 1
+
+    if (krylov_length_enum_option('missing') /= NO_SUCH_OPTION) stop 1
 
     error = krylov_finalize()
     if (error /= OK) stop 1

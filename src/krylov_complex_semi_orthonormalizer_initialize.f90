@@ -1,6 +1,6 @@
 function krylov_complex_semi_orthonormalizer_initialize(orthonormalizer, config) result(error)
 
-    use kinds, only: IK
+    use kinds, only: IK, RK, CK
     use errors, only: OK
     use options, only: config_t
     use krylov, only: complex_semi_orthonormalizer_t
@@ -29,6 +29,11 @@ function krylov_complex_semi_orthonormalizer_initialize(orthonormalizer, config)
               orthonormalizer%gram_matrix(basis_dim, basis_dim), &
               orthonormalizer%scaled_gram_matrix(basis_dim, basis_dim), &
               orthonormalizer%gram_matrix_decomposed(basis_dim, basis_dim))
+
+    orthonormalizer%vector_norm_squared = 0.0_RK
+    orthonormalizer%gram_matrix = (0.0_CK, 0.0_CK)
+    orthonormalizer%scaled_gram_matrix = (0.0_CK, 0.0_CK)
+    orthonormalizer%gram_matrix_decomposed = (0.0_CK, 0.0_CK)
 
     error = OK
 

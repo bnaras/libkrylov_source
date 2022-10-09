@@ -22,7 +22,7 @@ function krylov_complex_nks_orthonormalizer_transform_basis_rhs( &
     end do
 
     ! Transform to orthogonal basis in place
-    call complex_trsm('l', uplo, 'n', 'n', basis_dim, rhs_dim, (1.0_CK, 0.0_CK), &
+    call complex_trsm('l', uplo, 'c', 'n', basis_dim, rhs_dim, (1.0_CK, 0.0_CK), &
                       orthonormalizer%gram_matrix_decomposed, basis_dim, orthonormal_basis_rhs, basis_dim)
 
     error = OK

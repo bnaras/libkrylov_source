@@ -1,6 +1,6 @@
 program test_dict
 
-    use kinds, only: IK, RK
+    use kinds, only: IK, RK, LK
     use errors, only: OK, KEY_NOT_FOUND
     use dict, only: entry_t, get_length, make_entry, dict_t
     implicit none
@@ -14,27 +14,31 @@ program test_dict
     if (get_length('ab') /= 2_IK) stop 1
     if (get_length('abc') /= 3_IK) stop 1
     if (get_length(1.0_RK) /= storage_size(1.0_RK, kind=IK) / 8_IK) stop 1
-    if (get_length(.true.) /= storage_size(.true., kind=IK) / 8_IK) stop 1
+    if (get_length(.true._LK) /= storage_size(.true._LK, kind=IK) / 8_IK) stop 1
 
     e1 = make_entry('integer', 1_IK)
     if (e1%get_key() /= 'integer') stop 1
+    if (e1%get_length() /= storage_size(1_IK, kind=IK) / 8_IK) stop 1
     if (e1%as_integer() /= 1_IK) stop 1
 
     e2 = make_entry('string', 'abcd')
     if (e2%get_key() /= 'string') stop 1
+    if (e2%get_length() /= 4_IK) stop 1
     if (e2%as_string() /= 'abcd') stop 1
 
     e3 = make_entry('real', 1.0_RK)
     if (e3%get_key() /= 'real') stop 1
+    if (e3%get_length() /= storage_size(1.0_RK, kind=IK) / 8_IK) stop 1
     if (e3%as_real() /= 1.0_RK) stop 1
 
-    e4 = make_entry('logical', .true.)
+    e4 = make_entry('logical', .true._LK)
     if (e4%get_key() /= 'logical') stop 1
-    if (e4%as_logical() .neqv. .true.) stop 1
+    if (e4%get_length() /= storage_size(.true._LK, kind=IK) / 8_IK) stop 1
+    if (e4%as_logical() .neqv. .true._LK) stop 1
 
     e5 = e4
     if (e5%get_key() /= 'logical') stop 1
-    if (e5%as_logical() .neqv. .true.) stop 1
+    if (e5%as_logical() .neqv. .true._LK) stop 1
 
     error = d%initialize()
     if (d%count() /= 0_IK) stop 1
@@ -65,11 +69,13 @@ program test_dict
     error = d%put('integer', 2_IK)
     if (error /= OK) stop 1
     if (d%find_key('integer') /= 1_IK) stop 1
+    if (d%get_length('integer') /= storage_size(1_IK, kind=IK) / 8_IK) stop 1
     if (d%get_integer('integer') /= 2_IK) stop 1
     if (d%count() /= 1_IK) stop 1
 
     error = d%put('integer', 3_IK)
     if (d%find_key('integer') /= 1_IK) stop 1
+    if (d%get_length('integer') /= storage_size(1_IK, kind=IK) / 8_IK) stop 1
     if (d%get_integer('integer') /= 3_IK) stop 1
     if (d%count() /= 1_IK) stop 1
 
@@ -83,6 +89,7 @@ program test_dict
     if (error /= OK) stop 1
     if (d%count() /= 3_IK) stop 1
     if (d%find_key('string') /= 3_IK) stop 1
+    if (d%get_length('string') /= 3_IK) stop 1
     if (d%get_string('string') /= 'abc') stop 1
 
     error = d%delete('another')
@@ -96,13 +103,15 @@ program test_dict
     if (error /= OK) stop 1
     if (d%count() /= 3_IK) stop 1
     if (d%find_key('real') /= 2_IK) stop 1
+    if (d%get_length('real') /= storage_size(1.0_RK, kind=IK) / 8_IK) stop 1
     if (d%get_real('real') /= 1.0_RK) stop 1
 
-    error = d%put('logical', .true.)
+    error = d%put('logical', .true._LK)
     if (error /= OK) stop 1
     if (d%count() /= 4_IK) stop 1
     if (d%find_key('logical') /= 2_IK) stop 1
-    if (d%get_logical('logical') .neqv. .true.) stop 1
+    if (d%get_length('logical') /= storage_size(.true._LK, kind=IK) / 8_IK) stop 1
+    if (d%get_logical('logical') .neqv. .true._LK) stop 1
 
     error = d%delete('string')
     if (error /= OK) stop 1

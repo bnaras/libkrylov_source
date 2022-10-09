@@ -9,10 +9,9 @@ function krylov_get_space_last_gram_rcond(index) result(last_gram_rcond)
 
     if (index > krylov_get_num_spaces()) then
         last_gram_rcond = -1.0_RK
+        return
     end if
 
-    associate (space => spaces(index)%space_p)
-        last_gram_rcond = space%convergence%get_last_gram_rcond()
-    end associate
+    last_gram_rcond = spaces(index)%space_p%convergence%get_last_gram_rcond()
 
 end function krylov_get_space_last_gram_rcond

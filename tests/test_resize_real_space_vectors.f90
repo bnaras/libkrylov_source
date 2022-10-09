@@ -43,6 +43,9 @@ program test_resize_real_space_vectors
     length = krylov_get_space_vector_size(1_IK)
     if (length /= 400_IK) stop 1
 
+    error = krylov_resize_real_space_vectors(4_IK, 100_IK)
+    if (error /= NO_SUCH_SPACE) stop 1
+
     error = krylov_finalize()
     if (error /= OK) stop 1
 

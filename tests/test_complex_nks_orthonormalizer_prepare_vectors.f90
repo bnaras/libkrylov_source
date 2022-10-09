@@ -12,12 +12,12 @@ program test_complex_nks_orthonormalizer_prepare_vectors
     complex(CK) :: vectors(4_IK, 2_IK), residuals(4_IK, 2_IK), new_vectors(4_IK, 2_IK), new_vectors_ref(4_IK, 2_IK)
     integer(IK) :: error, new_dim
 
-    vectors = reshape((/(0.5_CK, 0.1_CK), (0.5_CK, 0.1_CK), (-0.5_CK, -0.1_CK), (-0.5_CK, -0.1_CK), &
-                        (0.5_CK, 0.1_CK), (0.5_CK, 0.1_CK), (0.5_CK, 0.1_CK), (0.5_CK, 0.1_CK)/), (/4_IK, 2_IK/))
-    residuals = reshape((/(1.0_CK, 0.1_CK), (-1.0_CK, -0.1_CK), (-3.0_CK, -0.1_CK), (3.0_CK, 0.1_CK), &
-                          (1.5_CK, 0.1_CK), (-1.5_CK, -0.1_CK), (0.5_CK, 0.1_CK), (-0.5_CK, -0.1_CK)/), (/4_IK, 2_IK/))
-    new_vectors_ref = reshape((/(1.0_CK, 0.1_CK), (-1.0_CK, -0.1_CK), (-3.0_CK, -0.1_CK), (3.0_CK, 0.1_CK), &
-                                (1.5_CK, 0.1_CK), (-1.5_CK, -0.1_CK), (0.5_CK, 0.1_CK), (-0.5_CK, -0.1_CK)/), (/4_IK, 2_IK/))
+    vectors = reshape((/(0.4_CK, 0.3_CK), (0.4_CK, 0.3_CK), (-0.4_CK, -0.3_CK), (-0.4_CK, -0.3_CK), &
+                        (0.2_CK, 0.2_CK), (0.2_CK, 0.2_CK), (0.0_CK, 0.0_CK), (0.0_CK, 0.0_CK)/), (/4_IK, 2_IK/))
+    residuals = reshape((/(0.1_CK, 0.1_CK), (0.1_CK, -0.1_CK), (-0.3_CK, -0.1_CK), (-0.3_CK, 0.1_CK), &
+                          (0.1_CK, 0.1_CK), (0.1_CK, -0.3_CK), (0.1_CK, 0.1_CK), (0.1_CK, -0.3_CK)/), (/4_IK, 2_IK/))
+    new_vectors_ref = reshape((/(0.1_CK, 0.1_CK), (0.1_CK, -0.1_CK), (-0.3_CK, -0.1_CK), (-0.3_CK, 0.1_CK), &
+                                (0.1_CK, 0.1_CK), (0.1_CK, -0.3_CK), (0.1_CK, 0.1_CK), (0.1_CK, -0.3_CK)/), (/4_IK, 2_IK/))
 
     error = config%initialize()
     if (error /= OK) stop 1
@@ -33,8 +33,8 @@ program test_complex_nks_orthonormalizer_prepare_vectors
 
     error = orthonormalizer%prepare_vectors(4_IK, 2_IK, 2_IK, vectors, residuals, new_vectors, new_dim)
     if (error /= OK) stop 1
-
     if (new_dim /= 2_IK) stop 1
+
     if (new_vectors /= near_complex_mat(new_vectors_ref)) stop 1
 
 end program test_complex_nks_orthonormalizer_prepare_vectors

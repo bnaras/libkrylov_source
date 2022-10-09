@@ -14,7 +14,7 @@ module blaswrapper
         sgemm, dgemm, cgemm, zgemm, ssymm, dsymm, csymm, zsymm, &
         ssyrk, ssyr2k, dsyrk, dsyr2k, cherk, cher2k, zherk, zher2k
 
-#ifdef USE_REAL32
+#if (defined USE_REAL32 || defined USE_C_FLOAT)
     procedure(real(RK)), pointer :: real_dot => sdot, real_nrm2 => snrm2
     procedure(), pointer :: real_axpy => saxpy, real_scal => sscal, &
         real_gemv => sgemv, real_gbmv => sgbmv, &
@@ -22,7 +22,7 @@ module blaswrapper
         real_gemm => sgemm, real_symm => ssymm, &
         real_syrk => ssyrk, real_syr2k => ssyr2k
 
-#elif defined USE_REAL64
+#elif (defined USE_REAL64 || defined USE_C_DOUBLE)
     procedure(real(RK)), pointer :: real_dot => ddot, real_nrm2 => dnrm2
     procedure(), pointer :: real_axpy => daxpy, real_scal => dscal, &
         real_gemv => dgemv, real_gbmv => dgbmv, &
@@ -31,7 +31,7 @@ module blaswrapper
         real_syrk => dsyrk, real_syr2k => dsyr2k
 #endif
 
-#ifdef USE_COMPLEX32
+#if (defined USE_COMPLEX32 || defined USE_COMPLEX_C_FLOAT)
     procedure(real(RK)), pointer :: complex_nrm2 => scnrm2
     procedure(), pointer :: complex_axpy => caxpy, complex_scal => cscal, &
         complex_gemv => cgemv, complex_gbmv => cgbmv, &
@@ -39,7 +39,7 @@ module blaswrapper
         complex_gemm => cgemm, complex_symm => csymm, &
         complex_herk => cherk, complex_her2k => cher2k
 
-#elif defined USE_COMPLEX64
+#elif (defined USE_COMPLEX64 || defined USE_COMPLEX_C_DOUBLE)
     procedure(real(RK)), pointer ::complex_nrm2 => dznrm2
     procedure(), pointer :: complex_axpy => zaxpy, complex_scal => zscal, &
         complex_gemv => zgemv, complex_gbmv => zgbmv, &
@@ -50,9 +50,9 @@ module blaswrapper
 
 #ifdef USE_GENERIC_DOTC
     procedure(complex(CK)), pointer :: complex_dotc => dotc
-#elif defined USE_COMPLEX32
+#elif (defined USE_COMPLEX32 || defined USE_COMPLEX_C_FLOAT)
     procedure(complex(CK)), pointer :: complex_dotc => cdotc
-#elif defined USE_COMPLEX64
+#elif (defined USE_COMPLEX64 || defined USE_COMPLEX_C_DOUBLE)
     procedure(complex(CK)), pointer :: complex_dotc => zdotc
 #endif
 

@@ -14,6 +14,7 @@ function krylov_real_jd_preconditioner_transform_residuals( &
 
     integer(IK) :: ful, sol1
     real(RK) :: numerator, denom, diag, min_diag
+    real(RK), allocatable :: shifts(:)
 
     if (full_dim /= preconditioner%full_dim) then
         error = INVALID_DIMENSION
@@ -37,22 +38,34 @@ function krylov_real_jd_preconditioner_transform_residuals( &
 
     min_diag = preconditioner%config%get_real_option('min_diagonal_scaling')
 
+    allocate (shifts(solution_dim))
+
+    if (preconditioner%config%get_logical_option('has_eigenvalues')) then
+        shifts = preconditioner%eigenvalues
+    else if (preconditioner%config%get_logical_option('has_shifts')) then
+        shifts = preconditioner%shifts
+    else
+        shifts = 0.0_RK
+    end if
+
     do sol1 = 1_IK, solution_dim
         numerator = 0.0_RK
         denom = 0.0_RK
         do ful = 1_IK, full_dim
-            diag = preconditioner%diagonal(ful) - preconditioner%eigenvalues(sol1)
+            diag = preconditioner%diagonal(ful) - shifts(sol1)
             if (abs(diag) < min_diag) diag = sign(min_diag, diag)
             numerator = numerator + preconditioner%solutions(ful, sol1) * residuals(ful, sol1) / diag
             denom = denom + preconditioner%solutions(ful, sol1) * preconditioner%solutions(ful, sol1) / diag
         end do
         do ful = 1_IK, full_dim
-            diag = preconditioner%diagonal(ful) - preconditioner%eigenvalues(sol1)
+            diag = preconditioner%diagonal(ful) - shifts(sol1)
             if (abs(diag) < min_diag) diag = sign(min_diag, diag)
             preconditioned_residuals(ful, sol1) = (residuals(ful, sol1) - preconditioner%solutions(ful, sol1) * &
-                                                   (numerator / denom)) / diag
+                                                  (numerator / denom)) / diag
         end do
     end do
+
+    deallocate (shifts)
 
     error = OK
 

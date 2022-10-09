@@ -13,8 +13,8 @@ program test_complex_nks_orthonormalizer_get_gram_rcond
     real(RK) :: gram_rcond
     integer(IK) :: error
 
-    vectors = reshape((/(0.5_CK, 0.1_CK), (0.5_CK, 0.1_CK), (-0.5_CK, -0.1_CK), (-0.5_CK, -0.1_CK), &
-                        (0.5_CK, 0.1_CK), (0.5_CK, 0.1_CK), (0.5_CK, 0.1_CK), (0.5_CK, 0.1_CK)/), (/4_IK, 2_IK/))
+    vectors = reshape((/(0.4_CK, 0.3_CK), (0.4_CK, 0.3_CK), (-0.4_CK, -0.3_CK), (-0.4_CK, -0.3_CK), &
+                        (0.2_CK, 0.2_CK), (0.2_CK, 0.2_CK), (0.0_CK, 0.0_CK), (0.0_CK, 0.0_CK)/), (/4_IK, 2_IK/))
 
     error = config%initialize()
     if (error /= OK) stop 1
@@ -29,6 +29,7 @@ program test_complex_nks_orthonormalizer_get_gram_rcond
     if (error /= OK) stop 1
 
     gram_rcond = orthonormalizer%get_gram_rcond()
-    if (gram_rcond /= near_real_num(1.0_RK)) stop 1
+
+    if (gram_rcond /= near_real_num(0.17157287525380979_RK)) stop 1
 
 end program test_complex_nks_orthonormalizer_get_gram_rcond

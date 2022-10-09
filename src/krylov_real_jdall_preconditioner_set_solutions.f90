@@ -1,6 +1,6 @@
 function krylov_real_jdall_preconditioner_set_solutions(preconditioner, full_dim, solution_dim, solutions) result(error)
 
-    use kinds, only: IK, RK
+    use kinds, only: IK, RK, LK
     use errors, only: OK, INVALID_DIMENSION
     use krylov, only: real_jdall_preconditioner_t
     implicit none
@@ -24,7 +24,7 @@ function krylov_real_jdall_preconditioner_set_solutions(preconditioner, full_dim
 
     preconditioner%solutions = solutions
 
-    err = preconditioner%config%set_logical_option('has_solutions', .true.)
+    err = preconditioner%config%set_logical_option('has_solutions', .true._LK)
     if (err /= OK) then
         error = err
         return

@@ -1,18 +1,18 @@
 function krylov_real_space_initialize(space, equation, full_dim, solution_dim, basis_dim, config) result(error)
 
-    use kinds, only: IK
+    use kinds, only: IK, AK
     use errors, only: OK, INVALID_CONFIGURATION
     use krylov, only: real_space_t, config_t
     implicit none
 
     class(real_space_t), intent(inout) :: space
-    character(len=*), intent(in) :: equation
+    character(len=*, kind=AK), intent(in) :: equation
     integer(IK), intent(in) :: full_dim, solution_dim, basis_dim
     type(config_t), intent(in) :: config
     integer(IK) :: error
 
     integer(IK) :: err, max_dim
-    character(len=:), allocatable :: preconditioner, orthonormalizer
+    character(len=:, kind=AK), allocatable :: preconditioner, orthonormalizer
 
     space%full_dim = full_dim
     space%solution_dim = solution_dim

@@ -1,6 +1,6 @@
 module solvers
 
-    use kinds, only: IK, RK, CK
+    use kinds, only: IK, RK, CK, AK
     use options, only: config_t
     use control, only: convergence_t
     use equations, only: real_equation_t, complex_equation_t
@@ -74,18 +74,18 @@ module solvers
 
         function krylov_space_i_initialize( &
             space, equation, full_dim, solution_dim, basis_dim, config) result(error)
-            import space_t, config_t, IK
+            import space_t, config_t, IK, AK
             class(space_t), intent(inout) :: space
-            character(len=*), intent(in) :: equation
+            character(len=*, kind=AK), intent(in) :: equation
             integer(IK), intent(in) :: full_dim, solution_dim, basis_dim
             type(config_t), intent(in) :: config
             integer(IK) :: error
         end function krylov_space_i_initialize
 
         function krylov_space_i_set_option(space, value) result(error)
-            import space_t, IK
+            import space_t, IK, AK
             class(space_t), intent(inout) :: space
-            character(len=*), intent(in) :: value
+            character(len=*, kind=AK), intent(in) :: value
             integer(IK) :: error
         end function krylov_space_i_set_option
 
@@ -101,32 +101,32 @@ module solvers
 
         function krylov_real_space_initialize( &
             space, equation, full_dim, solution_dim, basis_dim, config) result(error)
-            import real_space_t, config_t, IK
+            import real_space_t, config_t, IK, AK
             class(real_space_t), intent(inout) :: space
-            character(len=*), intent(in) :: equation
+            character(len=*, kind=AK), intent(in) :: equation
             integer(IK), intent(in) :: full_dim, solution_dim, basis_dim
             type(config_t), intent(in) :: config
             integer(IK) :: error
         end function krylov_real_space_initialize
 
         function krylov_real_space_set_equation(space, value) result(error)
-            import real_space_t, IK
+            import real_space_t, IK, AK
             class(real_space_t), intent(inout) :: space
-            character(len=*), intent(in) :: value
+            character(len=*, kind=AK), intent(in) :: value
             integer(IK) :: error
         end function krylov_real_space_set_equation
 
         function krylov_real_space_set_preconditioner(space, value) result(error)
-            import real_space_t, IK
+            import real_space_t, IK, AK
             class(real_space_t), intent(inout) :: space
-            character(len=*), intent(in) :: value
+            character(len=*, kind=AK), intent(in) :: value
             integer(IK) :: error
         end function krylov_real_space_set_preconditioner
 
         function krylov_real_space_set_orthonormalizer(space, value) result(error)
-            import real_space_t, IK
+            import real_space_t, IK, AK
             class(real_space_t), intent(inout) :: space
-            character(len=*), intent(in) :: value
+            character(len=*, kind=AK), intent(in) :: value
             integer(IK) :: error
         end function krylov_real_space_set_orthonormalizer
 
@@ -186,32 +186,32 @@ module solvers
 
         function krylov_complex_space_initialize( &
             space, equation, full_dim, solution_dim, basis_dim, config) result(error)
-            import complex_space_t, config_t, IK
+            import complex_space_t, config_t, IK, AK
             class(complex_space_t), intent(inout) :: space
-            character(len=*), intent(in) :: equation
+            character(len=*, kind=AK), intent(in) :: equation
             integer(IK), intent(in) :: full_dim, solution_dim, basis_dim
             type(config_t), intent(in) :: config
             integer(IK) :: error
         end function krylov_complex_space_initialize
 
         function krylov_complex_space_set_equation(space, value) result(error)
-            import complex_space_t, IK
+            import complex_space_t, IK, AK
             class(complex_space_t), intent(inout) :: space
-            character(len=*), intent(in) :: value
+            character(len=*, kind=AK), intent(in) :: value
             integer(IK) :: error
         end function krylov_complex_space_set_equation
 
         function krylov_complex_space_set_preconditioner(space, value) result(error)
-            import complex_space_t, IK
+            import complex_space_t, IK, AK
             class(complex_space_t), intent(inout) :: space
-            character(len=*), intent(in) :: value
+            character(len=*, kind=AK), intent(in) :: value
             integer(IK) :: error
         end function krylov_complex_space_set_preconditioner
 
         function krylov_complex_space_set_orthonormalizer(space, value) result(error)
-            import complex_space_t, IK
+            import complex_space_t, IK, AK
             class(complex_space_t), intent(inout) :: space
-            character(len=*), intent(in) :: value
+            character(len=*, kind=AK), intent(in) :: value
             integer(IK) :: error
         end function krylov_complex_space_set_orthonormalizer
 

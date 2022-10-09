@@ -3,9 +3,10 @@ function krylov_solve_complex_block_equation(multiply) result(error)
     use kinds, only: IK, CK
     use errors, only: OK, NOTHING_TO_DO, NOT_CONVERGED, NO_BASIS_UPDATE, MAX_DIM_REACHED
     use krylov, only: spaces, complex_space_t, krylov_i_complex_block_multiply, krylov_get_num_spaces, &
-                      krylov_get_integer_option, krylov_get_complex_block_dims, &
-                      krylov_get_complex_block_vectors, krylov_set_complex_block_products, &
-                      krylov_get_complex_block_convergence, krylov_get_space_convergence
+                      krylov_get_integer_option, krylov_get_complex_block_total_size, &
+                      krylov_get_complex_block_dims, krylov_get_complex_block_vectors, &
+                      krylov_set_complex_block_products, krylov_get_complex_block_convergence, &
+                      krylov_get_space_convergence
     implicit none
 
     procedure(krylov_i_complex_block_multiply) :: multiply
@@ -32,11 +33,7 @@ function krylov_solve_complex_block_equation(multiply) result(error)
 
     do iter = 1_IK, max_iterations
 
-        err = krylov_get_complex_block_dims(num_spaces, full_dims, subset_dims, offsets, total_size)
-        if (err /= OK) then
-            error = err
-            exit
-        end if
+        total_size = krylov_get_complex_block_total_size()
         if (total_size == 0_IK) then
             error = NOTHING_TO_DO
             exit
@@ -48,6 +45,12 @@ function krylov_solve_complex_block_equation(multiply) result(error)
         end if
         vectors = (0.0_CK, 0.0_CK)
         products = (0.0_CK, 0.0_CK)
+
+        err = krylov_get_complex_block_dims(num_spaces, full_dims, subset_dims, offsets)
+        if (err /= OK) then
+            error = err
+            exit
+        end if
 
         err = krylov_get_complex_block_vectors(num_spaces, total_size, full_dims, subset_dims, offsets, vectors)
         if (err /= OK) then
