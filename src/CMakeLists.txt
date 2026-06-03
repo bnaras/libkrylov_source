@@ -444,7 +444,11 @@ if(APPLE)
     COMMAND ${CMAKE_RANLIB} -c $<TARGET_FILE:krylov>)
 endif()
 
-string(TIMESTAMP LIBKRYLOV_COMPILED_DT "%Y-%m-%d %H:%M:%S")
+# R-package (r-pkg) edit: use a fixed datetime (the v1.1.0 release date) instead
+# of the build-time string(TIMESTAMP ...) so the compiled artifact is
+# reproducible (CRAN / r-universe). Was:
+#   string(TIMESTAMP LIBKRYLOV_COMPILED_DT "%Y-%m-%d %H:%M:%S")
+set(LIBKRYLOV_COMPILED_DT "2022-10-09 15:43:10")
 
 target_compile_definitions(
   krylov

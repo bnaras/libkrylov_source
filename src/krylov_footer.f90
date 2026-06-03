@@ -1,24 +1,14 @@
 function krylov_footer() result(error)
 
-    use kinds, only: IK, AK
+    ! R-package (r-pkg) edit: see krylov_header. The original wrote a footer to
+    ! stdout; CRAN forbids output from compiled code, so this is a no-op that
+    ! returns OK (the C API ckrylov_footer references it).
+
+    use kinds, only: IK
     use errors, only: OK
-    use krylov, only: krylov_get_current_datetime
     implicit none
 
     integer(IK) :: error
-
-    character(len=80, kind=AK) :: end_dt
-    integer(IK) :: err
-
-    err = krylov_get_current_datetime(end_dt)
-    if (err /= OK) then
-        error = err
-        return
-    end if
-
-    write (*, *)
-    write (*, '(a, a)') '  Finished  ', trim(end_dt)
-    write (*, *)
 
     error = OK
 
